@@ -17,6 +17,10 @@
     return tel ? `tel_${tel}` : `nombre_${(nombre || '').trim().toLowerCase()}`;
   }
 
+  function fmtMonto(n) {
+    return '$' + Number(n || 0).toLocaleString('es-AR');
+  }
+
   function fmtFecha(f) {
     if (!f) return '-';
     const [y, m, d] = f.split('-');
@@ -35,9 +39,16 @@
     const stats = new Map();
     getTurnos().forEach(t => {
       const key = claveCliente(t.cliente, t.telefono);
-      const actual = stats.get(key) || { cantidad: 0, ultima: '' };
+      const actual = stats.get(key) || { cantidad: 0, ultima: '', totalGastado: 0, ultimoServicio: '', ultimaCompletada: '' };
       actual.cantidad += 1;
       if (!actual.ultima || t.fecha >= actual.ultima) actual.ultima = t.fecha;
+      if (t.estado === 'completado') {
+        actual.totalGastado += Number(t.precio) || 0;
+        if (!actual.ultimaCompletada || t.fecha >= actual.ultimaCompletada) {
+          actual.ultimaCompletada = t.fecha;
+          actual.ultimoServicio = t.servicioNombre;
+        }
+      }
       stats.set(key, actual);
     });
     return stats;
@@ -58,7 +69,7 @@
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
       .forEach(c => {
         const key = claveCliente(c.nombre, c.telefono);
-        const s = stats.get(key) || { cantidad: 0, ultima: '' };
+        const s = stats.get(key) || { cantidad: 0, ultima: '', totalGastado: 0, ultimoServicio: '' };
         const dias = diasDesde(s.ultima);
         const recordatorio = dias !== null && dias >= RECORDATORIO_DIAS
           ? `<span class="badge badge--recordatorio">Recordar (${dias} días)</span>`
@@ -68,10 +79,9 @@
         tr.innerHTML = `
           <td>${c.nombre}</td>
           <td>${c.telefono || '-'}</td>
-          <td>${c.instagram || '-'}</td>
-          <td>${c.email || '-'}</td>
-          <td>${s.cantidad}</td>
           <td>${fmtFecha(s.ultima)}</td>
+          <td>${s.ultimoServicio || '-'}</td>
+          <td>${fmtMonto(s.totalGastado)}</td>
           <td>${recordatorio}</td>
           <td>
             <button class="link-btn" data-edit-cliente="${c.id}">Editar</button> ·

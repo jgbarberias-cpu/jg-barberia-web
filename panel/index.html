@@ -13,20 +13,20 @@
 <body>
 
 <!-- DASHBOARD -->
-<div id="dashboard" class="dashboard">
-  <header class="topbar">
-    <div class="topbar__brand">
+<div id="dashboard" class="dashboard dashboard--sidebar">
+  <aside class="sidebar">
+    <div class="sidebar__brand">
       <img src="../assets/img/logo.jpg" alt="JG Barbería">
       <span>Panel de control</span>
     </div>
-    <nav class="tabs">
+    <nav class="tabs tabs--vertical">
       <button class="tab is-active" data-view="turnos">Turnos</button>
       <button class="tab" data-view="finanzas">Finanzas</button>
       <button class="tab" data-view="clientes">Clientes</button>
       <button class="tab" data-view="servicios">Servicios</button>
       <button class="tab" data-view="resenas">Reseñas</button>
     </nav>
-  </header>
+  </aside>
 
   <main class="content">
 
@@ -98,7 +98,7 @@
       </div>
       <div class="table-wrap">
         <table class="data-table" id="clientesTable">
-          <thead><tr><th>Cliente</th><th>WhatsApp</th><th>Instagram</th><th>Email</th><th>Cantidad de turnos</th><th>Última visita</th><th>Recordatorio</th><th></th></tr></thead>
+          <thead><tr><th>Cliente</th><th>WhatsApp</th><th>Último corte</th><th>Último servicio</th><th>Total gastado</th><th>Recordatorio</th><th></th></tr></thead>
           <tbody id="clientesTbody"></tbody>
         </table>
         <p id="clientesEmpty" class="empty-state" hidden>Todavía no hay clientes registrados.</p>
@@ -266,15 +266,18 @@
     <label>WhatsApp / Teléfono
       <input type="tel" id="clienteTelefono">
     </label>
-    <label>Instagram
-      <input type="text" id="clienteInstagram" placeholder="@usuario">
-    </label>
-    <label>Email
-      <input type="email" id="clienteEmail">
-    </label>
-    <label>Notas
-      <textarea id="clienteNotas" rows="2"></textarea>
-    </label>
+    <details class="cliente-extra">
+      <summary>+ Más datos (opcional)</summary>
+      <label>Instagram
+        <input type="text" id="clienteInstagram" placeholder="@usuario">
+      </label>
+      <label>Email
+        <input type="email" id="clienteEmail">
+      </label>
+      <label>Notas
+        <textarea id="clienteNotas" rows="2"></textarea>
+      </label>
+    </details>
     <div class="modal__actions">
       <button type="button" id="deleteClienteBtn" class="btn btn--danger" hidden>Eliminar</button>
       <div class="modal__actions-right">
