@@ -48,6 +48,25 @@ create table if not exists resenas (
   created_at timestamptz not null default now()
 );
 
+create table if not exists tareas (
+  id uuid primary key default gen_random_uuid(),
+  descripcion text not null,
+  fecha date,
+  completada boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+alter table tareas enable row level security;
+drop policy if exists "anon_all_tareas" on tareas;
+create policy "anon_all_tareas" on tareas for all using (true) with check (true);
+
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'tareas') then
+    alter publication supabase_realtime add table tareas;
+  end if;
+end $$;
+
 create table if not exists finanzas (
   id uuid primary key default gen_random_uuid(),
   tipo text not null,

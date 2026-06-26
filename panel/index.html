@@ -25,6 +25,7 @@
       <button class="tab" data-view="clientes">Clientes</button>
       <button class="tab" data-view="servicios">Servicios</button>
       <button class="tab" data-view="resenas">Reseñas</button>
+      <button class="tab" data-view="tareas">Tareas</button>
     </nav>
   </aside>
 
@@ -131,6 +132,21 @@
           <tbody id="resenasTbody"></tbody>
         </table>
         <p id="resenasEmpty" class="empty-state" hidden>Todavía no hay reseñas.</p>
+      </div>
+    </section>
+
+    <!-- TAREAS VIEW -->
+    <section id="view-tareas" class="view">
+      <div class="view__header">
+        <h2>Tareas y recordatorios</h2>
+        <button id="newTareaBtn" class="btn btn--primary btn--small">+ Nueva tarea</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="tareasTable">
+          <thead><tr><th></th><th>Tarea</th><th>Fecha</th><th></th></tr></thead>
+          <tbody id="tareasTbody"></tbody>
+        </table>
+        <p id="tareasEmpty" class="empty-state" hidden>No hay tareas pendientes.</p>
       </div>
     </section>
 
@@ -288,6 +304,27 @@
   </form>
 </dialog>
 
+<!-- MODAL: TAREA -->
+<dialog id="tareaModal" class="modal">
+  <form id="tareaForm" class="modal__form">
+    <h3>Nueva tarea</h3>
+    <input type="hidden" id="tareaId">
+    <label>Tarea
+      <input type="text" id="tareaDescripcion" placeholder="Ej: Publicar reels, limpiar el local" required>
+    </label>
+    <label>Fecha (opcional)
+      <input type="date" id="tareaFecha">
+    </label>
+    <div class="modal__actions">
+      <button type="button" id="deleteTareaBtn" class="btn btn--danger" hidden>Eliminar</button>
+      <div class="modal__actions-right">
+        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn--primary">Guardar</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="supabase-client.js"></script>
@@ -300,6 +337,7 @@
 <script src="turnos.js"></script>
 <script src="clientes.js"></script>
 <script src="resenas.js"></script>
+<script src="tareas.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

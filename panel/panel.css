@@ -84,6 +84,9 @@ input, select, textarea, button { font-family: inherit; }
   border-radius: 4px;
   font-size: 0.95rem;
 }
+.tarea--hecha td { color: var(--text-muted); text-decoration: line-through; }
+.tarea--hecha td:first-child, .tarea--hecha td:last-child { text-decoration: none; }
+
 .cliente-extra { margin-top: 4px; }
 .cliente-extra summary { color: var(--gold); cursor: pointer; font-size: 0.85rem; margin-bottom: 8px; }
 .cliente-extra label { margin-top: 10px; }
