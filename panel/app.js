@@ -1,6 +1,7 @@
 (function () {
-  // Login desactivado temporalmente (ver panel/auth.js para reactivarlo: agregar de nuevo
-  // el chequeo de isLoggedIn/login/logout acá y sacar el atributo "hidden" de #loginScreen).
+  // Login desactivado temporalmente. panel/auth.js sigue existiendo (sin usar) para
+  // cuando se quiera reactivar: hay que volver a poner el bloque #loginScreen en
+  // index.html y el chequeo de isLoggedIn/login/logout acá.
   const { initServicios } = window.Panel.Servicios;
   const { initTurnos } = window.Panel.Turnos;
   const { initFinanzas } = window.Panel.Finanzas;

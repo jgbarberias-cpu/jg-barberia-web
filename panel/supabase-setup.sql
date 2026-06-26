@@ -30,9 +30,14 @@ create table if not exists clientes (
   id uuid primary key default gen_random_uuid(),
   nombre text not null,
   telefono text,
+  instagram text,
+  email text,
   notas text,
   created_at timestamptz not null default now()
 );
+
+alter table clientes add column if not exists instagram text;
+alter table clientes add column if not exists email text;
 
 create table if not exists resenas (
   id uuid primary key default gen_random_uuid(),

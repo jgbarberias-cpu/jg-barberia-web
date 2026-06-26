@@ -12,23 +12,6 @@
 </head>
 <body>
 
-<!-- LOGIN (desactivado temporalmente - ver panel/app.js y esta sección para reactivar) -->
-<div id="loginScreen" class="login-screen" hidden>
-  <form id="loginForm" class="login-card">
-    <img src="../assets/img/logo.jpg" alt="JG Barbería" class="login-card__logo">
-    <h1>Panel de control</h1>
-    <p class="login-card__subtitle">JG Barbería</p>
-    <label>Email
-      <input type="email" id="loginEmail" required autocomplete="username">
-    </label>
-    <label>Contraseña
-      <input type="password" id="loginPassword" required autocomplete="current-password">
-    </label>
-    <p id="loginError" class="form-error" hidden></p>
-    <button type="submit" class="btn btn--primary btn--block">Ingresar</button>
-  </form>
-</div>
-
 <!-- DASHBOARD -->
 <div id="dashboard" class="dashboard">
   <header class="topbar">
@@ -108,11 +91,14 @@
     <section id="view-clientes" class="view">
       <div class="view__header">
         <h2>Clientes (<span id="clientesTotal">0</span>)</h2>
-        <button id="newClienteBtn" class="btn btn--primary btn--small">+ Nuevo cliente</button>
+        <div>
+          <button id="exportClientesBtn" class="btn btn--ghost btn--small">Exportar CSV</button>
+          <button id="newClienteBtn" class="btn btn--primary btn--small">+ Nuevo cliente</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="data-table" id="clientesTable">
-          <thead><tr><th>Cliente</th><th>Teléfono</th><th>Cantidad de turnos</th><th>Última visita</th><th>Recordatorio</th><th></th></tr></thead>
+          <thead><tr><th>Cliente</th><th>WhatsApp</th><th>Instagram</th><th>Email</th><th>Cantidad de turnos</th><th>Última visita</th><th>Recordatorio</th><th></th></tr></thead>
           <tbody id="clientesTbody"></tbody>
         </table>
         <p id="clientesEmpty" class="empty-state" hidden>Todavía no hay clientes registrados.</p>
@@ -277,8 +263,14 @@
     <label>Nombre
       <input type="text" id="clienteNombre" required>
     </label>
-    <label>Teléfono
+    <label>WhatsApp / Teléfono
       <input type="tel" id="clienteTelefono">
+    </label>
+    <label>Instagram
+      <input type="text" id="clienteInstagram" placeholder="@usuario">
+    </label>
+    <label>Email
+      <input type="email" id="clienteEmail">
     </label>
     <label>Notas
       <textarea id="clienteNotas" rows="2"></textarea>

@@ -58,6 +58,8 @@
         tr.innerHTML = `
           <td>${c.nombre}</td>
           <td>${c.telefono || '-'}</td>
+          <td>${c.instagram || '-'}</td>
+          <td>${c.email || '-'}</td>
           <td>${s.cantidad}</td>
           <td>${fmtFecha(s.ultima)}</td>
           <td>${recordatorio}</td>
@@ -82,6 +84,8 @@
       document.getElementById('clienteId').value = cliente.id;
       document.getElementById('clienteNombre').value = cliente.nombre;
       document.getElementById('clienteTelefono').value = cliente.telefono || '';
+      document.getElementById('clienteInstagram').value = cliente.instagram || '';
+      document.getElementById('clienteEmail').value = cliente.email || '';
       document.getElementById('clienteNotas').value = cliente.notas || '';
     } else {
       document.getElementById('clienteId').value = '';
@@ -111,6 +115,22 @@
     });
   }
 
+  function exportarCSV() {
+    const headers = ['Nombre', 'WhatsApp', 'Instagram', 'Email', 'Notas'];
+    const filas = cache.map(c => [c.nombre, c.telefono || '', c.instagram || '', c.email || '', c.notas || '']);
+    const csv = [headers, ...filas]
+      .map(fila => fila.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `clientes-jg-barberia-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function initClientes() {
     onSnapshot(query(clientesCol, orderBy('nombre')), snap => {
       cache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -123,6 +143,7 @@
     });
 
     document.getElementById('newClienteBtn').addEventListener('click', () => openClienteModal(null));
+    document.getElementById('exportClientesBtn').addEventListener('click', exportarCSV);
 
     document.getElementById('clientesTbody').addEventListener('click', (e) => {
       const editId = e.target.dataset.editCliente;
@@ -149,6 +170,8 @@
       const data = {
         nombre: document.getElementById('clienteNombre').value.trim(),
         telefono: document.getElementById('clienteTelefono').value.trim(),
+        instagram: document.getElementById('clienteInstagram').value.trim(),
+        email: document.getElementById('clienteEmail').value.trim(),
         notas: document.getElementById('clienteNotas').value.trim()
       };
       if (editingCliente) {
