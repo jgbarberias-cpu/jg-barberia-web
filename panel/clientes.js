@@ -1,6 +1,7 @@
 (function () {
   const { db, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy } = window.Panel.Storage;
   const { getTurnos, onTurnosChange } = window.Panel.Turnos;
+  const { logCliente } = window.Panel.Sheets;
 
   const clientesCol = collection(db, 'clientes');
   let cache = [];
@@ -96,6 +97,7 @@
   async function eliminarCliente(cliente) {
     if (confirm(`¿Eliminar a ${cliente.nombre} de la lista de clientes? (No borra sus turnos pasados)`)) {
       await deleteDoc(doc(db, 'clientes', cliente.id));
+      logCliente(cliente, 'Eliminado');
     }
   }
 
@@ -176,8 +178,10 @@
       };
       if (editingCliente) {
         await updateDoc(doc(db, 'clientes', editingCliente.id), data);
+        logCliente(data, 'Actualizado');
       } else {
         await addDoc(clientesCol, data);
+        logCliente(data, 'Nuevo');
       }
       document.getElementById('clienteModal').close();
     });
