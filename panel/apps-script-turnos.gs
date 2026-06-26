@@ -1,5 +1,13 @@
+// Ejecutar esta función manualmente una vez (▶ Ejecutar, eligiéndola en el
+// desplegable de arriba) para que Google pida autorizar el acceso a Calendar.
+function autorizarCalendar() {
+  CalendarApp.getDefaultCalendar();
+  Logger.log('Permisos de Calendar OK');
+}
+
 function doGet(e) {
-  if (e.parameter.action === 'dedup' && e.parameter.confirm === 'si') {
+  var params = (e && e.parameter) || {};
+  if (params.action === 'dedup' && params.confirm === 'si') {
     var resultado = deduplicarClientes();
     return ContentService.createTextOutput(JSON.stringify(resultado))
       .setMimeType(ContentService.MimeType.JSON);
