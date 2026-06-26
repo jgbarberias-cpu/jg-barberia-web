@@ -37,11 +37,17 @@ function getClientesSheet(ss) {
   return sheet;
 }
 
+function normTel(tel) {
+  return String(tel || '').replace(/\D/g, '');
+}
+
 function findClienteRow(sheet, telefono, nombre) {
+  var tel = normTel(telefono);
+  var nom = String(nombre || '').trim().toLowerCase();
   var values = sheet.getDataRange().getValues();
   for (var i = 1; i < values.length; i++) {
-    if (telefono && values[i][1] === telefono) return i + 1;
-    if (!telefono && values[i][0] === nombre) return i + 1;
+    if (tel && normTel(values[i][1]) === tel) return i + 1;
+    if (!tel && String(values[i][0] || '').trim().toLowerCase() === nom) return i + 1;
   }
   return -1;
 }

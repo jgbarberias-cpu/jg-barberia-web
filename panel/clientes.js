@@ -8,6 +8,15 @@
   let editingCliente = null;
   const RECORDATORIO_DIAS = 14;
 
+  function normTel(tel) {
+    return (tel || '').replace(/\D/g, '');
+  }
+
+  function claveCliente(nombre, telefono) {
+    const tel = normTel(telefono);
+    return tel ? `tel_${tel}` : `nombre_${(nombre || '').trim().toLowerCase()}`;
+  }
+
   function fmtFecha(f) {
     if (!f) return '-';
     const [y, m, d] = f.split('-');
@@ -25,7 +34,7 @@
   function statsPorTelefono() {
     const stats = new Map();
     getTurnos().forEach(t => {
-      const key = (t.telefono && t.telefono.trim()) || `__sin_telefono_${t.cliente}`;
+      const key = claveCliente(t.cliente, t.telefono);
       const actual = stats.get(key) || { cantidad: 0, ultima: '' };
       actual.cantidad += 1;
       if (!actual.ultima || t.fecha >= actual.ultima) actual.ultima = t.fecha;
@@ -48,7 +57,7 @@
       .slice()
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
       .forEach(c => {
-        const key = (c.telefono && c.telefono.trim()) || `__sin_telefono_${c.nombre}`;
+        const key = claveCliente(c.nombre, c.telefono);
         const s = stats.get(key) || { cantidad: 0, ultima: '' };
         const dias = diasDesde(s.ultima);
         const recordatorio = dias !== null && dias >= RECORDATORIO_DIAS
@@ -103,10 +112,10 @@
 
   // Crea automáticamente los clientes que aparecen en turnos y todavía no están en la lista.
   function syncClientesFromTurnos(turnos) {
-    const vistos = new Set(cache.map(c => (c.telefono && c.telefono.trim()) || `__sin_telefono_${c.nombre}`));
+    const vistos = new Set(cache.map(c => claveCliente(c.nombre, c.telefono)));
     const nuevos = new Map();
     turnos.forEach(t => {
-      const key = (t.telefono && t.telefono.trim()) || `__sin_telefono_${t.cliente}`;
+      const key = claveCliente(t.cliente, t.telefono);
       if (!vistos.has(key) && !nuevos.has(key) && t.cliente) {
         nuevos.set(key, { nombre: t.cliente, telefono: (t.telefono || '').trim() });
       }
