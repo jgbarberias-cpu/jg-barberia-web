@@ -34,6 +34,15 @@ create table if not exists clientes (
   created_at timestamptz not null default now()
 );
 
+create table if not exists resenas (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  comentario text not null,
+  calificacion int not null check (calificacion between 1 and 5),
+  aprobado boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists finanzas (
   id uuid primary key default gen_random_uuid(),
   tipo text not null,
@@ -68,6 +77,18 @@ drop policy if exists "anon_all_clientes" on clientes;
 drop policy if exists "auth_all_clientes" on clientes;
 create policy "auth_all_clientes" on clientes for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
+-- Reseñas: cualquiera puede dejar una (sin login), pero solo se ven públicamente
+-- las aprobadas. Aprobar/eliminar requiere estar logueado (se hace desde el panel).
+alter table resenas enable row level security;
+drop policy if exists "public_insert_resenas" on resenas;
+create policy "public_insert_resenas" on resenas for insert with check (true);
+drop policy if exists "public_select_resenas" on resenas;
+create policy "public_select_resenas" on resenas for select using (aprobado = true or auth.role() = 'authenticated');
+drop policy if exists "auth_update_resenas" on resenas;
+create policy "auth_update_resenas" on resenas for update using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+drop policy if exists "auth_delete_resenas" on resenas;
+create policy "auth_delete_resenas" on resenas for delete using (auth.role() = 'authenticated');
+
 do $$
 begin
   if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'servicios') then
@@ -81,5 +102,8 @@ begin
   end if;
   if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'clientes') then
     alter publication supabase_realtime add table clientes;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'resenas') then
+    alter publication supabase_realtime add table resenas;
   end if;
 end $$;

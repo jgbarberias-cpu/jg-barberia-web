@@ -4,6 +4,7 @@
   const { initTurnos } = window.Panel.Turnos;
   const { initFinanzas } = window.Panel.Finanzas;
   const { initClientes } = window.Panel.Clientes;
+  const { initResenas } = window.Panel.Resenas;
 
   const loginScreen = document.getElementById('loginScreen');
   const dashboard = document.getElementById('dashboard');
@@ -18,6 +19,7 @@
       initTurnos();
       initFinanzas();
       initClientes();
+      initResenas();
     }
   }
 

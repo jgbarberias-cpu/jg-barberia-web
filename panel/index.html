@@ -41,6 +41,7 @@
       <button class="tab" data-view="finanzas">Finanzas</button>
       <button class="tab" data-view="clientes">Clientes</button>
       <button class="tab" data-view="servicios">Servicios</button>
+      <button class="tab" data-view="resenas">Reseñas</button>
     </nav>
     <button id="logoutBtn" class="btn btn--ghost btn--small">Salir</button>
   </header>
@@ -131,6 +132,20 @@
           <tbody id="serviciosTbody"></tbody>
         </table>
         <p id="serviciosEmpty" class="empty-state" hidden>Todavía no agregaste servicios.</p>
+      </div>
+    </section>
+
+    <!-- RESEÑAS VIEW -->
+    <section id="view-resenas" class="view">
+      <div class="view__header">
+        <h2>Reseñas de clientes</h2>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="resenasTable">
+          <thead><tr><th>Fecha</th><th>Nombre</th><th>Calificación</th><th>Comentario</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="resenasTbody"></tbody>
+        </table>
+        <p id="resenasEmpty" class="empty-state" hidden>Todavía no hay reseñas.</p>
       </div>
     </section>
 
@@ -290,6 +305,7 @@
 <script src="finanzas.js"></script>
 <script src="turnos.js"></script>
 <script src="clientes.js"></script>
+<script src="resenas.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
