@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Panel de control | JG Barbería</title>
+<link rel="icon" href="../assets/img/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="dashboard">
+  <header class="topbar">
+    <div class="topbar__brand">
+      <img src="../assets/img/logo.jpg" alt="JG Barbería">
+      <span>Panel de control</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab is-active" data-view="turnos">Turnos</button>
+      <button class="tab" data-view="finanzas">Finanzas</button>
+      <button class="tab" data-view="clientes">Clientes</button>
+      <button class="tab" data-view="servicios">Servicios</button>
+    </nav>
+  </header>
+
+  <main class="content">
+
+    <!-- TURNOS VIEW -->
+    <section id="view-turnos" class="view is-active">
+      <div class="view__header">
+        <div class="calendar-nav">
+          <button id="prevMonth" class="icon-btn" aria-label="Mes anterior">‹</button>
+          <h2 id="calendarLabel">Mes</h2>
+          <button id="nextMonth" class="icon-btn" aria-label="Mes siguiente">›</button>
+          <button id="todayBtn" class="btn btn--ghost btn--small">Hoy</button>
+        </div>
+        <button id="newTurnoBtn" class="btn btn--primary btn--small">+ Nuevo turno</button>
+      </div>
+      <div class="calendar">
+        <div class="calendar__weekdays">
+          <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+        </div>
+        <div id="calendarGrid" class="calendar__grid"></div>
+      </div>
+    </section>
+
+    <!-- FINANZAS VIEW -->
+    <section id="view-finanzas" class="view">
+      <div class="view__header">
+        <div class="month-filter">
+          <input type="month" id="finanzasMonth">
+        </div>
+        <button id="newMovBtn" class="btn btn--primary btn--small">+ Nuevo movimiento</button>
+      </div>
+      <div class="summary-cards">
+        <div class="summary-card summary-card--ingreso">
+          <span>Ingresos del mes</span>
+          <strong id="totalIngresos">$0</strong>
+        </div>
+        <div class="summary-card summary-card--egreso">
+          <span>Egresos del mes</span>
+          <strong id="totalEgresos">$0</strong>
+        </div>
+        <div class="summary-card summary-card--balance">
+          <span>Balance</span>
+          <strong id="totalBalance">$0</strong>
+        </div>
+      </div>
+      <div class="finanzas-legend">
+        <span><i class="legend-dot legend-dot--ingreso"></i> Ingresos por día</span>
+        <span><i class="legend-dot legend-dot--egreso"></i> Egresos por día</span>
+      </div>
+      <div id="finanzasChart" class="finanzas-chart"></div>
+      <div class="table-wrap">
+        <table class="data-table" id="finanzasTable">
+          <thead>
+            <tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Categoría</th><th>Origen</th><th>Monto</th><th></th></tr>
+          </thead>
+          <tbody id="finanzasTbody"></tbody>
+        </table>
+        <p id="finanzasEmpty" class="empty-state" hidden>No hay movimientos este mes.</p>
+      </div>
+    </section>
+
+    <!-- CLIENTES VIEW -->
+    <section id="view-clientes" class="view">
+      <div class="view__header">
+        <h2>Clientes (<span id="clientesTotal">0</span>)</h2>
+        <button id="newClienteBtn" class="btn btn--primary btn--small">+ Nuevo cliente</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="clientesTable">
+          <thead><tr><th>Cliente</th><th>Teléfono</th><th>Cantidad de turnos</th><th>Última visita</th><th>Recordatorio</th><th></th></tr></thead>
+          <tbody id="clientesTbody"></tbody>
+        </table>
+        <p id="clientesEmpty" class="empty-state" hidden>Todavía no hay clientes registrados.</p>
+      </div>
+    </section>
+
+    <!-- SERVICIOS VIEW -->
+    <section id="view-servicios" class="view">
+      <div class="view__header">
+        <h2>Servicios y precios</h2>
+        <button id="newServicioBtn" class="btn btn--primary btn--small">+ Nuevo servicio</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="serviciosTable">
+          <thead><tr><th>Servicio</th><th>Precio</th><th>Activo</th><th></th></tr></thead>
+          <tbody id="serviciosTbody"></tbody>
+        </table>
+        <p id="serviciosEmpty" class="empty-state" hidden>Todavía no agregaste servicios.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- MODAL: TURNO -->
+<dialog id="turnoModal" class="modal">
+  <form id="turnoForm" class="modal__form">
+    <h3 id="turnoModalTitle">Nuevo turno</h3>
+    <input type="hidden" id="turnoId">
+    <label>Cliente
+      <input type="text" id="turnoCliente" required>
+    </label>
+    <label>Teléfono
+      <input type="tel" id="turnoTelefono">
+    </label>
+    <div class="form-row">
+      <label>Fecha
+        <input type="date" id="turnoFecha" required>
+      </label>
+      <label>Hora
+        <input type="time" id="turnoHora" required>
+      </label>
+    </div>
+    <label>Servicio
+      <select id="turnoServicio" required></select>
+    </label>
+    <label>Estado
+      <select id="turnoEstado">
+        <option value="pendiente">Pendiente</option>
+        <option value="confirmado">Confirmado</option>
+        <option value="completado">Completado</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+    </label>
+    <label>Notas
+      <textarea id="turnoNotas" rows="2"></textarea>
+    </label>
+    <p id="turnoWarning" class="form-warning" hidden></p>
+    <div class="modal__actions">
+      <button type="button" id="deleteTurnoBtn" class="btn btn--danger" hidden>Eliminar</button>
+      <div class="modal__actions-right">
+        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn--primary">Guardar</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- MODAL: DÍA -->
+<dialog id="dayModal" class="modal">
+  <div class="modal__form">
+    <h3 id="dayModalTitle">Turnos del día</h3>
+    <div id="dayList" class="day-list"></div>
+    <div class="modal__actions">
+      <div></div>
+      <div class="modal__actions-right">
+        <button type="button" class="btn btn--ghost" data-close-modal>Cerrar</button>
+        <button type="button" id="addTurnoFromDay" class="btn btn--primary">+ Nuevo turno</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL: MOVIMIENTO FINANCIERO -->
+<dialog id="movModal" class="modal">
+  <form id="movForm" class="modal__form">
+    <h3>Nuevo movimiento</h3>
+    <input type="hidden" id="movId">
+    <label>Tipo
+      <select id="movTipo">
+        <option value="ingreso">Ingreso</option>
+        <option value="egreso">Egreso</option>
+      </select>
+    </label>
+    <div class="form-row">
+      <label>Fecha
+        <input type="date" id="movFecha" required>
+      </label>
+      <label>Monto
+        <input type="number" id="movMonto" min="0" step="1" required>
+      </label>
+    </div>
+    <label>Descripción
+      <input type="text" id="movDescripcion" required>
+    </label>
+    <label>Categoría
+      <input type="text" id="movCategoria" placeholder="Ej: Insumos, Alquiler, Ventas">
+    </label>
+    <div class="modal__actions">
+      <div></div>
+      <div class="modal__actions-right">
+        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn--primary">Guardar</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- MODAL: SERVICIO -->
+<dialog id="servicioModal" class="modal">
+  <form id="servicioForm" class="modal__form">
+    <h3>Nuevo servicio</h3>
+    <input type="hidden" id="servicioId">
+    <label>Nombre
+      <input type="text" id="servicioNombre" required>
+    </label>
+    <label>Precio
+      <input type="number" id="servicioPrecio" min="0" step="1" required>
+    </label>
+    <label class="checkbox-label">
+      <input type="checkbox" id="servicioActivo" checked> Activo (visible al crear turnos)
+    </label>
+    <div class="modal__actions">
+      <div></div>
+      <div class="modal__actions-right">
+        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn--primary">Guardar</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- MODAL: CLIENTE -->
+<dialog id="clienteModal" class="modal">
+  <form id="clienteForm" class="modal__form">
+    <h3>Nuevo cliente</h3>
+    <input type="hidden" id="clienteId">
+    <label>Nombre
+      <input type="text" id="clienteNombre" required>
+    </label>
+    <label>Teléfono
+      <input type="tel" id="clienteTelefono">
+    </label>
+    <label>Notas
+      <textarea id="clienteNotas" rows="2"></textarea>
+    </label>
+    <div class="modal__actions">
+      <button type="button" id="deleteClienteBtn" class="btn btn--danger" hidden>Eliminar</button>
+      <div class="modal__actions-right">
+        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn--primary">Guardar</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="supabase-client.js"></script>
+<script src="storage.js"></script>
+<script src="sheets-config.js"></script>
+<script src="sheets-export.js"></script>
+<script src="servicios.js"></script>
+<script src="finanzas.js"></script>
+<script src="turnos.js"></script>
+<script src="clientes.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
