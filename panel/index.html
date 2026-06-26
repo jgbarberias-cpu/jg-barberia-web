@@ -12,8 +12,8 @@
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="loginScreen" class="login-screen">
+<!-- LOGIN (desactivado temporalmente - ver panel/app.js y esta sección para reactivar) -->
+<div id="loginScreen" class="login-screen" hidden>
   <form id="loginForm" class="login-card">
     <img src="../assets/img/logo.jpg" alt="JG Barbería" class="login-card__logo">
     <h1>Panel de control</h1>
@@ -30,7 +30,7 @@
 </div>
 
 <!-- DASHBOARD -->
-<div id="dashboard" class="dashboard" hidden>
+<div id="dashboard" class="dashboard">
   <header class="topbar">
     <div class="topbar__brand">
       <img src="../assets/img/logo.jpg" alt="JG Barbería">
@@ -43,7 +43,6 @@
       <button class="tab" data-view="servicios">Servicios</button>
       <button class="tab" data-view="resenas">Reseñas</button>
     </nav>
-    <button id="logoutBtn" class="btn btn--ghost btn--small">Salir</button>
   </header>
 
   <main class="content">
