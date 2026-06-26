@@ -3,6 +3,7 @@
 
   const finanzasCol = collection(db, 'finanzas');
   let cache = [];
+  let editingMov = null;
 
   function currentMonthValue() {
     const now = new Date();
@@ -69,7 +70,10 @@
         <td>${m.categoria || '-'}</td>
         <td>${origenBadge}</td>
         <td class="amount--${m.tipo}">${m.tipo === 'ingreso' ? '+' : '-'}${fmt(m.monto)}</td>
-        <td><button class="link-btn" data-delete-mov="${m.id}">Eliminar</button></td>
+        <td>
+          <button class="link-btn" data-edit-mov="${m.id}">Editar</button> ·
+          <button class="link-btn" data-delete-mov="${m.id}">Eliminar</button>
+        </td>
       `;
       tbody.appendChild(tr);
     });
@@ -91,43 +95,74 @@
 
     const modal = document.getElementById('movModal');
     const form = document.getElementById('movForm');
+    const deleteBtn = document.getElementById('deleteMovBtn');
     const tipoInput = document.getElementById('movTipo');
     const fechaInput = document.getElementById('movFecha');
     const montoInput = document.getElementById('movMonto');
     const descInput = document.getElementById('movDescripcion');
     const catInput = document.getElementById('movCategoria');
 
-    document.getElementById('newMovBtn').addEventListener('click', () => {
-      form.reset();
-      fechaInput.value = new Date().toISOString().slice(0, 10);
-      modal.showModal();
-    });
-
-    document.getElementById('finanzasTbody').addEventListener('click', async (e) => {
-      const delId = e.target.dataset.deleteMov;
-      if (!delId) return;
-      const mov = cache.find(m => m.id === delId);
-      if (!mov || !confirm('¿Eliminar este movimiento?')) return;
-
-      await deleteDoc(doc(db, 'finanzas', delId));
-
+    async function eliminarMov(mov) {
+      if (!confirm('¿Eliminar este movimiento?')) return;
+      await deleteDoc(doc(db, 'finanzas', mov.id));
       if (mov.origen === 'turno' && mov.turnoId) {
         await updateDoc(doc(db, 'turnos', mov.turnoId), { facturado: false, finanzaId: null });
+      }
+    }
+
+    function abrirModal(mov) {
+      editingMov = mov || null;
+      form.reset();
+      modal.querySelector('h3').textContent = mov ? 'Editar movimiento' : 'Nuevo movimiento';
+      deleteBtn.hidden = !mov;
+      if (mov) {
+        tipoInput.value = mov.tipo;
+        fechaInput.value = mov.fecha;
+        montoInput.value = mov.monto;
+        descInput.value = mov.descripcion;
+        catInput.value = mov.categoria || '';
+      } else {
+        fechaInput.value = new Date().toISOString().slice(0, 10);
+      }
+      modal.showModal();
+    }
+
+    document.getElementById('newMovBtn').addEventListener('click', () => abrirModal(null));
+
+    document.getElementById('finanzasTbody').addEventListener('click', async (e) => {
+      const editId = e.target.dataset.editMov;
+      const delId = e.target.dataset.deleteMov;
+      if (editId) {
+        const mov = cache.find(m => m.id === editId);
+        if (mov) abrirModal(mov);
+      }
+      if (delId) {
+        const mov = cache.find(m => m.id === delId);
+        if (mov) await eliminarMov(mov);
+      }
+    });
+
+    deleteBtn.addEventListener('click', async () => {
+      if (editingMov) {
+        await eliminarMov(editingMov);
+        modal.close();
       }
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      await addDoc(finanzasCol, {
+      const data = {
         tipo: tipoInput.value,
         fecha: fechaInput.value,
         monto: Number(montoInput.value),
         descripcion: descInput.value.trim(),
-        categoria: catInput.value.trim(),
-        origen: 'manual',
-        turnoId: null,
-        createdAt: serverTimestamp()
-      });
+        categoria: catInput.value.trim()
+      };
+      if (editingMov) {
+        await updateDoc(doc(db, 'finanzas', editingMov.id), data);
+      } else {
+        await addDoc(finanzasCol, { ...data, origen: 'manual', turnoId: null, createdAt: serverTimestamp() });
+      }
       modal.close();
     });
   }
