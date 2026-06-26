@@ -1,3 +1,73 @@
+function doGet(e) {
+  if (e.parameter.action === 'dedup' && e.parameter.confirm === 'si') {
+    var resultado = deduplicarClientes();
+    return ContentService.createTextOutput(JSON.stringify(resultado))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput('OK');
+}
+
+// Fusiona filas duplicadas en "Clientes" (mismo teléfono normalizado, o mismo
+// nombre si no hay teléfono), sumando cantidad de turnos y quedándose con el
+// dato más completo de cada columna. Se llama solo manualmente vía GET con
+// ?action=dedup&confirm=si.
+function deduplicarClientes() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Clientes');
+  if (!sheet) return { clientesFusionados: [], filasEliminadas: 0 };
+
+  var values = sheet.getDataRange().getValues();
+  var grupos = {};
+  var orden = [];
+
+  for (var i = 1; i < values.length; i++) {
+    var row = values[i];
+    var nombre = String(row[0] || '').trim();
+    var tel = normTel(row[1]);
+    var key = tel ? ('tel_' + tel) : ('nombre_' + nombre.toLowerCase());
+
+    if (!grupos[key]) {
+      grupos[key] = { indices: [], rows: [] };
+      orden.push(key);
+    }
+    grupos[key].indices.push(i + 1);
+    grupos[key].rows.push(row);
+  }
+
+  var reporte = [];
+  var filasABorrar = [];
+
+  orden.forEach(function (key) {
+    var g = grupos[key];
+    if (g.rows.length <= 1) return;
+
+    var nombre = '', telefono = '', instagram = '', email = '', notas = '', cantidad = 0, ultima = '';
+    g.rows.forEach(function (row) {
+      if (String(row[0] || '').length > nombre.length) nombre = String(row[0] || '');
+      if (!telefono && row[1]) telefono = row[1];
+      if (!instagram && row[2]) instagram = row[2];
+      if (!email && row[3]) email = row[3];
+      if (!notas && row[4]) notas = row[4];
+      cantidad += Number(row[5]) || 0;
+      if (row[6] && (!ultima || String(row[6]) > String(ultima))) ultima = row[6];
+    });
+
+    var filaPrincipal = g.indices[0];
+    sheet.getRange(filaPrincipal, 1, 1, 7).setValues([[nombre, telefono, instagram, email, notas, cantidad, ultima]]);
+
+    for (var k = 1; k < g.indices.length; k++) {
+      filasABorrar.push(g.indices[k]);
+    }
+
+    reporte.push({ cliente: nombre, telefono: telefono, filasFusionadas: g.indices.length, cantidadTotalTurnos: cantidad });
+  });
+
+  filasABorrar.sort(function (a, b) { return b - a; });
+  filasABorrar.forEach(function (fila) { sheet.deleteRow(fila); });
+
+  return { clientesFusionados: reporte, filasEliminadas: filasABorrar.length };
+}
+
 function doPost(e) {
   var data = JSON.parse(e.postData.contents);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
