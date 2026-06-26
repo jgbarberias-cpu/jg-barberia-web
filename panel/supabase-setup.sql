@@ -50,22 +50,23 @@ alter table servicios enable row level security;
 alter table turnos enable row level security;
 alter table finanzas enable row level security;
 
--- Acceso abierto (sin login): cualquiera con el link puede leer y escribir.
-drop policy if exists "auth_all_servicios" on servicios;
+-- Acceso protegido: solo usuarios logueados pueden leer y escribir.
 drop policy if exists "anon_all_servicios" on servicios;
-create policy "anon_all_servicios" on servicios for all using (true) with check (true);
+drop policy if exists "auth_all_servicios" on servicios;
+create policy "auth_all_servicios" on servicios for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
-drop policy if exists "auth_all_turnos" on turnos;
 drop policy if exists "anon_all_turnos" on turnos;
-create policy "anon_all_turnos" on turnos for all using (true) with check (true);
+drop policy if exists "auth_all_turnos" on turnos;
+create policy "auth_all_turnos" on turnos for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
-drop policy if exists "auth_all_finanzas" on finanzas;
 drop policy if exists "anon_all_finanzas" on finanzas;
-create policy "anon_all_finanzas" on finanzas for all using (true) with check (true);
+drop policy if exists "auth_all_finanzas" on finanzas;
+create policy "auth_all_finanzas" on finanzas for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 alter table clientes enable row level security;
 drop policy if exists "anon_all_clientes" on clientes;
-create policy "anon_all_clientes" on clientes for all using (true) with check (true);
+drop policy if exists "auth_all_clientes" on clientes;
+create policy "auth_all_clientes" on clientes for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 do $$
 begin
