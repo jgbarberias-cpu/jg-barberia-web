@@ -267,14 +267,14 @@
         }
 
         await updateDoc(doc(db, 'turnos', editingTurno.id), data);
-        logTurno(data, 'Actualizado');
+        logTurno({ ...data, id: editingTurno.id }, 'Actualizado');
       } else {
         const newDocRef = await addDoc(turnosCol, { ...data, facturado: false, finanzaId: null, createdAt: serverTimestamp() });
         if (data.estado === 'completado') {
           const finanzaId = await createTurnoIncome({ ...data, id: newDocRef.id });
           await updateDoc(newDocRef, { facturado: true, finanzaId });
         }
-        logTurno(data, 'Nuevo');
+        logTurno({ ...data, id: newDocRef.id }, 'Nuevo');
       }
 
       document.getElementById('turnoModal').close();

@@ -95,8 +95,72 @@ function doPost(e) {
     upsertClienteVisita(ss, data);
   }
 
+  sincronizarCalendario(ss, data);
+
   return ContentService.createTextOutput(JSON.stringify({ ok: true }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Crea/actualiza/borra el evento en Google Calendar correspondiente a un turno.
+// Guarda la relación turnoId -> eventId en una hoja oculta "CalendarioIDs".
+function getCalEventsSheet(ss) {
+  var sheet = ss.getSheetByName('CalendarioIDs');
+  if (!sheet) {
+    sheet = ss.insertSheet('CalendarioIDs');
+    sheet.appendRow(['TurnoId', 'EventId']);
+    sheet.hideSheet();
+  }
+  return sheet;
+}
+
+function findEventRow(sheet, turnoId) {
+  var values = sheet.getDataRange().getValues();
+  for (var i = 1; i < values.length; i++) {
+    if (values[i][0] === turnoId) return i + 1;
+  }
+  return -1;
+}
+
+function sincronizarCalendario(ss, data) {
+  if (!data.id || !data.fecha || !data.hora) return;
+
+  var sheet = getCalEventsSheet(ss);
+  var fila = findEventRow(sheet, data.id);
+  var cal = CalendarApp.getDefaultCalendar();
+
+  if (data.accion === 'Eliminado') {
+    if (fila !== -1) {
+      var eventId = sheet.getRange(fila, 2).getValue();
+      try { cal.getEventById(eventId).deleteEvent(); } catch (err) { }
+      sheet.deleteRow(fila);
+    }
+    return;
+  }
+
+  var inicio = new Date(data.fecha + 'T' + data.hora + ':00');
+  var fin = new Date(inicio.getTime() + 45 * 60000);
+  var titulo = data.cliente + ' - ' + (data.servicioNombre || '');
+  var descripcion = 'Servicio: ' + (data.servicioNombre || '') +
+    '\nPrecio: $' + (data.precio || 0) +
+    '\nTeléfono: ' + (data.telefono || '') +
+    '\nEstado: ' + (data.estado || '') +
+    (data.notas ? ('\nNotas: ' + data.notas) : '');
+
+  if (fila === -1) {
+    var event = cal.createEvent(titulo, inicio, fin, { description: descripcion });
+    sheet.appendRow([data.id, event.getId()]);
+  } else {
+    var eventId2 = sheet.getRange(fila, 2).getValue();
+    try {
+      var ev = cal.getEventById(eventId2);
+      ev.setTitle(titulo);
+      ev.setTime(inicio, fin);
+      ev.setDescription(descripcion);
+    } catch (err) {
+      var nuevoEvento = cal.createEvent(titulo, inicio, fin, { description: descripcion });
+      sheet.getRange(fila, 2).setValue(nuevoEvento.getId());
+    }
+  }
 }
 
 function getClientesSheet(ss) {

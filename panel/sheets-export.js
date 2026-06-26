@@ -14,6 +14,7 @@
     send({
       tipo: 'turno',
       accion,
+      id: turno.id,
       fecha: turno.fecha,
       hora: turno.hora,
       cliente: turno.cliente,
