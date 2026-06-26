@@ -137,7 +137,9 @@ function sincronizarCalendario(ss, data) {
     return;
   }
 
-  var inicio = new Date(data.fecha + 'T' + data.hora + ':00');
+  // Se fija la hora de Argentina (UTC-3, sin horario de verano) en el string ISO,
+  // así no depende de la zona horaria configurada en el proyecto de Apps Script.
+  var inicio = new Date(data.fecha + 'T' + data.hora + ':00-03:00');
   var fin = new Date(inicio.getTime() + 45 * 60000);
   var titulo = data.cliente + ' - ' + (data.servicioNombre || '');
   var descripcion = 'Servicio: ' + (data.servicioNombre || '') +
