@@ -58,7 +58,8 @@ create table if not exists tareas (
 
 alter table tareas enable row level security;
 drop policy if exists "anon_all_tareas" on tareas;
-create policy "anon_all_tareas" on tareas for all using (true) with check (true);
+drop policy if exists "auth_all_tareas" on tareas;
+create policy "auth_all_tareas" on tareas for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 do $$
 begin
@@ -83,33 +84,58 @@ alter table servicios enable row level security;
 alter table turnos enable row level security;
 alter table finanzas enable row level security;
 
--- Acceso abierto (sin login en el panel, temporalmente).
+-- Login obligatorio: cualquier usuario logueado (empleado o dueño) tiene
+-- acceso completo a Servicios, Turnos, Finanzas y Clientes.
 drop policy if exists "auth_all_servicios" on servicios;
 drop policy if exists "anon_all_servicios" on servicios;
-create policy "anon_all_servicios" on servicios for all using (true) with check (true);
+create policy "auth_all_servicios" on servicios for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 drop policy if exists "auth_all_turnos" on turnos;
 drop policy if exists "anon_all_turnos" on turnos;
-create policy "anon_all_turnos" on turnos for all using (true) with check (true);
+create policy "auth_all_turnos" on turnos for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 drop policy if exists "auth_all_finanzas" on finanzas;
 drop policy if exists "anon_all_finanzas" on finanzas;
-create policy "anon_all_finanzas" on finanzas for all using (true) with check (true);
+create policy "auth_all_finanzas" on finanzas for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 alter table clientes enable row level security;
 drop policy if exists "auth_all_clientes" on clientes;
 drop policy if exists "anon_all_clientes" on clientes;
-create policy "anon_all_clientes" on clientes for all using (true) with check (true);
+create policy "auth_all_clientes" on clientes for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
--- Reseñas: igual que antes, cualquiera puede dejar una. Por ahora el panel
--- (sin login) también puede ver y moderar todas, no solo las aprobadas.
+-- profiles: guarda el rol ('empleado' o 'dueno') de cada usuario de Supabase Auth.
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  role text not null check (role in ('empleado', 'dueno')),
+  created_at timestamptz not null default now()
+);
+
+alter table profiles enable row level security;
+drop policy if exists "select_own_profile" on profiles;
+create policy "select_own_profile" on profiles for select using (auth.uid() = id);
+
+-- Reseñas: cualquiera puede dejar una (clientes públicos, sin login).
+-- Ver/aprobar/eliminar reseñas queda solo para el rol 'dueno'.
 alter table resenas enable row level security;
-drop policy if exists "public_insert_resenas" on resenas;
-create policy "public_insert_resenas" on resenas for insert with check (true);
+drop policy if exists "anon_all_resenas" on resenas;
 drop policy if exists "public_select_resenas" on resenas;
 drop policy if exists "auth_update_resenas" on resenas;
 drop policy if exists "auth_delete_resenas" on resenas;
-create policy "anon_all_resenas" on resenas for all using (true) with check (true);
+drop policy if exists "public_insert_resenas" on resenas;
+create policy "public_insert_resenas" on resenas for insert with check (true);
+
+drop policy if exists "dueno_select_resenas" on resenas;
+create policy "dueno_select_resenas" on resenas for select using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'dueno')
+);
+drop policy if exists "dueno_update_resenas" on resenas;
+create policy "dueno_update_resenas" on resenas for update using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'dueno')
+);
+drop policy if exists "dueno_delete_resenas" on resenas;
+create policy "dueno_delete_resenas" on resenas for delete using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'dueno')
+);
 
 do $$
 begin
