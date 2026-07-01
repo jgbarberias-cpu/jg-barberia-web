@@ -26,12 +26,12 @@
     const session = await getSession();
     if (!session) return null;
     const { data, error } = await client
-      .from('profiles')
-      .select('role')
+      .from('barberia_roles')
+      .select('rol')
       .eq('id', session.user.id)
       .single();
     if (error || !data) return null;
-    return data.role;
+    return data.rol;
   }
 
   window.Panel.Auth = { isLoggedIn, login, logout, getRole };
