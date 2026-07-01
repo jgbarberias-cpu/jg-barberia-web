@@ -716,6 +716,66 @@ input, select, textarea {
 .emp-badge--visitas { background: rgba(255,255,255,0.06); color: var(--text-muted); border: 1px solid var(--border); }
 .emp-badge--recordar { background: rgba(201,168,76,0.12); color: var(--gold-light); border: 1px solid rgba(201,168,76,0.3); }
 
+/* Tabs empleado */
+.emp-tabs { display: flex; gap: 4px; }
+.emp-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.emp-tab:hover { color: var(--text); }
+.emp-tab.is-active { color: var(--gold); border-bottom-color: var(--gold); }
+
+.emp-view { display: none; }
+.emp-view.is-active { display: flex; flex-direction: column; gap: 36px; }
+
+/* Formulario cortes */
+.emp-form__fields--3 { grid-template-columns: 2fr 2fr 1fr; }
+
+.emp-finanzas-dia { display: flex; flex-direction: column; gap: 16px; }
+
+.emp-total-dia {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.emp-total-dia strong {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  color: var(--green);
+  font-weight: 700;
+}
+
+.emp-cortes-lista { display: flex; flex-direction: column; gap: 8px; }
+
+.emp-corte-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  gap: 12px;
+}
+
+.emp-corte-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.emp-corte-desc { font-size: 0.88rem; font-weight: 500; }
+.emp-corte-cat { font-size: 0.74rem; color: var(--text-muted); }
+
+.emp-corte-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.emp-corte-monto { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; color: var(--green); }
+.emp-corte-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 2px 4px; transition: color 0.15s; }
+.emp-corte-del:hover { color: var(--red); }
+
 /* ── Resumen ── */
 .resumen-grid {
   display: grid;
@@ -834,6 +894,6 @@ input, select, textarea {
   .plan-board { grid-template-columns: repeat(4, 1fr); }
   .resumen-grid { grid-template-columns: 1fr; }
   .resumen-card--wide { grid-column: span 1; }
-  .emp-form__fields { grid-template-columns: 1fr; }
+  .emp-form__fields, .emp-form__fields--3 { grid-template-columns: 1fr; }
   .emp-buscar { width: 100%; }
 }
