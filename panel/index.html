@@ -7,7 +7,8 @@
 <title>Panel de control | JG Barbería</title>
 <link rel="icon" href="../assets/img/logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="panel.css">
 </head>
 <body>
@@ -16,7 +17,7 @@
 <div id="loginScreen" class="login-screen" hidden>
   <form id="loginForm" class="login-card">
     <img src="../assets/img/logo.jpg" alt="JG Barbería" class="login-card__logo">
-    <h1>Panel de control</h1>
+    <h1>Panel de Control</h1>
     <p class="login-card__subtitle">JG Barbería</p>
     <label>Email
       <input type="email" id="loginEmail" required autocomplete="username">
@@ -34,15 +35,12 @@
   <aside class="sidebar">
     <div class="sidebar__brand">
       <img src="../assets/img/logo.jpg" alt="JG Barbería">
-      <span>Panel de control</span>
+      <span>JG Barbería</span>
     </div>
     <nav class="tabs tabs--vertical">
       <button class="tab is-active" data-view="turnos">Turnos</button>
       <button class="tab" data-view="finanzas">Finanzas</button>
       <button class="tab" data-view="clientes">Clientes</button>
-      <button class="tab" data-view="servicios">Servicios</button>
-      <button class="tab" data-view="resenas" data-role-only="dueno">Reseñas</button>
-      <button class="tab" data-view="tareas">Tareas</button>
       <button class="tab" data-view="planificacion">Planificación</button>
     </nav>
     <div class="sidebar__footer">
@@ -128,50 +126,6 @@
       </div>
     </section>
 
-    <!-- SERVICIOS VIEW -->
-    <section id="view-servicios" class="view">
-      <div class="view__header">
-        <h2>Servicios y precios</h2>
-        <button id="newServicioBtn" class="btn btn--primary btn--small">+ Nuevo servicio</button>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table" id="serviciosTable">
-          <thead><tr><th>Servicio</th><th>Precio</th><th>Activo</th><th></th></tr></thead>
-          <tbody id="serviciosTbody"></tbody>
-        </table>
-        <p id="serviciosEmpty" class="empty-state" hidden>Todavía no agregaste servicios.</p>
-      </div>
-    </section>
-
-    <!-- RESEÑAS VIEW -->
-    <section id="view-resenas" class="view">
-      <div class="view__header">
-        <h2>Reseñas de clientes</h2>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table" id="resenasTable">
-          <thead><tr><th>Fecha</th><th>Nombre</th><th>Calificación</th><th>Comentario</th><th>Estado</th><th></th></tr></thead>
-          <tbody id="resenasTbody"></tbody>
-        </table>
-        <p id="resenasEmpty" class="empty-state" hidden>Todavía no hay reseñas.</p>
-      </div>
-    </section>
-
-    <!-- TAREAS VIEW -->
-    <section id="view-tareas" class="view">
-      <div class="view__header">
-        <h2>Tareas y recordatorios</h2>
-        <button id="newTareaBtn" class="btn btn--primary btn--small">+ Nueva tarea</button>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table" id="tareasTable">
-          <thead><tr><th></th><th>Tarea</th><th>Fecha</th><th></th></tr></thead>
-          <tbody id="tareasTbody"></tbody>
-        </table>
-        <p id="tareasEmpty" class="empty-state" hidden>No hay tareas pendientes.</p>
-      </div>
-    </section>
-
     <!-- PLANIFICACION VIEW -->
     <section id="view-planificacion" class="view">
       <div class="view__header">
@@ -183,6 +137,21 @@
         </div>
       </div>
       <div class="plan-board" id="planBoard"></div>
+    </section>
+
+    <!-- SERVICIOS (oculto, necesario para el formulario de turnos) -->
+    <section id="view-servicios" class="view" style="display:none">
+      <div class="view__header">
+        <h2>Servicios y precios</h2>
+        <button id="newServicioBtn" class="btn btn--primary btn--small">+ Nuevo servicio</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="serviciosTable">
+          <thead><tr><th>Servicio</th><th>Precio</th><th>Activo</th><th></th></tr></thead>
+          <tbody id="serviciosTbody"></tbody>
+        </table>
+        <p id="serviciosEmpty" class="empty-state" hidden>Todavía no agregaste servicios.</p>
+      </div>
     </section>
 
   </main>
@@ -282,7 +251,7 @@
   </form>
 </dialog>
 
-<!-- MODAL: SERVICIO -->
+<!-- MODAL: SERVICIO (usado internamente por el formulario de turnos) -->
 <dialog id="servicioModal" class="modal">
   <form id="servicioForm" class="modal__form">
     <h3>Nuevo servicio</h3>
@@ -339,27 +308,6 @@
   </form>
 </dialog>
 
-<!-- MODAL: TAREA -->
-<dialog id="tareaModal" class="modal">
-  <form id="tareaForm" class="modal__form">
-    <h3>Nueva tarea</h3>
-    <input type="hidden" id="tareaId">
-    <label>Tarea
-      <input type="text" id="tareaDescripcion" placeholder="Ej: Publicar reels, limpiar el local" required>
-    </label>
-    <label>Fecha (opcional)
-      <input type="date" id="tareaFecha">
-    </label>
-    <div class="modal__actions">
-      <button type="button" id="deleteTareaBtn" class="btn btn--danger" hidden>Eliminar</button>
-      <div class="modal__actions-right">
-        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
-        <button type="submit" class="btn btn--primary">Guardar</button>
-      </div>
-    </div>
-  </form>
-</dialog>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="supabase-client.js"></script>
@@ -371,8 +319,6 @@
 <script src="finanzas.js"></script>
 <script src="turnos.js"></script>
 <script src="clientes.js"></script>
-<script src="resenas.js"></script>
-<script src="tareas.js"></script>
 <script src="planificacion.js"></script>
 <script src="app.js"></script>
 </body>

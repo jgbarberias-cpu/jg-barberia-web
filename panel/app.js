@@ -10,8 +10,6 @@
     window.Panel.Turnos.initTurnos();
     window.Panel.Finanzas.initFinanzas();
     window.Panel.Clientes.initClientes();
-    window.Panel.Resenas.initResenas();
-    window.Panel.Tareas.initTareas();
     window.Panel.Planificacion.initPlanificacion();
 
     // Tabs
