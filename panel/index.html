@@ -43,6 +43,7 @@
       <button class="tab" data-view="servicios">Servicios</button>
       <button class="tab" data-view="resenas" data-role-only="dueno">Reseñas</button>
       <button class="tab" data-view="tareas">Tareas</button>
+      <button class="tab" data-view="planificacion">Planificación</button>
     </nav>
     <div class="sidebar__footer">
       <span id="sidebarRole" class="sidebar__role"></span>
@@ -169,6 +170,19 @@
         </table>
         <p id="tareasEmpty" class="empty-state" hidden>No hay tareas pendientes.</p>
       </div>
+    </section>
+
+    <!-- PLANIFICACION VIEW -->
+    <section id="view-planificacion" class="view">
+      <div class="view__header">
+        <h2>Planificación semanal</h2>
+        <div class="plan-legend">
+          <span class="plan-badge plan-badge--limpieza">Limpieza</span>
+          <span class="plan-badge plan-badge--marketing">Marketing</span>
+          <span class="plan-badge plan-badge--otra">Otra</span>
+        </div>
+      </div>
+      <div class="plan-board" id="planBoard"></div>
     </section>
 
   </main>
@@ -359,6 +373,7 @@
 <script src="clientes.js"></script>
 <script src="resenas.js"></script>
 <script src="tareas.js"></script>
+<script src="planificacion.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

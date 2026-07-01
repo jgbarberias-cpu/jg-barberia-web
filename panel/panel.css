@@ -87,6 +87,32 @@ input, select, textarea, button { font-family: inherit; }
   font-size: 0.95rem;
 }
 .tarea--hecha td { color: var(--text-muted); text-decoration: line-through; }
+
+/* Planificacion semanal */
+.plan-legend { display: flex; gap: 8px; align-items: center; }
+.plan-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 20px; }
+.plan-badge--limpieza, .plan-card--limpieza { border-left: 3px solid #4fc3f7; }
+.plan-badge--limpieza { background: rgba(79,195,247,0.15); color: #4fc3f7; }
+.plan-badge--marketing, .plan-card--marketing { border-left: 3px solid #ce93d8; }
+.plan-badge--marketing { background: rgba(206,147,216,0.15); color: #ce93d8; }
+.plan-badge--otra, .plan-card--otra { border-left: 3px solid var(--text-muted); }
+.plan-badge--otra { background: rgba(176,176,176,0.15); color: var(--text-muted); }
+
+.plan-board { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 16px; align-items: flex-start; }
+.plan-col { min-width: 165px; flex-shrink: 0; background: var(--bg-soft); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.plan-col__header { color: var(--gold); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.plan-list { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+.plan-card { background: var(--bg-card); border-radius: 6px; padding: 8px 10px; border-left: 3px solid var(--border); display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+.plan-card__text { flex: 1; }
+.plan-card__actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+.plan-card:hover .plan-card__actions { opacity: 1; }
+.plan-edit-btn, .plan-del-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; color: var(--text-muted); padding: 2px; }
+.plan-edit-btn:hover { color: var(--gold); }
+.plan-del-btn:hover { color: var(--red); }
+.plan-add-form { display: flex; flex-direction: column; gap: 5px; padding-top: 6px; border-top: 1px solid var(--border); }
+.plan-input { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 4px; font-size: 0.8rem; width: 100%; }
+.plan-cat { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 6px; border-radius: 4px; font-size: 0.75rem; width: 100%; }
+.plan-save-btn { width: 100%; margin-top: 2px; }
 .tarea--hecha td:first-child, .tarea--hecha td:last-child { text-decoration: none; }
 
 .cliente-extra { margin-top: 4px; }
