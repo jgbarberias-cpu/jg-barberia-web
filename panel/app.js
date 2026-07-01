@@ -43,9 +43,19 @@
 
   async function showDashboard() {
     document.getElementById('loginScreen').hidden = true;
+    const role = await getRole();
+
+    if (role === 'empleado') {
+      document.getElementById('empleadoDashboard').hidden = false;
+      window.Panel.Empleado.initEmpleado(async () => {
+        await logout();
+        location.reload();
+      });
+      return;
+    }
+
     document.getElementById('dashboard').hidden = false;
     initModules();
-    const role = await getRole();
     applyRole(role);
   }
 

@@ -30,7 +30,47 @@
   </form>
 </div>
 
-<!-- DASHBOARD -->
+<!-- DASHBOARD EMPLEADO -->
+<div id="empleadoDashboard" class="emp-dashboard" hidden>
+  <header class="emp-header">
+    <div class="emp-header__brand">
+      <img src="../assets/img/logo.jpg" alt="JG Barbería">
+      <span>JG Barbería</span>
+    </div>
+    <button id="empLogoutBtn" class="btn btn--ghost btn--small">Salir</button>
+  </header>
+
+  <main class="emp-main">
+    <div class="emp-registro">
+      <h2>Registrar cliente</h2>
+      <form id="empForm" class="emp-form">
+        <div class="emp-form__fields">
+          <div class="emp-form__field">
+            <label for="empNombre">Nombre</label>
+            <input type="text" id="empNombre" placeholder="Nombre del cliente" required autocomplete="off">
+          </div>
+          <div class="emp-form__field">
+            <label for="empTelefono">WhatsApp</label>
+            <input type="tel" id="empTelefono" placeholder="Ej: 3855551234" required autocomplete="off">
+          </div>
+        </div>
+        <button type="submit" class="btn btn--primary">Registrar</button>
+        <p id="empMsg" class="emp-msg" hidden></p>
+      </form>
+    </div>
+
+    <div class="emp-clientes">
+      <div class="emp-clientes__header">
+        <h2>Clientes <span id="empTotal"></span></h2>
+        <input type="text" id="empBuscar" class="emp-buscar" placeholder="Buscar por nombre o número...">
+      </div>
+      <div id="empLista" class="emp-lista"></div>
+      <p id="empEmpty" class="empty-state" hidden>Todavía no hay clientes registrados.</p>
+    </div>
+  </main>
+</div>
+
+<!-- DASHBOARD DUEÑO -->
 <div id="dashboard" class="dashboard dashboard--sidebar" hidden>
   <aside class="sidebar">
     <div class="sidebar__brand">
@@ -356,6 +396,7 @@
 <script src="clientes.js"></script>
 <script src="planificacion.js"></script>
 <script src="resumen.js"></script>
+<script src="empleado.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
