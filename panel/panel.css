@@ -485,11 +485,14 @@ input, select, textarea {
 .plan-badge--marketing { background: rgba(206,147,216,0.12); color: #ce93d8; border: 1px solid rgba(206,147,216,0.25); }
 .plan-badge--otra { background: rgba(176,176,176,0.1); color: var(--text-muted); border: 1px solid var(--border); }
 
-.plan-board { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 16px; align-items: flex-start; }
+.plan-board {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  align-items: flex-start;
+}
 
 .plan-col {
-  min-width: 168px;
-  flex-shrink: 0;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -539,6 +542,83 @@ input, select, textarea {
 .plan-cat { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 5px 6px; border-radius: 6px; font-size: 0.72rem; width: 100%; font-family: 'Poppins', sans-serif; }
 .plan-save-btn { width: 100%; margin-top: 2px; }
 
+/* ── Resumen ── */
+.resumen-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.resumen-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.resumen-card--wide { grid-column: span 2; }
+
+.resumen-card__title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+
+.resumen-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.resumen-stat__num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.resumen-stat__label { color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.resumen-stat--ingreso .resumen-stat__num { color: var(--green); }
+.resumen-stat--egreso .resumen-stat__num { color: var(--red); }
+.resumen-stat--balance .resumen-stat__num { color: var(--gold); }
+
+.resumen-stats-row { display: flex; gap: 24px; flex-wrap: wrap; }
+
+.resumen-turno {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--bg-soft);
+  border-radius: 6px;
+  border-left: 2px solid var(--gold);
+  font-size: 0.84rem;
+}
+.resumen-turno__hora { color: var(--gold); font-weight: 600; font-size: 1rem; font-family: 'Cormorant Garamond', serif; }
+.resumen-turno__info { display: flex; flex-direction: column; gap: 2px; flex: 1; margin-left: 12px; }
+.resumen-turno__cliente { font-weight: 500; }
+.resumen-turno__servicio { color: var(--text-muted); font-size: 0.76rem; }
+
+.resumen-empty { color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 12px 0; }
+
+.resumen-recordatorio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  background: var(--bg-soft);
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+.resumen-recordatorio__nombre { font-weight: 500; }
+.resumen-recordatorio__dias { color: var(--gold); font-size: 0.76rem; }
+
 /* ── Responsive ── */
 @media (max-width: 760px) {
   .summary-cards { grid-template-columns: 1fr; }
@@ -577,4 +657,7 @@ input, select, textarea {
     background: none;
   }
   .sidebar__footer { margin-top: 0; padding: 0; border-top: none; flex-direction: row; align-items: center; }
+  .plan-board { grid-template-columns: repeat(4, 1fr); }
+  .resumen-grid { grid-template-columns: 1fr; }
+  .resumen-card--wide { grid-column: span 1; }
 }

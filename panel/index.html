@@ -38,7 +38,8 @@
       <span>JG Barbería</span>
     </div>
     <nav class="tabs tabs--vertical">
-      <button class="tab is-active" data-view="turnos">Turnos</button>
+      <button class="tab is-active" data-view="resumen">Resumen</button>
+      <button class="tab" data-view="turnos">Turnos</button>
       <button class="tab" data-view="finanzas">Finanzas</button>
       <button class="tab" data-view="clientes">Clientes</button>
       <button class="tab" data-view="planificacion">Planificación</button>
@@ -51,8 +52,42 @@
 
   <main class="content">
 
+    <!-- RESUMEN VIEW -->
+    <section id="view-resumen" class="view is-active">
+      <div class="view__header">
+        <h2>Resumen</h2>
+      </div>
+      <div class="resumen-grid">
+        <div class="resumen-card resumen-card--wide" id="resumenTurnos">
+          <div class="resumen-card__title">Turnos de hoy</div>
+          <div id="resumenTurnosList"><p class="resumen-empty">Cargando...</p></div>
+        </div>
+        <div class="resumen-card">
+          <div class="resumen-card__title">Finanzas del mes</div>
+          <div class="resumen-stats-row">
+            <div class="resumen-stat resumen-stat--ingreso">
+              <span class="resumen-stat__num" id="resumenIngresos">$0</span>
+              <span class="resumen-stat__label">Ingresos</span>
+            </div>
+            <div class="resumen-stat resumen-stat--egreso">
+              <span class="resumen-stat__num" id="resumenEgresos">$0</span>
+              <span class="resumen-stat__label">Egresos</span>
+            </div>
+            <div class="resumen-stat resumen-stat--balance">
+              <span class="resumen-stat__num" id="resumenBalance">$0</span>
+              <span class="resumen-stat__label">Balance</span>
+            </div>
+          </div>
+        </div>
+        <div class="resumen-card">
+          <div class="resumen-card__title">Recordatorios pendientes</div>
+          <div id="resumenRecordatorios"><p class="resumen-empty">Cargando...</p></div>
+        </div>
+      </div>
+    </section>
+
     <!-- TURNOS VIEW -->
-    <section id="view-turnos" class="view is-active">
+    <section id="view-turnos" class="view">
       <div class="view__header">
         <div class="calendar-nav">
           <button id="prevMonth" class="icon-btn" aria-label="Mes anterior">‹</button>
@@ -320,6 +355,7 @@
 <script src="turnos.js"></script>
 <script src="clientes.js"></script>
 <script src="planificacion.js"></script>
+<script src="resumen.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

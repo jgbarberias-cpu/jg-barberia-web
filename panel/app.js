@@ -11,6 +11,7 @@
     window.Panel.Finanzas.initFinanzas();
     window.Panel.Clientes.initClientes();
     window.Panel.Planificacion.initPlanificacion();
+    window.Panel.Resumen.initResumen();
 
     // Tabs
     document.querySelectorAll('.tab').forEach(tab => {
