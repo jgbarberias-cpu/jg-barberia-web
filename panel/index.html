@@ -119,6 +119,20 @@
 
     <!-- VISTA FINANZAS DEL DÍA -->
     <div id="empViewFinanzas" class="emp-view">
+
+      <!-- Resumen mensual por barbero -->
+      <div class="emp-mes-resumen">
+        <div class="emp-mes-resumen__header">
+          <h2>Resumen del mes</h2>
+          <span id="finMesPeriodo" class="emp-mes-periodo"></span>
+        </div>
+        <div class="emp-mes-grid" id="finMesGrid"></div>
+        <div class="emp-contadores-total">
+          <div class="emp-contadores-total__label">Total del mes</div>
+          <div class="emp-contadores-total__val" id="finMesTotal">0 cortes — $0</div>
+        </div>
+      </div>
+
       <div class="emp-registro">
         <h2>Registrar corte</h2>
         <form id="empCorteForm" class="emp-form">
@@ -478,6 +492,9 @@
     <label>Cliente
       <input type="text" id="counterCliente" placeholder="Nombre del cliente" autocomplete="off" list="counterClientesList" required>
       <datalist id="counterClientesList"></datalist>
+    </label>
+    <label>WhatsApp
+      <input type="tel" id="counterWpp" placeholder="Ej: 3855551234" autocomplete="off">
     </label>
     <p id="counterNuevoMsg" class="form-warning" hidden></p>
     <div class="modal__actions">

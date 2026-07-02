@@ -716,6 +716,33 @@ input, select, textarea {
 .emp-badge--visitas { background: rgba(255,255,255,0.06); color: var(--text-muted); border: 1px solid var(--border); }
 .emp-badge--recordar { background: rgba(201,168,76,0.12); color: var(--gold-light); border: 1px solid rgba(201,168,76,0.3); }
 
+.emp-card__wa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.67rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: rgba(37,211,102,0.1);
+  color: #25d366;
+  border: 1px solid rgba(37,211,102,0.25);
+  letter-spacing: 0.3px;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.emp-card__wa:hover { background: rgba(37,211,102,0.22); }
+.emp-card__wa--urgente {
+  background: rgba(37,211,102,0.18);
+  border-color: rgba(37,211,102,0.5);
+  animation: pulse-wa 2s infinite;
+}
+@keyframes pulse-wa {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.4); }
+  50%       { box-shadow: 0 0 0 5px rgba(37,211,102,0); }
+}
+
 /* Tabs empleado */
 .emp-tabs { display: flex; gap: 4px; }
 .emp-tab {
@@ -874,6 +901,71 @@ input, select, textarea {
   color: var(--gold);
 }
 
+/* ── Resumen mensual finanzas empleado ── */
+.emp-mes-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.emp-mes-resumen__header {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.emp-mes-resumen__header h2 {
+  font-size: 1.7rem;
+  margin-bottom: 0;
+}
+
+.emp-mes-periodo {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
+.emp-mes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.emp-mes-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.emp-mes-card__nombre {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  color: var(--gold);
+  letter-spacing: 2px;
+}
+
+.emp-mes-card__cortes {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.emp-mes-card__dinero {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--green);
+}
+
 /* ── Resumen ── */
 .resumen-grid {
   display: grid;
@@ -995,4 +1087,5 @@ input, select, textarea {
   .emp-form__fields, .emp-form__fields--3 { grid-template-columns: 1fr; }
   .emp-buscar { width: 100%; }
   .emp-contadores-grid { grid-template-columns: 1fr; }
+  .emp-mes-grid { grid-template-columns: 1fr; }
 }

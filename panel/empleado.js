@@ -1,5 +1,5 @@
 (function () {
-  const { db, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } = window.Panel.Storage;
+  const { db, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } = window.Panel.Storage;
 
   const clientesCol  = collection(db, 'clientes');
   const turnosCol    = collection(db, 'turnos');
@@ -93,6 +93,8 @@
       const s = statsCliente(c);
       const dias = diasDesde(s.ultima);
       const recordatorio = dias !== null && dias >= RECORDATORIO_DIAS;
+      const telNorm = normTel(c.telefono);
+      const waHref = telNorm ? `https://wa.me/549${telNorm}` : null;
       const card = document.createElement('div');
       card.className = 'emp-card' + (recordatorio ? ' emp-card--alerta' : '');
       card.innerHTML = `
@@ -107,6 +109,7 @@
         <div class="emp-card__badges">
           ${s.cantidad > 0 ? `<span class="emp-badge emp-badge--visitas">${s.cantidad} corte${s.cantidad !== 1 ? 's' : ''}</span>` : ''}
           ${recordatorio ? `<span class="emp-badge emp-badge--recordar">Recordar (${dias}d)</span>` : ''}
+          ${waHref ? `<a href="${waHref}" target="_blank" rel="noopener" class="emp-card__wa${recordatorio ? ' emp-card__wa--urgente' : ''}">WhatsApp</a>` : ''}
         </div>
       `;
       lista.appendChild(card);
@@ -177,6 +180,7 @@
     const form      = document.getElementById('counterForm');
     const barbInput = document.getElementById('counterBarbero');
     const cliInput  = document.getElementById('counterCliente');
+    const wppInput  = document.getElementById('counterWpp');
     const titleEl   = document.getElementById('counterModalTitle');
     const nuevoMsg  = document.getElementById('counterNuevoMsg');
 
@@ -187,11 +191,12 @@
 
     document.querySelectorAll('.emp-counter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const barbero  = btn.dataset.barbero;
-        const display  = btn.closest('.emp-counter-card').querySelector('.emp-counter-name').textContent;
+        const barbero = btn.dataset.barbero;
+        const display = btn.closest('.emp-counter-card').querySelector('.emp-counter-name').textContent;
         barbInput.value = barbero;
         titleEl.textContent = `Corte — ${display}`;
         cliInput.value = '';
+        wppInput.value = '';
         nuevoMsg.hidden = true;
         refreshDatalist();
         modal.showModal();
@@ -201,31 +206,44 @@
 
     cliInput.addEventListener('input', () => {
       const nombre = cliInput.value.trim();
-      if (!nombre) { nuevoMsg.hidden = true; return; }
+      if (!nombre) { nuevoMsg.hidden = true; wppInput.value = ''; return; }
       const existe = cacheClientes.find(c => c.nombre.toLowerCase() === nombre.toLowerCase());
-      nuevoMsg.textContent = existe ? '' : `"${nombre}" no está registrado — se creará como cliente nuevo`;
-      nuevoMsg.hidden = !!existe;
+      if (existe) {
+        wppInput.value = existe.telefono || '';
+        nuevoMsg.hidden = true;
+      } else {
+        wppInput.value = '';
+        nuevoMsg.textContent = `"${nombre}" no está en la base — se creará como cliente nuevo`;
+        nuevoMsg.hidden = false;
+      }
     });
 
     form.addEventListener('submit', async e => {
       e.preventDefault();
-      const barbero      = barbInput.value;
+      const barbero       = barbInput.value;
       const clienteNombre = cliInput.value.trim();
+      const wpp           = wppInput.value.trim();
       if (!clienteNombre) return;
 
       const submitBtn = form.querySelector('[type="submit"]');
       submitBtn.disabled = true;
 
       try {
-        const servicio     = cacheServicios[0];
-        const precio       = servicio ? servicio.precio : 9000;
+        const servicio       = cacheServicios[0];
+        const precio         = servicio ? servicio.precio : 9000;
         const servicioNombre = servicio ? servicio.nombre : 'Corte';
-        const servicioId   = servicio ? servicio.id : null;
+        const servicioId     = servicio ? servicio.id : null;
 
         const clienteReg = cacheClientes.find(c => c.nombre.toLowerCase() === clienteNombre.toLowerCase());
-        const telefono   = clienteReg ? clienteReg.telefono : '';
+        let telefono = wpp;
+
         if (!clienteReg) {
-          await addDoc(clientesCol, { nombre: clienteNombre, telefono: '', notas: '' });
+          await addDoc(clientesCol, { nombre: clienteNombre, telefono: wpp, notas: '' });
+        } else {
+          telefono = clienteReg.telefono || wpp;
+          if (!clienteReg.telefono && wpp) {
+            await updateDoc(doc(db, 'clientes', clienteReg.id), { telefono: wpp });
+          }
         }
 
         const finanzaRef = await addDoc(finanzasCol, {
@@ -250,6 +268,37 @@
 
     modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
     modal.querySelectorAll('[data-close-modal]').forEach(b => b.addEventListener('click', () => modal.close()));
+  }
+
+  // ── Resumen mensual en Finanzas ────────────────────────────────
+  function renderResumenMes() {
+    const ahora  = new Date();
+    const mesISO = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+    const mesNombre = ahora.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
+    const periodoEl = document.getElementById('finMesPeriodo');
+    if (periodoEl) periodoEl.textContent = mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1);
+
+    const grid = document.getElementById('finMesGrid');
+    if (!grid) return;
+
+    let totalCortes = 0, totalDinero = 0;
+    grid.innerHTML = BARBEROS.map(b => {
+      const cortes = cacheTurnos.filter(t =>
+        t.fecha && t.fecha.startsWith(mesISO) && t.barbero === b.nombre && t.estado === 'completado'
+      );
+      const dinero = cortes.reduce((s, t) => s + Number(t.precio || 0), 0);
+      totalCortes += cortes.length;
+      totalDinero += dinero;
+      return `
+        <div class="emp-mes-card">
+          <div class="emp-mes-card__nombre">${b.display}</div>
+          <div class="emp-mes-card__cortes">${cortes.length} corte${cortes.length !== 1 ? 's' : ''}</div>
+          <div class="emp-mes-card__dinero">${fmt(dinero)}</div>
+        </div>`;
+    }).join('');
+
+    const totalEl = document.getElementById('finMesTotal');
+    if (totalEl) totalEl.textContent = `${totalCortes} corte${totalCortes !== 1 ? 's' : ''} — ${fmt(totalDinero)}`;
   }
 
   // ── Vista Finanzas del día ─────────────────────────────────────
@@ -382,6 +431,7 @@
       renderLista();
       renderCortes();
       renderContadores();
+      renderResumenMes();
     });
 
     onSnapshot(query(finanzasCol, orderBy('fecha', 'desc')), snap => {
