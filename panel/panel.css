@@ -876,6 +876,17 @@ input, select, textarea {
   color: var(--green);
 }
 
+.emp-counter-comision {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gold);
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 20px;
+  padding: 4px 12px;
+  letter-spacing: 0.3px;
+}
+
 .emp-contadores-total {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -964,6 +975,17 @@ input, select, textarea {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--green);
+}
+
+.emp-mes-card__comision {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gold);
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 20px;
+  padding: 3px 10px;
+  margin-top: 2px;
 }
 
 /* ── Resumen ── */

@@ -15,9 +15,9 @@
   const RECORDATORIO_DIAS = 14;
 
   const BARBEROS = [
-    { id: 'Santiago', nombre: 'Santiago Barone',  display: 'SANTIAGO' },
-    { id: 'Sebastian', nombre: 'Sebastian Peralta', display: 'SEBASTIAN' },
-    { id: 'Juan',     nombre: 'Juan Griguoli',    display: 'JUAN' },
+    { id: 'Santiago', nombre: 'Santiago Barone',  display: 'SANTIAGO', short: 'Santy', comision: 5000 },
+    { id: 'Sebastian', nombre: 'Sebastian Peralta', display: 'SEBASTIAN', short: 'Seba', comision: 5000 },
+    { id: 'Juan',     nombre: 'Juan Griguoli',    display: 'JUAN',      short: 'Juan',  comision: null },
   ];
 
   function normTel(t) { return (t || '').replace(/\D/g, ''); }
@@ -168,8 +168,18 @@
       totalDinero += dinero;
       const numEl = document.getElementById(`cnt${b.id}`);
       const mntEl = document.getElementById(`mnt${b.id}`);
+      const comEl = document.getElementById(`com${b.id}`);
       if (numEl) numEl.textContent = cortes.length;
       if (mntEl) mntEl.textContent = fmt(dinero);
+      if (comEl) {
+        if (b.comision !== null) {
+          const para = cortes.length * b.comision;
+          comEl.textContent = `${fmt(para)} para ${b.short}`;
+          comEl.hidden = false;
+        } else {
+          comEl.hidden = true;
+        }
+      }
     });
     const totalEl = document.getElementById('cntTotal');
     if (totalEl) totalEl.textContent = `${totalCortes} corte${totalCortes !== 1 ? 's' : ''} — ${fmt(totalDinero)}`;
@@ -289,11 +299,15 @@
       const dinero = cortes.reduce((s, t) => s + Number(t.precio || 0), 0);
       totalCortes += cortes.length;
       totalDinero += dinero;
+      const comisionLine = b.comision !== null
+        ? `<div class="emp-mes-card__comision">${fmt(cortes.length * b.comision)} para ${b.short}</div>`
+        : '';
       return `
         <div class="emp-mes-card">
           <div class="emp-mes-card__nombre">${b.display}</div>
           <div class="emp-mes-card__cortes">${cortes.length} corte${cortes.length !== 1 ? 's' : ''}</div>
           <div class="emp-mes-card__dinero">${fmt(dinero)}</div>
+          ${comisionLine}
         </div>`;
     }).join('');
 
