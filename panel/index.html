@@ -82,38 +82,7 @@
       <div class="emp-registro">
         <h2>Contadores del día</h2>
       </div>
-      <div class="emp-contadores-grid">
-        <div class="emp-counter-card">
-          <div class="emp-counter-name">SANTIAGO</div>
-          <button class="emp-counter-btn" data-barbero="Santiago Barone">+</button>
-          <div class="emp-counter-stats">
-            <span class="emp-counter-num" id="cntSantiago">0</span>
-            <span class="emp-counter-label">cortes hoy</span>
-          </div>
-          <div class="emp-counter-money" id="mntSantiago">$0</div>
-          <div class="emp-counter-comision" id="comSantiago" hidden></div>
-        </div>
-        <div class="emp-counter-card">
-          <div class="emp-counter-name">SEBASTIAN</div>
-          <button class="emp-counter-btn" data-barbero="Sebastian Peralta">+</button>
-          <div class="emp-counter-stats">
-            <span class="emp-counter-num" id="cntSebastian">0</span>
-            <span class="emp-counter-label">cortes hoy</span>
-          </div>
-          <div class="emp-counter-money" id="mntSebastian">$0</div>
-          <div class="emp-counter-comision" id="comSebastian" hidden></div>
-        </div>
-        <div class="emp-counter-card">
-          <div class="emp-counter-name">JUAN</div>
-          <button class="emp-counter-btn" data-barbero="Juan Griguoli">+</button>
-          <div class="emp-counter-stats">
-            <span class="emp-counter-num" id="cntJuan">0</span>
-            <span class="emp-counter-label">cortes hoy</span>
-          </div>
-          <div class="emp-counter-money" id="mntJuan">$0</div>
-          <div class="emp-counter-comision" id="comJuan" hidden></div>
-        </div>
-      </div>
+      <div id="empContadoresGrid" class="emp-contadores-grid"></div>
       <div class="emp-contadores-total">
         <div class="emp-contadores-total__label">Total del día</div>
         <div class="emp-contadores-total__val" id="cntTotal">0 cortes — $0</div>
@@ -187,6 +156,7 @@
       <button class="tab" data-view="finanzas">Finanzas</button>
       <button class="tab" data-view="clientes">Clientes</button>
       <button class="tab" data-view="planificacion">Planificación</button>
+      <button class="tab" data-view="barberos">Barberos</button>
     </nav>
     <div class="sidebar__footer">
       <span id="sidebarRole" class="sidebar__role"></span>
@@ -316,6 +286,21 @@
         </div>
       </div>
       <div class="plan-board" id="planBoard"></div>
+    </section>
+
+    <!-- BARBEROS VIEW -->
+    <section id="view-barberos" class="view">
+      <div class="view__header">
+        <h2>Barberos</h2>
+        <button id="newBarberoBtn" class="btn btn--primary btn--small">+ Nuevo barbero</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="barberosTable">
+          <thead><tr><th>Nombre completo</th><th>Apodo</th><th>Comisión</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="barberosTbody"></tbody>
+        </table>
+        <p id="barberosEmpty" class="empty-state" hidden>No hay barberos registrados.</p>
+      </div>
     </section>
 
     <!-- SERVICIOS (oculto, necesario para el formulario de turnos) -->
@@ -487,6 +472,36 @@
   </form>
 </dialog>
 
+<!-- MODAL: BARBERO -->
+<dialog id="barberoModal" class="modal">
+  <form id="barberoForm" class="modal__form">
+    <h3 id="barberoModalTitle">Nuevo barbero</h3>
+    <input type="hidden" id="barberoId">
+    <label>Nombre completo
+      <input type="text" id="barberoNombre" required placeholder="Ej: Santiago Barone">
+    </label>
+    <label>Apodo (se muestra en contadores)
+      <input type="text" id="barberoApodo" required placeholder="Ej: Santy">
+    </label>
+    <label class="checkbox-label">
+      <input type="checkbox" id="barberoDuenio"> Dueño — cobra el total del corte
+    </label>
+    <label id="barberoComisionLabel">Comisión por corte ($)
+      <input type="number" id="barberoComision" min="0" step="1" placeholder="Ej: 5000">
+    </label>
+    <label class="checkbox-label">
+      <input type="checkbox" id="barberoActivo" checked> Activo
+    </label>
+    <div class="modal__actions">
+      <button type="button" id="deleteBarberoBtn" class="btn btn--danger" hidden>Eliminar</button>
+      <div class="modal__actions-right">
+        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn--primary">Guardar</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
 <!-- MODAL: CONTADOR DE CORTE -->
 <dialog id="counterModal" class="modal">
   <form id="counterForm" class="modal__form">
@@ -523,6 +538,7 @@
 <script src="clientes.js"></script>
 <script src="planificacion.js"></script>
 <script src="resumen.js"></script>
+<script src="barberos.js"></script>
 <script src="empleado.js"></script>
 <script src="app.js"></script>
 </body>

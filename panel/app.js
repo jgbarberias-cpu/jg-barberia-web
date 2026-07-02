@@ -12,6 +12,7 @@
     window.Panel.Clientes.initClientes();
     window.Panel.Planificacion.initPlanificacion();
     window.Panel.Resumen.initResumen();
+    window.Panel.Barberos.initBarberos();
 
     // Tabs
     document.querySelectorAll('.tab').forEach(tab => {

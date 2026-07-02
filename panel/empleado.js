@@ -5,42 +5,33 @@
   const turnosCol    = collection(db, 'turnos');
   const finanzasCol  = collection(db, 'finanzas');
   const serviciosCol = collection(db, 'servicios');
+  const barberosCol  = collection(db, 'barberos');
 
   let cacheClientes  = [];
   let cacheTurnos    = [];
   let cacheFinanzas  = [];
   let cacheServicios = [];
+  let cacheBarberos  = [];
   let busqueda = '';
 
   const RECORDATORIO_DIAS = 14;
 
-  const BARBEROS = [
-    { id: 'Santiago', nombre: 'Santiago Barone',  display: 'SANTIAGO', short: 'Santy', comision: 5000 },
-    { id: 'Sebastian', nombre: 'Sebastian Peralta', display: 'SEBASTIAN', short: 'Seba', comision: 5000 },
-    { id: 'Juan',     nombre: 'Juan Griguoli',    display: 'JUAN',      short: 'Juan',  comision: null },
-  ];
-
   function normTel(t) { return (t || '').replace(/\D/g, ''); }
-
   function todayISO() { return new Date().toISOString().slice(0, 10); }
-
   function horaActual() {
     const now = new Date();
     return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   }
-
   function diasDesde(fecha) {
     if (!fecha) return null;
     const [y, m, d] = fecha.split('-').map(Number);
     return Math.floor((new Date() - new Date(y, m - 1, d)) / 86400000);
   }
-
   function fmtFecha(f) {
     if (!f) return '-';
     const [y, m, d] = f.split('-');
     return `${d}/${m}/${y}`;
   }
-
   function fmt(n) { return '$' + Number(n || 0).toLocaleString('es-AR'); }
 
   // ── Tabs empleado ──────────────────────────────────────────────
@@ -72,9 +63,9 @@
   }
 
   function renderLista() {
-    const lista  = document.getElementById('empLista');
-    const empty  = document.getElementById('empEmpty');
-    const total  = document.getElementById('empTotal');
+    const lista = document.getElementById('empLista');
+    const empty = document.getElementById('empEmpty');
+    const total = document.getElementById('empTotal');
     if (!lista) return;
 
     const filtrado = cacheClientes
@@ -94,7 +85,7 @@
       const dias = diasDesde(s.ultima);
       const recordatorio = dias !== null && dias >= RECORDATORIO_DIAS;
       const telNorm = normTel(c.telefono);
-      const waHref = telNorm ? `https://wa.me/549${telNorm}` : null;
+      const waHref  = telNorm ? `https://wa.me/549${telNorm}` : null;
       const card = document.createElement('div');
       card.className = 'emp-card' + (recordatorio ? ' emp-card--alerta' : '');
       card.innerHTML = `
@@ -115,13 +106,8 @@
       lista.appendChild(card);
     });
 
-    // Actualizar datalist para autocomplete en cortes
     const dl = document.getElementById('empClientesList');
-    if (dl) {
-      dl.innerHTML = cacheClientes
-        .map(c => `<option value="${c.nombre}">`)
-        .join('');
-    }
+    if (dl) dl.innerHTML = cacheClientes.map(c => `<option value="${c.nombre}">`).join('');
   }
 
   function initFormClientes() {
@@ -155,36 +141,79 @@
     });
   }
 
-  // ── Contadores por barbero ─────────────────────────────────────
+  // ── Contadores por barbero (dinámico desde DB) ─────────────────
   function renderContadores() {
-    const hoy = todayISO();
+    const hoy  = todayISO();
+    const grid = document.getElementById('empContadoresGrid');
+    if (!grid) return;
+
     let totalCortes = 0, totalDinero = 0;
-    BARBEROS.forEach(b => {
+    const activos = cacheBarberos.filter(b => b.activo !== false);
+
+    grid.innerHTML = activos.map(b => {
       const cortes = cacheTurnos.filter(t =>
         t.fecha === hoy && t.barbero === b.nombre && t.estado === 'completado'
       );
       const dinero = cortes.reduce((s, t) => s + Number(t.precio || 0), 0);
       totalCortes += cortes.length;
       totalDinero += dinero;
-      const numEl = document.getElementById(`cnt${b.id}`);
-      const mntEl = document.getElementById(`mnt${b.id}`);
-      const comEl = document.getElementById(`com${b.id}`);
-      if (numEl) numEl.textContent = cortes.length;
-      if (mntEl) mntEl.textContent = fmt(dinero);
-      if (comEl) {
-        if (b.comision !== null) {
-          const para = cortes.length * b.comision;
-          comEl.textContent = `${fmt(para)} para ${b.short}`;
-          comEl.hidden = false;
-        } else {
-          comEl.hidden = true;
-        }
-      }
-    });
+      const para = b.comision != null ? cortes.length * b.comision : null;
+      const display = (b.apodo || b.nombre).toUpperCase();
+      return `
+        <div class="emp-counter-card">
+          <div class="emp-counter-name">${display}</div>
+          <button class="emp-counter-btn" data-barbero="${b.nombre}" data-display="${display}">+</button>
+          <div class="emp-counter-stats">
+            <span class="emp-counter-num">${cortes.length}</span>
+            <span class="emp-counter-label">cortes hoy</span>
+          </div>
+          <div class="emp-counter-money">${fmt(dinero)}</div>
+          ${para !== null ? `<div class="emp-counter-comision">${fmt(para)} para ${b.apodo || b.nombre}</div>` : ''}
+        </div>`;
+    }).join('');
+
     const totalEl = document.getElementById('cntTotal');
     if (totalEl) totalEl.textContent = `${totalCortes} corte${totalCortes !== 1 ? 's' : ''} — ${fmt(totalDinero)}`;
   }
 
+  // ── Resumen mensual en Finanzas ────────────────────────────────
+  function renderResumenMes() {
+    const ahora     = new Date();
+    const mesISO    = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+    const mesNombre = ahora.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
+    const periodoEl = document.getElementById('finMesPeriodo');
+    if (periodoEl) periodoEl.textContent = mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1);
+
+    const grid = document.getElementById('finMesGrid');
+    if (!grid) return;
+
+    let totalCortes = 0, totalDinero = 0;
+    const activos = cacheBarberos.filter(b => b.activo !== false);
+
+    grid.innerHTML = activos.map(b => {
+      const cortes = cacheTurnos.filter(t =>
+        t.fecha && t.fecha.startsWith(mesISO) && t.barbero === b.nombre && t.estado === 'completado'
+      );
+      const dinero = cortes.reduce((s, t) => s + Number(t.precio || 0), 0);
+      totalCortes += cortes.length;
+      totalDinero += dinero;
+      const comisionLine = b.comision != null
+        ? `<div class="emp-mes-card__comision">${fmt(cortes.length * b.comision)} para ${b.apodo || b.nombre}</div>`
+        : '';
+      return `
+        <div class="emp-mes-card">
+          <div class="emp-mes-card__nombre">${(b.apodo || b.nombre).toUpperCase()}</div>
+          <div class="emp-mes-card__cortes">${cortes.length} corte${cortes.length !== 1 ? 's' : ''}</div>
+          <div class="emp-mes-card__dinero">${fmt(dinero)}</div>
+          ${comisionLine}
+        </div>`;
+    }).join('');
+
+    const totalEl = document.getElementById('finMesTotal');
+    if (totalEl) totalEl.textContent = `${totalCortes} corte${totalCortes !== 1 ? 's' : ''} — ${fmt(totalDinero)}`;
+  }
+
+  // ── Inicializar modal de contador ──────────────────────────────
   function initContadores() {
     const modal     = document.getElementById('counterModal');
     const form      = document.getElementById('counterForm');
@@ -199,19 +228,18 @@
       if (dl) dl.innerHTML = cacheClientes.map(c => `<option value="${c.nombre}">`).join('');
     }
 
-    document.querySelectorAll('.emp-counter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const barbero = btn.dataset.barbero;
-        const display = btn.closest('.emp-counter-card').querySelector('.emp-counter-name').textContent;
-        barbInput.value = barbero;
-        titleEl.textContent = `Corte — ${display}`;
-        cliInput.value = '';
-        wppInput.value = '';
-        nuevoMsg.hidden = true;
-        refreshDatalist();
-        modal.showModal();
-        setTimeout(() => cliInput.focus(), 80);
-      });
+    // Event delegation: el grid se regenera en cada render
+    document.getElementById('empContadoresGrid').addEventListener('click', e => {
+      const btn = e.target.closest('.emp-counter-btn');
+      if (!btn) return;
+      barbInput.value = btn.dataset.barbero;
+      titleEl.textContent = `Corte — ${btn.dataset.display}`;
+      cliInput.value = '';
+      wppInput.value = '';
+      nuevoMsg.hidden = true;
+      refreshDatalist();
+      modal.showModal();
+      setTimeout(() => cliInput.focus(), 80);
     });
 
     cliInput.addEventListener('input', () => {
@@ -280,54 +308,19 @@
     modal.querySelectorAll('[data-close-modal]').forEach(b => b.addEventListener('click', () => modal.close()));
   }
 
-  // ── Resumen mensual en Finanzas ────────────────────────────────
-  function renderResumenMes() {
-    const ahora  = new Date();
-    const mesISO = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
-    const mesNombre = ahora.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
-    const periodoEl = document.getElementById('finMesPeriodo');
-    if (periodoEl) periodoEl.textContent = mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1);
-
-    const grid = document.getElementById('finMesGrid');
-    if (!grid) return;
-
-    let totalCortes = 0, totalDinero = 0;
-    grid.innerHTML = BARBEROS.map(b => {
-      const cortes = cacheTurnos.filter(t =>
-        t.fecha && t.fecha.startsWith(mesISO) && t.barbero === b.nombre && t.estado === 'completado'
-      );
-      const dinero = cortes.reduce((s, t) => s + Number(t.precio || 0), 0);
-      totalCortes += cortes.length;
-      totalDinero += dinero;
-      const comisionLine = b.comision !== null
-        ? `<div class="emp-mes-card__comision">${fmt(cortes.length * b.comision)} para ${b.short}</div>`
-        : '';
-      return `
-        <div class="emp-mes-card">
-          <div class="emp-mes-card__nombre">${b.display}</div>
-          <div class="emp-mes-card__cortes">${cortes.length} corte${cortes.length !== 1 ? 's' : ''}</div>
-          <div class="emp-mes-card__dinero">${fmt(dinero)}</div>
-          ${comisionLine}
-        </div>`;
-    }).join('');
-
-    const totalEl = document.getElementById('finMesTotal');
-    if (totalEl) totalEl.textContent = `${totalCortes} corte${totalCortes !== 1 ? 's' : ''} — ${fmt(totalDinero)}`;
-  }
-
   // ── Vista Finanzas del día ─────────────────────────────────────
   function populateServicios() {
     const sel = document.getElementById('empCorteServicio');
     if (!sel) return;
     const activos = cacheServicios.filter(s => s.activo !== false);
-    sel.innerHTML = activos.map(s => `<option value="${s.id}" data-precio="${s.precio}" data-nombre="${s.nombre}">${s.nombre} (${fmt(s.precio)})</option>`).join('');
-    if (activos.length > 0) {
-      document.getElementById('empCortePrecio').value = activos[0].precio;
-    }
+    sel.innerHTML = activos.map(s =>
+      `<option value="${s.id}" data-precio="${s.precio}" data-nombre="${s.nombre}">${s.nombre} (${fmt(s.precio)})</option>`
+    ).join('');
+    if (activos.length > 0) document.getElementById('empCortePrecio').value = activos[0].precio;
   }
 
   function renderCortes() {
-    const hoy   = todayISO();
+    const hoy    = todayISO();
     const lista  = document.getElementById('empCortesLista');
     const empty  = document.getElementById('empCortesEmpty');
     const totalEl = document.getElementById('empTotalDia');
@@ -337,8 +330,7 @@
       .filter(f => f.fecha === hoy && f.tipo === 'ingreso')
       .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
 
-    const total = cortesHoy.reduce((s, f) => s + Number(f.monto), 0);
-    totalEl.textContent = fmt(total);
+    totalEl.textContent = fmt(cortesHoy.reduce((s, f) => s + Number(f.monto), 0));
     empty.hidden = cortesHoy.length > 0;
     lista.innerHTML = '';
 
@@ -360,9 +352,7 @@
 
     lista.querySelectorAll('.emp-corte-del').forEach(btn => {
       btn.addEventListener('click', async () => {
-        if (confirm('¿Eliminar este corte?')) {
-          await deleteDoc(doc(db, 'finanzas', btn.dataset.id));
-        }
+        if (confirm('¿Eliminar este corte?')) await deleteDoc(doc(db, 'finanzas', btn.dataset.id));
       });
     });
   }
@@ -378,44 +368,28 @@
 
     document.getElementById('empCorteForm').addEventListener('submit', async e => {
       e.preventDefault();
-      const cliente      = document.getElementById('empCorteCliente').value.trim();
-      const opt          = sel.selectedOptions[0];
+      const cliente        = document.getElementById('empCorteCliente').value.trim();
+      const opt            = sel.selectedOptions[0];
       const servicioNombre = opt ? opt.dataset.nombre : '';
-      const servicioId   = opt ? opt.value : null;
-      const monto        = Number(precio.value);
-      const msg          = document.getElementById('empCorteMsg');
-
+      const servicioId     = opt ? opt.value : null;
+      const monto          = Number(precio.value);
+      const msg            = document.getElementById('empCorteMsg');
       if (!cliente || !monto) return;
 
-      // Buscar telefono del cliente si existe en la base
       const clienteReg = cacheClientes.find(c => c.nombre.toLowerCase() === cliente.toLowerCase());
       const telefono   = clienteReg ? clienteReg.telefono : '';
 
-      // Crear finanza (ingreso)
       const finanzaRef = await addDoc(finanzasCol, {
-        tipo: 'ingreso',
-        fecha: todayISO(),
-        monto,
+        tipo: 'ingreso', fecha: todayISO(), monto,
         descripcion: `${cliente} — ${servicioNombre}`,
-        categoria: 'Servicios',
-        origen: 'turno',
-        turnoId: null,
+        categoria: 'Servicios', origen: 'turno', turnoId: null,
         createdAt: serverTimestamp()
       });
 
-      // Crear turno completado vinculado
       await addDoc(turnosCol, {
-        cliente,
-        telefono,
-        fecha: todayISO(),
-        hora: horaActual(),
-        servicioId,
-        servicioNombre,
-        precio: monto,
-        estado: 'completado',
-        notas: '',
-        facturado: true,
-        finanzaId: finanzaRef.id,
+        cliente, telefono, fecha: todayISO(), hora: horaActual(),
+        servicioId, servicioNombre, precio: monto, estado: 'completado',
+        notas: '', facturado: true, finanzaId: finanzaRef.id,
         createdAt: serverTimestamp()
       });
 
@@ -428,7 +402,7 @@
     });
   }
 
-  // ── Init principal ────────────────────────────────────────────
+  // ── Init principal ─────────────────────────────────────────────
   function initEmpleado(onLogout) {
     initTabs();
     initFormClientes();
@@ -456,6 +430,12 @@
     onSnapshot(query(serviciosCol, orderBy('nombre')), snap => {
       cacheServicios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       populateServicios();
+    });
+
+    onSnapshot(query(barberosCol, orderBy('nombre')), snap => {
+      cacheBarberos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderContadores();
+      renderResumenMes();
     });
 
     document.getElementById('empLogoutBtn').addEventListener('click', onLogout);
