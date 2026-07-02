@@ -14,6 +14,12 @@
 
   const RECORDATORIO_DIAS = 14;
 
+  const BARBEROS = [
+    { id: 'Santiago', nombre: 'Santiago Barone',  display: 'SANTIAGO' },
+    { id: 'Sebastian', nombre: 'Sebastian Peralta', display: 'SEBASTIAN' },
+    { id: 'Juan',     nombre: 'Juan Griguoli',    display: 'JUAN' },
+  ];
+
   function normTel(t) { return (t || '').replace(/\D/g, ''); }
 
   function todayISO() { return new Date().toISOString().slice(0, 10); }
@@ -146,6 +152,106 @@
     });
   }
 
+  // ── Contadores por barbero ─────────────────────────────────────
+  function renderContadores() {
+    const hoy = todayISO();
+    let totalCortes = 0, totalDinero = 0;
+    BARBEROS.forEach(b => {
+      const cortes = cacheTurnos.filter(t =>
+        t.fecha === hoy && t.barbero === b.nombre && t.estado === 'completado'
+      );
+      const dinero = cortes.reduce((s, t) => s + Number(t.precio || 0), 0);
+      totalCortes += cortes.length;
+      totalDinero += dinero;
+      const numEl = document.getElementById(`cnt${b.id}`);
+      const mntEl = document.getElementById(`mnt${b.id}`);
+      if (numEl) numEl.textContent = cortes.length;
+      if (mntEl) mntEl.textContent = fmt(dinero);
+    });
+    const totalEl = document.getElementById('cntTotal');
+    if (totalEl) totalEl.textContent = `${totalCortes} corte${totalCortes !== 1 ? 's' : ''} — ${fmt(totalDinero)}`;
+  }
+
+  function initContadores() {
+    const modal     = document.getElementById('counterModal');
+    const form      = document.getElementById('counterForm');
+    const barbInput = document.getElementById('counterBarbero');
+    const cliInput  = document.getElementById('counterCliente');
+    const titleEl   = document.getElementById('counterModalTitle');
+    const nuevoMsg  = document.getElementById('counterNuevoMsg');
+
+    function refreshDatalist() {
+      const dl = document.getElementById('counterClientesList');
+      if (dl) dl.innerHTML = cacheClientes.map(c => `<option value="${c.nombre}">`).join('');
+    }
+
+    document.querySelectorAll('.emp-counter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const barbero  = btn.dataset.barbero;
+        const display  = btn.closest('.emp-counter-card').querySelector('.emp-counter-name').textContent;
+        barbInput.value = barbero;
+        titleEl.textContent = `Corte — ${display}`;
+        cliInput.value = '';
+        nuevoMsg.hidden = true;
+        refreshDatalist();
+        modal.showModal();
+        setTimeout(() => cliInput.focus(), 80);
+      });
+    });
+
+    cliInput.addEventListener('input', () => {
+      const nombre = cliInput.value.trim();
+      if (!nombre) { nuevoMsg.hidden = true; return; }
+      const existe = cacheClientes.find(c => c.nombre.toLowerCase() === nombre.toLowerCase());
+      nuevoMsg.textContent = existe ? '' : `"${nombre}" no está registrado — se creará como cliente nuevo`;
+      nuevoMsg.hidden = !!existe;
+    });
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const barbero      = barbInput.value;
+      const clienteNombre = cliInput.value.trim();
+      if (!clienteNombre) return;
+
+      const submitBtn = form.querySelector('[type="submit"]');
+      submitBtn.disabled = true;
+
+      try {
+        const servicio     = cacheServicios[0];
+        const precio       = servicio ? servicio.precio : 9000;
+        const servicioNombre = servicio ? servicio.nombre : 'Corte';
+        const servicioId   = servicio ? servicio.id : null;
+
+        const clienteReg = cacheClientes.find(c => c.nombre.toLowerCase() === clienteNombre.toLowerCase());
+        const telefono   = clienteReg ? clienteReg.telefono : '';
+        if (!clienteReg) {
+          await addDoc(clientesCol, { nombre: clienteNombre, telefono: '', notas: '' });
+        }
+
+        const finanzaRef = await addDoc(finanzasCol, {
+          tipo: 'ingreso', fecha: todayISO(), monto: precio,
+          descripcion: `${clienteNombre} — ${servicioNombre}`,
+          categoria: 'Servicios', origen: 'contador', turnoId: null,
+          createdAt: serverTimestamp()
+        });
+
+        await addDoc(turnosCol, {
+          cliente: clienteNombre, telefono, fecha: todayISO(), hora: horaActual(),
+          servicioId, servicioNombre, precio, estado: 'completado',
+          barbero, notas: '', facturado: true,
+          finanzaId: finanzaRef.id, createdAt: serverTimestamp()
+        });
+
+        modal.close();
+      } catch (err) { console.error(err); }
+
+      submitBtn.disabled = false;
+    });
+
+    modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
+    modal.querySelectorAll('[data-close-modal]').forEach(b => b.addEventListener('click', () => modal.close()));
+  }
+
   // ── Vista Finanzas del día ─────────────────────────────────────
   function populateServicios() {
     const sel = document.getElementById('empCorteServicio');
@@ -264,6 +370,7 @@
     initTabs();
     initFormClientes();
     initFormCortes();
+    initContadores();
 
     onSnapshot(query(clientesCol, orderBy('nombre')), snap => {
       cacheClientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -274,6 +381,7 @@
       cacheTurnos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderLista();
       renderCortes();
+      renderContadores();
     });
 
     onSnapshot(query(finanzasCol, orderBy('fecha', 'desc')), snap => {

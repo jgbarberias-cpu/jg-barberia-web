@@ -776,6 +776,104 @@ input, select, textarea {
 .emp-corte-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 2px 4px; transition: color 0.15s; }
 .emp-corte-del:hover { color: var(--red); }
 
+/* ── Contadores ── */
+.emp-contadores-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.emp-counter-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 28px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.emp-counter-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.9rem;
+  color: var(--gold);
+  letter-spacing: 3px;
+}
+
+.emp-counter-btn {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #0a0a0a;
+  border: none;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.12s, opacity 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 20px rgba(201,168,76,0.25);
+}
+.emp-counter-btn:hover { opacity: 0.88; transform: scale(1.06); box-shadow: 0 6px 28px rgba(201,168,76,0.4); }
+.emp-counter-btn:active { transform: scale(0.94); }
+.emp-counter-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.emp-counter-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.emp-counter-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3.4rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.emp-counter-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.emp-counter-money {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.emp-contadores-total {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.emp-contadores-total__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.emp-contadores-total__val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
 /* ── Resumen ── */
 .resumen-grid {
   display: grid;
@@ -896,4 +994,5 @@ input, select, textarea {
   .resumen-card--wide { grid-column: span 1; }
   .emp-form__fields, .emp-form__fields--3 { grid-template-columns: 1fr; }
   .emp-buscar { width: 100%; }
+  .emp-contadores-grid { grid-template-columns: 1fr; }
 }

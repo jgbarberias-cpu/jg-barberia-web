@@ -39,7 +39,8 @@
     </div>
     <nav class="emp-tabs">
       <button class="emp-tab is-active" data-emp-view="clientes">Clientes</button>
-      <button class="emp-tab" data-emp-view="finanzas">Finanzas del día</button>
+      <button class="emp-tab" data-emp-view="finanzas">Finanzas</button>
+      <button class="emp-tab" data-emp-view="contadores">Contadores</button>
     </nav>
     <button id="empLogoutBtn" class="btn btn--ghost btn--small">Salir</button>
   </header>
@@ -73,6 +74,46 @@
         </div>
         <div id="empLista" class="emp-lista"></div>
         <p id="empEmpty" class="empty-state" hidden>Todavía no hay clientes registrados.</p>
+      </div>
+    </div>
+
+    <!-- VISTA CONTADORES -->
+    <div id="empViewContadores" class="emp-view">
+      <div class="emp-registro">
+        <h2>Contadores del día</h2>
+      </div>
+      <div class="emp-contadores-grid">
+        <div class="emp-counter-card">
+          <div class="emp-counter-name">SANTIAGO</div>
+          <button class="emp-counter-btn" data-barbero="Santiago Barone">+</button>
+          <div class="emp-counter-stats">
+            <span class="emp-counter-num" id="cntSantiago">0</span>
+            <span class="emp-counter-label">cortes hoy</span>
+          </div>
+          <div class="emp-counter-money" id="mntSantiago">$0</div>
+        </div>
+        <div class="emp-counter-card">
+          <div class="emp-counter-name">SEBASTIAN</div>
+          <button class="emp-counter-btn" data-barbero="Sebastian Peralta">+</button>
+          <div class="emp-counter-stats">
+            <span class="emp-counter-num" id="cntSebastian">0</span>
+            <span class="emp-counter-label">cortes hoy</span>
+          </div>
+          <div class="emp-counter-money" id="mntSebastian">$0</div>
+        </div>
+        <div class="emp-counter-card">
+          <div class="emp-counter-name">JUAN</div>
+          <button class="emp-counter-btn" data-barbero="Juan Griguoli">+</button>
+          <div class="emp-counter-stats">
+            <span class="emp-counter-num" id="cntJuan">0</span>
+            <span class="emp-counter-label">cortes hoy</span>
+          </div>
+          <div class="emp-counter-money" id="mntJuan">$0</div>
+        </div>
+      </div>
+      <div class="emp-contadores-total">
+        <div class="emp-contadores-total__label">Total del día</div>
+        <div class="emp-contadores-total__val" id="cntTotal">0 cortes — $0</div>
       </div>
     </div>
 
@@ -424,6 +465,26 @@
       <div class="modal__actions-right">
         <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
         <button type="submit" class="btn btn--primary">Guardar</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- MODAL: CONTADOR DE CORTE -->
+<dialog id="counterModal" class="modal">
+  <form id="counterForm" class="modal__form">
+    <h3 id="counterModalTitle">Registrar corte</h3>
+    <input type="hidden" id="counterBarbero">
+    <label>Cliente
+      <input type="text" id="counterCliente" placeholder="Nombre del cliente" autocomplete="off" list="counterClientesList" required>
+      <datalist id="counterClientesList"></datalist>
+    </label>
+    <p id="counterNuevoMsg" class="form-warning" hidden></p>
+    <div class="modal__actions">
+      <div></div>
+      <div class="modal__actions-right">
+        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn--primary">Registrar corte</button>
       </div>
     </div>
   </form>
