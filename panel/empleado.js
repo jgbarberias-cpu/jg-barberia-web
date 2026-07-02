@@ -16,6 +16,16 @@
 
   const RECORDATORIO_DIAS = 14;
 
+  const BARBEROS_DEFAULT = [
+    { nombre: 'Santiago Barone',  apodo: 'Santy', comision: 5000, activo: true },
+    { nombre: 'Sebastian Peralta', apodo: 'Seba',  comision: 5000, activo: true },
+    { nombre: 'Juan Griguoli',    apodo: 'Juan',  comision: null,  activo: true },
+  ];
+
+  function getBarberos() {
+    return cacheBarberos.length > 0 ? cacheBarberos : BARBEROS_DEFAULT;
+  }
+
   function normTel(t) { return (t || '').replace(/\D/g, ''); }
   function todayISO() { return new Date().toISOString().slice(0, 10); }
   function horaActual() {
@@ -148,7 +158,7 @@
     if (!grid) return;
 
     let totalCortes = 0, totalDinero = 0;
-    const activos = cacheBarberos.filter(b => b.activo !== false);
+    const activos = getBarberos().filter(b => b.activo !== false);
 
     grid.innerHTML = activos.map(b => {
       const cortes = cacheTurnos.filter(t =>
@@ -188,7 +198,7 @@
     if (!grid) return;
 
     let totalCortes = 0, totalDinero = 0;
-    const activos = cacheBarberos.filter(b => b.activo !== false);
+    const activos = getBarberos().filter(b => b.activo !== false);
 
     grid.innerHTML = activos.map(b => {
       const cortes = cacheTurnos.filter(t =>
