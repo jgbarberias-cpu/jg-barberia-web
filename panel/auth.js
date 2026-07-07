@@ -28,7 +28,7 @@
     const { data, error } = await client
       .from('barberia_roles')
       .select('rol')
-      .eq('id', session.user.id)
+      .eq('user_id', session.user.id)
       .single();
     if (error || !data) return null;
     return data.rol;

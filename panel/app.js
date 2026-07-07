@@ -55,6 +55,12 @@
       return;
     }
 
+    if (role !== 'dueno') {
+      await logout();
+      showLogin('Sin acceso. Contactá al administrador.');
+      return;
+    }
+
     document.getElementById('dashboard').hidden = false;
     initModules();
     applyRole(role);
