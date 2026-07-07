@@ -136,6 +136,19 @@
     });
   }
 
+  function sincronizarConSheets() {
+    if (!cache.length) { alert('No hay clientes para sincronizar.'); return; }
+    if (!confirm(`¿Enviar ${cache.length} cliente${cache.length !== 1 ? 's' : ''} a Google Sheets?`)) return;
+    cache.forEach(c => logCliente({
+      nombre: c.nombre,
+      telefono: c.telefono || '',
+      instagram: c.instagram || '',
+      email: c.email || '',
+      notas: c.notas || ''
+    }, 'Nuevo'));
+    alert(`✓ ${cache.length} clientes enviados a Google Sheets.`);
+  }
+
   function exportarCSV() {
     const headers = ['Nombre', 'WhatsApp', 'Instagram', 'Email', 'Notas'];
     const filas = cache.map(c => [c.nombre, c.telefono || '', c.instagram || '', c.email || '', c.notas || '']);
@@ -165,6 +178,7 @@
 
     document.getElementById('newClienteBtn').addEventListener('click', () => openClienteModal(null));
     document.getElementById('exportClientesBtn').addEventListener('click', exportarCSV);
+    document.getElementById('syncSheetsBtn').addEventListener('click', sincronizarConSheets);
 
     document.getElementById('clientesTbody').addEventListener('click', (e) => {
       const editId = e.target.dataset.editCliente;

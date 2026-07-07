@@ -5,6 +5,12 @@ function autorizarCalendar() {
   Logger.log('Permisos de Calendar OK');
 }
 
+var SPREADSHEET_ID = '17_xOGPKcw76AdiS8AMGk8jF9JydjReIyzC9RlAHBRQE';
+
+function getSpreadsheet() {
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
+}
+
 function doGet(e) {
   var params = (e && e.parameter) || {};
   if (params.action === 'dedup' && params.confirm === 'si') {
@@ -20,7 +26,7 @@ function doGet(e) {
 // dato más completo de cada columna. Se llama solo manualmente vía GET con
 // ?action=dedup&confirm=si.
 function deduplicarClientes() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet();
   var sheet = ss.getSheetByName('Clientes');
   if (!sheet) return { clientesFusionados: [], filasEliminadas: 0 };
 
@@ -78,7 +84,7 @@ function deduplicarClientes() {
 
 function doPost(e) {
   var data = JSON.parse(e.postData.contents);
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet();
 
   if (data.tipo === 'cliente') {
     upsertClienteInfo(ss, data);

@@ -143,6 +143,7 @@
       }
 
       await addDoc(clientesCol, { nombre, telefono: telRaw, notas: '' });
+      window.Panel.Sheets.logCliente({ nombre, telefono: telRaw, notas: '' }, 'Nuevo');
       document.getElementById('empForm').reset();
       msg.textContent = `✓ ${nombre} registrado correctamente.`;
       msg.style.color = 'var(--green)';
@@ -287,10 +288,12 @@
 
         if (!clienteReg) {
           await addDoc(clientesCol, { nombre: clienteNombre, telefono: wpp, notas: '' });
+          window.Panel.Sheets.logCliente({ nombre: clienteNombre, telefono: wpp, instagram: '', email: '', notas: '' }, 'Nuevo');
         } else {
           telefono = clienteReg.telefono || wpp;
           if (!clienteReg.telefono && wpp) {
             await updateDoc(doc(db, 'clientes', clienteReg.id), { telefono: wpp });
+            window.Panel.Sheets.logCliente({ nombre: clienteNombre, telefono: wpp, instagram: '', email: '', notas: '' }, 'Actualizado');
           }
         }
 
@@ -301,12 +304,17 @@
           createdAt: serverTimestamp()
         });
 
-        await addDoc(turnosCol, {
+        const turnoRef = await addDoc(turnosCol, {
           cliente: clienteNombre, telefono, fecha: todayISO(), hora: horaActual(),
           servicioId, servicioNombre, precio, estado: 'completado',
           barbero, notas: '', facturado: true,
           finanzaId: finanzaRef.id, createdAt: serverTimestamp()
         });
+        window.Panel.Sheets.logTurno({
+          id: turnoRef ? turnoRef.id : '', cliente: clienteNombre, telefono,
+          fecha: todayISO(), hora: horaActual(),
+          servicioNombre, precio, estado: 'completado', notas: ''
+        }, 'Nuevo');
 
         modal.close();
       } catch (err) { console.error(err); }
@@ -396,12 +404,17 @@
         createdAt: serverTimestamp()
       });
 
-      await addDoc(turnosCol, {
+      const turnoRef = await addDoc(turnosCol, {
         cliente, telefono, fecha: todayISO(), hora: horaActual(),
         servicioId, servicioNombre, precio: monto, estado: 'completado',
         notas: '', facturado: true, finanzaId: finanzaRef.id,
         createdAt: serverTimestamp()
       });
+      window.Panel.Sheets.logTurno({
+        id: turnoRef ? turnoRef.id : '', cliente, telefono,
+        fecha: todayISO(), hora: horaActual(),
+        servicioNombre, precio: monto, estado: 'completado', notas: ''
+      }, 'Nuevo');
 
       document.getElementById('empCorteForm').reset();
       populateServicios();
