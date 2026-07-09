@@ -988,6 +988,17 @@ input, select, textarea {
   margin-top: 2px;
 }
 
+.emp-mes-card--neto {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.07);
+  grid-column: 1 / -1;
+}
+
+.emp-mes-card__dinero--neto {
+  font-size: 2rem;
+  color: var(--gold);
+}
+
 /* ── Resumen ── */
 .resumen-grid {
   display: grid;

@@ -198,7 +198,7 @@
     const grid = document.getElementById('finMesGrid');
     if (!grid) return;
 
-    let totalCortes = 0, totalDinero = 0;
+    let totalCortes = 0, totalDinero = 0, totalComisiones = 0;
     const activos = getBarberos().filter(b => b.activo !== false);
 
     grid.innerHTML = activos.map(b => {
@@ -208,8 +208,10 @@
       const dinero = cortes.reduce((s, t) => s + Number(t.precio || 0), 0);
       totalCortes += cortes.length;
       totalDinero += dinero;
+      const comision = b.comision != null ? cortes.length * b.comision : 0;
+      totalComisiones += comision;
       const comisionLine = b.comision != null
-        ? `<div class="emp-mes-card__comision">${fmt(cortes.length * b.comision)} para ${b.apodo || b.nombre}</div>`
+        ? `<div class="emp-mes-card__comision">${fmt(comision)} para ${b.apodo || b.nombre}</div>`
         : '';
       return `
         <div class="emp-mes-card">
@@ -220,8 +222,16 @@
         </div>`;
     }).join('');
 
+    const neto = totalDinero - totalComisiones;
+    grid.innerHTML += `
+      <div class="emp-mes-card emp-mes-card--neto">
+        <div class="emp-mes-card__nombre">PARA VOS (NETO)</div>
+        <div class="emp-mes-card__cortes">${fmt(totalDinero)} − ${fmt(totalComisiones)} comisiones</div>
+        <div class="emp-mes-card__dinero emp-mes-card__dinero--neto">${fmt(neto)}</div>
+      </div>`;
+
     const totalEl = document.getElementById('finMesTotal');
-    if (totalEl) totalEl.textContent = `${totalCortes} corte${totalCortes !== 1 ? 's' : ''} — ${fmt(totalDinero)}`;
+    if (totalEl) totalEl.textContent = `${totalCortes} corte${totalCortes !== 1 ? 's' : ''} — ${fmt(totalDinero)} bruto`;
   }
 
   // ── Inicializar modal de contador ──────────────────────────────
