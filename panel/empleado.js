@@ -185,6 +185,26 @@
 
     const totalEl = document.getElementById('cntTotal');
     if (totalEl) totalEl.textContent = `${totalCortes} corte${totalCortes !== 1 ? 's' : ''} — ${fmt(totalDinero)}`;
+
+    const listaEl = document.getElementById('cntClientesHoy');
+    if (listaEl) {
+      const cortesHoy = cacheTurnos
+        .filter(t => t.fecha === hoy && t.estado === 'completado')
+        .sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+      if (cortesHoy.length === 0) {
+        listaEl.innerHTML = '';
+      } else {
+        listaEl.innerHTML = `
+          <div class="cnt-clientes-hoy__titulo">Clientes de hoy</div>
+          ${cortesHoy.map((t, i) => `
+            <div class="cnt-clientes-hoy__fila">
+              <span class="cnt-clientes-hoy__num">${i + 1}</span>
+              <span class="cnt-clientes-hoy__nombre">${t.cliente || '—'}</span>
+              <span class="cnt-clientes-hoy__barbero">${t.barbero || '—'}</span>
+              <span class="cnt-clientes-hoy__hora">${t.hora || ''}</span>
+            </div>`).join('')}`;
+      }
+    }
   }
 
   // ── Resumen mensual en Finanzas ────────────────────────────────

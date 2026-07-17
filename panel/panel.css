@@ -988,6 +988,64 @@ input, select, textarea {
   margin-top: 2px;
 }
 
+.cnt-clientes-hoy {
+  margin-top: 24px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.cnt-clientes-hoy__titulo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  color: var(--gold);
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.cnt-clientes-hoy__fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.cnt-clientes-hoy__num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cnt-clientes-hoy__nombre {
+  flex: 1;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cnt-clientes-hoy__barbero {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.05);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.cnt-clientes-hoy__hora {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  min-width: 40px;
+  text-align: right;
+}
+
 .emp-mes-card--neto {
   border-color: var(--gold);
   background: rgba(201,168,76,0.07);
