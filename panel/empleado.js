@@ -196,13 +196,20 @@
       } else {
         listaEl.innerHTML = `
           <div class="cnt-clientes-hoy__titulo">Clientes de hoy</div>
-          ${cortesHoy.map((t, i) => `
+          ${cortesHoy.map((t, i) => {
+            const tel = normTel(t.telefono);
+            const waBtn = tel
+              ? `<a href="https://wa.me/549${tel}" target="_blank" rel="noopener" class="cnt-clientes-hoy__wa">WP</a>`
+              : '';
+            return `
             <div class="cnt-clientes-hoy__fila">
               <span class="cnt-clientes-hoy__num">${i + 1}</span>
               <span class="cnt-clientes-hoy__nombre">${t.cliente || '—'}</span>
               <span class="cnt-clientes-hoy__barbero">${t.barbero || '—'}</span>
               <span class="cnt-clientes-hoy__hora">${t.hora || ''}</span>
-            </div>`).join('')}`;
+              ${waBtn}
+            </div>`;
+          }).join('')}`;
       }
     }
   }
