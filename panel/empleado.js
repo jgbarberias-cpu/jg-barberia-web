@@ -84,7 +84,14 @@
         const b = busqueda.toLowerCase();
         return c.nombre.toLowerCase().includes(b) || (c.telefono || '').includes(b);
       })
-      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      .sort((a, b) => {
+        const ua = statsCliente(a).ultima || '';
+        const ub = statsCliente(b).ultima || '';
+        if (!ua && !ub) return a.nombre.localeCompare(b.nombre);
+        if (!ua) return 1;
+        if (!ub) return -1;
+        return ub.localeCompare(ua);
+      });
 
     total.textContent = `(${cacheClientes.length})`;
     empty.hidden = filtrado.length > 0;

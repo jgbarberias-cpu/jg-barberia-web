@@ -66,7 +66,16 @@
 
     cache
       .slice()
-      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+      .sort((a, b) => {
+        const ka = claveCliente(a.nombre, a.telefono);
+        const kb = claveCliente(b.nombre, b.telefono);
+        const ua = (stats.get(ka) || {}).ultima || '';
+        const ub = (stats.get(kb) || {}).ultima || '';
+        if (!ua && !ub) return a.nombre.localeCompare(b.nombre);
+        if (!ua) return 1;
+        if (!ub) return -1;
+        return ub.localeCompare(ua);
+      })
       .forEach(c => {
         const key = claveCliente(c.nombre, c.telefono);
         const s = stats.get(key) || { cantidad: 0, ultima: '', totalGastado: 0, ultimoServicio: '' };
