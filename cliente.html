@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi cuenta | JG Barbería</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/img/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --bg-soft: #111;
+  --bg-card: #181818;
+  --border: #252525;
+  --gold: #c9a84c;
+  --gold-light: #e4c97e;
+  --text: #eee;
+  --text-muted: #888;
+  --green: #25d366;
+  --red: #e05252;
+  --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; font-size: 15px; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+
+/* Header */
+.cp-header {
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.cp-brand { display: flex; align-items: center; gap: 10px; }
+.cp-brand img { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--gold); object-fit: cover; }
+.cp-brand span { font-family: 'Bebas Neue', sans-serif; color: var(--gold); font-size: 1.2rem; letter-spacing: 1.5px; }
+.cp-header-right { display: flex; align-items: center; gap: 10px; }
+.cp-header-link { color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.cp-header-link:hover { color: var(--gold); }
+#cpLogoutBtn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.75rem;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: none;
+}
+#cpLogoutBtn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* Main */
+.cp-main { max-width: 600px; margin: 0 auto; padding: 32px 20px 80px; display: flex; flex-direction: column; gap: 20px; }
+
+/* Login screen */
+.cp-login { display: none; flex-direction: column; align-items: center; gap: 24px; padding: 40px 0; text-align: center; }
+.cp-login.is-active { display: flex; }
+.cp-login__logo { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover; box-shadow: 0 0 40px rgba(201,168,76,0.15); }
+.cp-login h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 2px; }
+.cp-login p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; max-width: 300px; }
+.cp-login__form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; }
+.cp-login__form input {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  font-size: 1.1rem;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: 1px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.cp-login__form input:focus { outline: none; border-color: var(--gold); }
+.cp-login__error { color: var(--red); font-size: 0.82rem; }
+
+/* Botones */
+.cp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: var(--radius);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  width: 100%;
+}
+.cp-btn:hover { opacity: 0.88; }
+.cp-btn:active { transform: scale(0.98); }
+.cp-btn--gold { background: var(--gold); color: #0a0a0a; }
+.cp-btn--wa { background: #25d366; color: #fff; font-size: 0.9rem; }
+.cp-btn--ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+
+/* Loading */
+.cp-loading { display: none; text-align: center; padding: 80px 0; color: var(--text-muted); font-size: 0.88rem; }
+.cp-loading.is-active { display: block; }
+.cp-spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* No encontrado */
+.cp-notfound { display: none; flex-direction: column; align-items: center; gap: 16px; padding: 60px 24px; text-align: center; }
+.cp-notfound.is-active { display: flex; }
+.cp-notfound__icon { font-size: 3rem; }
+.cp-notfound h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 1px; }
+.cp-notfound p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; max-width: 320px; }
+
+/* Dashboard */
+.cp-dashboard { display: none; flex-direction: column; gap: 16px; }
+.cp-dashboard.is-active { display: flex; }
+
+.cp-welcome { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 1px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+.cp-welcome span { color: var(--gold); }
+
+/* Cards */
+.cp-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cp-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cp-card--wide { grid-column: 1 / -1; }
+.cp-card--gold { border-color: rgba(201,168,76,0.35); background: rgba(201,168,76,0.05); }
+.cp-card__label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+.cp-card__value { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; color: var(--gold); line-height: 1; }
+.cp-card__sub { font-size: 0.78rem; color: var(--text-muted); }
+
+/* Puntos */
+.cp-points-bar { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 4px; }
+.cp-points-bar__fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 99px; transition: width 0.7s cubic-bezier(.22,.68,0,1.1); }
+.cp-discount-badge {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: rgba(37,211,102,0.12);
+  border: 1px solid rgba(37,211,102,0.4);
+  color: #25d366;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 6px;
+  animation: pulse-green 2s infinite;
+}
+.cp-discount-badge.is-active { display: inline-flex; }
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(37,211,102,0); }
+}
+
+/* Sección */
+.cp-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* Servicios */
+.cp-servicios { display: flex; flex-direction: column; gap: 8px; }
+.cp-servicio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  transition: border-color 0.15s;
+}
+.cp-servicio:hover { border-color: #333; }
+.cp-servicio__nombre { font-weight: 500; font-size: 0.95rem; }
+.cp-servicio__precio { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--gold); letter-spacing: 0.5px; }
+
+/* Promos */
+.cp-promos { display: flex; flex-direction: column; gap: 8px; }
+.cp-promo {
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-left: 3px solid var(--gold);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+.cp-promo__titulo { font-weight: 600; font-size: 0.95rem; color: var(--gold-light); margin-bottom: 4px; }
+.cp-promo__desc { font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; }
+
+.cp-empty { color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 12px 0; }
+</style>
+</head>
+<body>
+
+<header class="cp-header">
+  <div class="cp-brand">
+    <img src="assets/img/logo.jpg" alt="JG Barbería">
+    <span>JG Barbería</span>
+  </div>
+  <div class="cp-header-right">
+    <a href="index.html" class="cp-header-link">← Volver</a>
+    <button id="cpLogoutBtn">Salir</button>
+  </div>
+</header>
+
+<main class="cp-main">
+
+  <!-- Login -->
+  <div class="cp-login is-active" id="cpLogin">
+    <img src="assets/img/logo.jpg" alt="JG Barbería" class="cp-login__logo">
+    <h2>Tu cuenta</h2>
+    <p>Ingresá tu número de WhatsApp para ver tus puntos, historial y promociones.</p>
+    <form class="cp-login__form" id="cpLoginForm">
+      <input type="tel" id="cpPhone" placeholder="Ej: 3855123456" inputmode="numeric" autocomplete="tel" required>
+      <button type="submit" class="cp-btn cp-btn--gold">Ingresar</button>
+    </form>
+    <p class="cp-login__error" id="cpLoginError" hidden></p>
+  </div>
+
+  <!-- Loading -->
+  <div class="cp-loading" id="cpLoading">
+    <div class="cp-spinner"></div>
+    <p>Buscando tu cuenta...</p>
+  </div>
+
+  <!-- No encontrado -->
+  <div class="cp-notfound" id="cpNotFound">
+    <div class="cp-notfound__icon">✂️</div>
+    <h3>No te encontramos</h3>
+    <p>Tu número no está registrado aún. La próxima vez que vengas a la barbería, pedile al empleado que te registre y empezás a acumular puntos.</p>
+    <div style="max-width:300px;width:100%;display:flex;flex-direction:column;gap:10px">
+      <a href="https://wa.me/5493855720748?text=Hola!%20Quiero%20registrarme%20en%20JG%20Barber%C3%ADa" target="_blank" class="cp-btn cp-btn--wa">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Contactar por WhatsApp
+      </a>
+      <button class="cp-btn cp-btn--ghost" id="cpTryAgainBtn">Probar otro número</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="cp-dashboard" id="cpDashboard">
+
+    <p class="cp-welcome">Hola, <span id="cpNombre"></span></p>
+
+    <!-- Puntos -->
+    <div class="cp-card cp-card--gold cp-card--wide">
+      <span class="cp-card__label">Mis puntos</span>
+      <span class="cp-card__value" id="cpPuntos">0</span>
+      <div class="cp-points-bar"><div class="cp-points-bar__fill" id="cpPuntosBar" style="width:0%"></div></div>
+      <span class="cp-card__sub" id="cpPuntosSub"></span>
+      <div class="cp-discount-badge" id="cpDescuentoBadge">🎉 ¡Descuento disponible! Avisale a tu barbero</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="cp-cards">
+      <div class="cp-card">
+        <span class="cp-card__label">Cortes totales</span>
+        <span class="cp-card__value" id="cpCortes">0</span>
+        <span class="cp-card__sub">visitas registradas</span>
+      </div>
+      <div class="cp-card">
+        <span class="cp-card__label">Días sin corte</span>
+        <span class="cp-card__value" id="cpDias">—</span>
+        <span class="cp-card__sub" id="cpUltimaFecha"></span>
+      </div>
+    </div>
+
+    <!-- Reservar turno -->
+    <a href="https://wa.me/5493855720748?text=Hola!%20Quiero%20sacar%20turno%20en%20JG%20Barber%C3%ADa%20%F0%9F%92%88" target="_blank" rel="noopener" class="cp-btn cp-btn--wa">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Reservar turno por WhatsApp
+    </a>
+
+    <!-- Servicios -->
+    <p class="cp-section-title">Nuestros servicios</p>
+    <div class="cp-servicios" id="cpServiciosList"><p class="cp-empty">Cargando...</p></div>
+
+    <!-- Promos -->
+    <p class="cp-section-title" id="cpPromosTitle" style="display:none">Promociones activas</p>
+    <div class="cp-promos" id="cpPromosList"></div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="reviews-config.js"></script>
+<script>
+(function () {
+  const cfg = window.REVIEWS_SUPABASE_CONFIG;
+  const sb  = supabase.createClient(cfg.url, cfg.anonKey);
+
+  const PUNTOS_META = 10;
+
+  const loginEl    = document.getElementById('cpLogin');
+  const loadingEl  = document.getElementById('cpLoading');
+  const notFoundEl = document.getElementById('cpNotFound');
+  const dashEl     = document.getElementById('cpDashboard');
+  const logoutBtn  = document.getElementById('cpLogoutBtn');
+
+  function normTel(t) { return (t || '').replace(/\D/g, ''); }
+
+  function fmtFecha(f) {
+    if (!f) return null;
+    const [y, m, d] = String(f).slice(0, 10).split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function diasDesde(f) {
+    if (!f) return null;
+    const s = String(f).slice(0, 10);
+    const [y, m, d] = s.split('-').map(Number);
+    return Math.floor((new Date() - new Date(y, m - 1, d)) / 86400000);
+  }
+
+  function fmtPesos(n) { return '$' + Number(n || 0).toLocaleString('es-AR'); }
+
+  function showScreen(name) {
+    loginEl.classList.toggle('is-active',    name === 'login');
+    loadingEl.classList.toggle('is-active',  name === 'loading');
+    notFoundEl.classList.toggle('is-active', name === 'notfound');
+    dashEl.classList.toggle('is-active',     name === 'dashboard');
+    logoutBtn.style.display = name === 'dashboard' ? 'block' : 'none';
+  }
+
+  function renderDashboard(cliente, servicios, promos) {
+    const primerNombre = (cliente.nombre || '').trim().split(' ')[0];
+    document.getElementById('cpNombre').textContent = primerNombre;
+
+    // Puntos
+    const puntos = cliente.puntos || 0;
+    document.getElementById('cpPuntos').textContent = puntos;
+    const modulo = puntos % PUNTOS_META;
+    const pct = puntos === 0 ? 0 : modulo === 0 ? 100 : (modulo / PUNTOS_META) * 100;
+    document.getElementById('cpPuntosBar').style.width = pct + '%';
+
+    const descuentos = Math.floor(puntos / PUNTOS_META);
+    if (descuentos > 0) {
+      document.getElementById('cpPuntosSub').textContent =
+        `Tenés ${descuentos} descuento${descuentos > 1 ? 's' : ''} disponible${descuentos > 1 ? 's' : ''} ✓`;
+      document.getElementById('cpDescuentoBadge').classList.add('is-active');
+    } else {
+      const faltan = PUNTOS_META - modulo;
+      document.getElementById('cpPuntosSub').textContent =
+        `Te faltan ${faltan} punto${faltan !== 1 ? 's' : ''} para tu próximo descuento`;
+      document.getElementById('cpDescuentoBadge').classList.remove('is-active');
+    }
+
+    // Stats
+    const cortes = cliente.cantidad_cortes || 0;
+    document.getElementById('cpCortes').textContent = cortes;
+
+    const ultima = cliente.ultima_visita;
+    const dias = diasDesde(ultima);
+    document.getElementById('cpDias').textContent = dias !== null ? dias : '—';
+    document.getElementById('cpUltimaFecha').textContent = ultima
+      ? `Último corte: ${fmtFecha(ultima)}`
+      : 'Sin registro aún';
+
+    // Servicios
+    const svcEl = document.getElementById('cpServiciosList');
+    const activos = (servicios || []).filter(s => s.activo !== false);
+    svcEl.innerHTML = activos.length
+      ? activos.map(s => `
+          <div class="cp-servicio">
+            <span class="cp-servicio__nombre">${s.nombre}</span>
+            <span class="cp-servicio__precio">${fmtPesos(s.precio)}</span>
+          </div>`).join('')
+      : '<p class="cp-empty">Sin servicios cargados.</p>';
+
+    // Promos
+    const promosEl   = document.getElementById('cpPromosList');
+    const promosTitle = document.getElementById('cpPromosTitle');
+    if (promos && promos.length > 0) {
+      promosTitle.style.display = 'block';
+      promosEl.innerHTML = promos.map(p => `
+        <div class="cp-promo">
+          <div class="cp-promo__titulo">🏷 ${p.titulo}</div>
+          ${p.descripcion ? `<div class="cp-promo__desc">${p.descripcion}</div>` : ''}
+        </div>`).join('');
+    } else {
+      promosTitle.style.display = 'none';
+      promosEl.innerHTML = '';
+    }
+  }
+
+  async function buscarCliente(tel) {
+    showScreen('loading');
+    document.getElementById('cpLoginError').hidden = true;
+
+    try {
+      const [clientesRes, svcRes, promoRes] = await Promise.all([
+        sb.from('clientes').select('*'),
+        sb.from('servicios').select('*').order('nombre'),
+        sb.from('promociones').select('*').eq('activo', true)
+      ]);
+
+      const todos = clientesRes.data || [];
+      const cliente = todos.find(c => normTel(c.telefono) === tel);
+
+      if (!cliente) {
+        showScreen('notfound');
+        return;
+      }
+
+      renderDashboard(cliente, svcRes.data || [], promoRes.data || []);
+      showScreen('dashboard');
+      sessionStorage.setItem('jg_cliente_tel', tel);
+    } catch (err) {
+      showScreen('login');
+      const errEl = document.getElementById('cpLoginError');
+      errEl.textContent = 'Error de conexión. Intentá de nuevo.';
+      errEl.hidden = false;
+    }
+  }
+
+  // Login form
+  document.getElementById('cpLoginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const tel = normTel(document.getElementById('cpPhone').value);
+    if (!tel) return;
+    await buscarCliente(tel);
+  });
+
+  // Try again
+  document.getElementById('cpTryAgainBtn').addEventListener('click', () => {
+    document.getElementById('cpPhone').value = '';
+    showScreen('login');
+  });
+
+  // Logout
+  logoutBtn.addEventListener('click', () => {
+    sessionStorage.removeItem('jg_cliente_tel');
+    document.getElementById('cpPhone').value = '';
+    showScreen('login');
+  });
+
+  // Auto-login si hay sesión guardada
+  const savedTel = sessionStorage.getItem('jg_cliente_tel');
+  if (savedTel) {
+    document.getElementById('cpPhone').value = savedTel;
+    buscarCliente(savedTel);
+  }
+})();
+</script>
+</body>
+</html>

@@ -159,6 +159,7 @@
       <button class="tab" data-view="finanzas">Finanzas</button>
       <button class="tab" data-view="clientes">Clientes</button>
       <button class="tab" data-view="barberos">Barberos</button>
+      <button class="tab" data-view="promociones">Promos</button>
     </nav>
     <div class="sidebar__footer">
       <span id="sidebarRole" class="sidebar__role"></span>
@@ -291,6 +292,26 @@
           <tbody id="barberosTbody"></tbody>
         </table>
         <p id="barberosEmpty" class="empty-state" hidden>No hay barberos registrados.</p>
+      </div>
+    </section>
+
+    <!-- PROMOCIONES VIEW -->
+    <section id="view-promociones" class="view">
+      <div class="view__header">
+        <h2>Promociones</h2>
+        <button id="newPromoBtn" class="btn btn--primary btn--small">+ Nueva promo</button>
+      </div>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px">
+        Las promociones activas se muestran a los clientes en su portal. Podés crear descuentos, 2x1, promos de temporada, etc.
+      </p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Título</th><th>Descripción</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody id="promosTbody"></tbody>
+        </table>
+        <p id="promosEmpty" class="empty-state" hidden>No hay promociones. Creá una para que los clientes la vean.</p>
       </div>
     </section>
 
@@ -463,6 +484,30 @@
   </form>
 </dialog>
 
+<!-- MODAL: PROMOCION -->
+<dialog id="promoModal" class="modal">
+  <form id="promoForm" class="modal__form">
+    <h3 id="promoModalTitle">Nueva promoción</h3>
+    <input type="hidden" id="promoId">
+    <label>Título
+      <input type="text" id="promoTitulo" required placeholder="Ej: 2x1 en degradados este mes">
+    </label>
+    <label>Descripción
+      <textarea id="promoDescripcion" rows="3" placeholder="Detallá la promo para que los clientes entiendan..."></textarea>
+    </label>
+    <label class="checkbox-label">
+      <input type="checkbox" id="promoActivo" checked> Activa (visible en el portal de clientes)
+    </label>
+    <div class="modal__actions">
+      <button type="button" id="deletePromoBtn" class="btn btn--danger" hidden>Eliminar</button>
+      <div class="modal__actions-right">
+        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn--primary">Guardar</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
 <!-- MODAL: BARBERO -->
 <dialog id="barberoModal" class="modal">
   <form id="barberoForm" class="modal__form">
@@ -530,6 +575,7 @@
 <script src="resumen.js"></script>
 <script src="barberos.js"></script>
 <script src="empleado.js"></script>
+<script src="promociones.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

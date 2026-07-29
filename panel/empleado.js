@@ -263,11 +263,18 @@
 
         const clienteReg = cacheClientes.find(c => c.nombre.toLowerCase() === clienteNombre.toLowerCase());
         let telefono = wpp;
+        let clienteId = null;
+        let currentPuntos = 0;
+        let currentCortes = 0;
 
         if (!clienteReg) {
-          await addDoc(clientesCol, { nombre: clienteNombre, telefono: wpp, notas: '' });
+          const newRef = await addDoc(clientesCol, { nombre: clienteNombre, telefono: wpp, notas: '' });
+          clienteId = newRef ? newRef.id : null;
           window.Panel.Sheets.logCliente({ nombre: clienteNombre, telefono: wpp, instagram: '', email: '', notas: '' }, 'Nuevo');
         } else {
+          clienteId = clienteReg.id;
+          currentPuntos = clienteReg.puntos || 0;
+          currentCortes = clienteReg.cantidadCortes || 0;
           telefono = clienteReg.telefono || wpp;
           if (!clienteReg.telefono && wpp) {
             await updateDoc(doc(db, 'clientes', clienteReg.id), { telefono: wpp });
@@ -294,6 +301,13 @@
           servicioNombre, precio, estado: 'completado', notas: ''
         }, 'Nuevo');
 
+        if (clienteId) {
+          await updateDoc(doc(db, 'clientes', clienteId), {
+            puntos: currentPuntos + 1,
+            ultimaVisita: todayISO(),
+            cantidadCortes: currentCortes + 1
+          });
+        }
         modal.close();
       } catch (err) { console.error(err); }
 
@@ -403,6 +417,14 @@
         fecha: todayISO(), hora: horaActual(),
         servicioNombre, precio: monto, estado: 'completado', notas: ''
       }, 'Nuevo');
+
+      if (clienteReg) {
+        await updateDoc(doc(db, 'clientes', clienteReg.id), {
+          puntos: (clienteReg.puntos || 0) + 1,
+          ultimaVisita: todayISO(),
+          cantidadCortes: (clienteReg.cantidadCortes || 0) + 1
+        });
+      }
 
       document.getElementById('empCorteForm').reset();
       populateServicios();

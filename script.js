@@ -15,7 +15,7 @@
 
   function elegirRol(rol) {
     if (rol === 'cliente') {
-      cerrarGate();
+      window.location.href = 'cliente.html';
     } else {
       window.location.href = 'panel/';
     }

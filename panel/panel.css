@@ -313,6 +313,8 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; }
 .badge--manual { background: var(--bg-soft); color: var(--text-muted); border: 1px solid var(--border); }
 .badge--turno { background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
 .badge--recordatorio { background: rgba(201,168,76,0.12); color: var(--gold-light); border: 1px solid rgba(201,168,76,0.3); }
+.badge--success { background: #1a2e1e; color: #7dd4a0; border: 1px solid #1e3a24; }
+.badge--muted   { background: var(--bg-soft); color: var(--text-muted); border: 1px solid var(--border); }
 
 .amount--ingreso { color: var(--green); font-weight: 600; }
 .amount--egreso { color: var(--red); font-weight: 600; }
