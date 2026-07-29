@@ -5,6 +5,87 @@ function autorizarCalendar() {
   Logger.log('Permisos de Calendar OK');
 }
 
+// ── Resumen diario por email ───────────────────────────────────────────────
+
+// Ejecutar UNA VEZ manualmente para activar el envío automático a las 22hs.
+function crearTriggerDiario() {
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'enviarResumenDiario') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('enviarResumenDiario')
+    .timeBased()
+    .atHour(22)
+    .nearMinute(0)
+    .everyDays(1)
+    .create();
+  Logger.log('Trigger creado: enviarResumenDiario a las 22hs');
+}
+
+function enviarResumenDiario() {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheetByName('Turnos');
+
+  var ahora = new Date();
+  var ahoraAr = new Date(ahora.getTime() - 3 * 60 * 60 * 1000);
+  var hoy = Utilities.formatDate(ahoraAr, 'UTC', 'yyyy-MM-dd');
+  var mes = hoy.substring(0, 7);
+  var fechaLinda = Utilities.formatDate(ahoraAr, 'UTC', 'dd/MM/yyyy');
+  var mesLindo = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][ahoraAr.getMonth()] + ' ' + ahoraAr.getFullYear();
+
+  var cortesHoy = [], cortesMes = [];
+
+  if (sheet && sheet.getLastRow() > 1) {
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      var fecha = String(row[2] || '').substring(0, 10);
+      var estado = String(row[8] || '').toLowerCase();
+      var accion = String(row[1] || '').toLowerCase();
+      if (estado !== 'completado' || accion === 'eliminado') continue;
+      var entry = { cliente: row[4] || '', servicio: row[6] || '', precio: Number(row[7]) || 0 };
+      if (fecha === hoy) cortesHoy.push(entry);
+      if (fecha.startsWith(mes)) cortesMes.push(entry);
+    }
+  }
+
+  var totalHoy = cortesHoy.reduce(function(s, c) { return s + c.precio; }, 0);
+  var totalMes = cortesMes.reduce(function(s, c) { return s + c.precio; }, 0);
+  var fmt = function(n) { return '$' + n.toLocaleString('es-AR'); };
+
+  var html = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#222">';
+  html += '<div style="background:#111;padding:20px;text-align:center"><span style="color:#c9a84c;font-size:22px;font-weight:bold">✂ JG Barbería</span></div>';
+
+  // Resumen del día
+  html += '<div style="padding:20px">';
+  html += '<h2 style="color:#c9a84c;border-bottom:2px solid #c9a84c;padding-bottom:8px">Resumen del día — ' + fechaLinda + '</h2>';
+  if (cortesHoy.length === 0) {
+    html += '<p style="color:#888">Sin cortes registrados hoy.</p>';
+  } else {
+    html += '<p style="font-size:18px"><strong>' + cortesHoy.length + ' corte' + (cortesHoy.length !== 1 ? 's' : '') + '</strong> &nbsp;·&nbsp; <strong style="color:#c9a84c">' + fmt(totalHoy) + '</strong></p>';
+    html += '<table style="width:100%;border-collapse:collapse;margin-top:8px">';
+    html += '<tr style="background:#f5f5f5"><th style="text-align:left;padding:8px;border:1px solid #ddd">Cliente</th><th style="text-align:left;padding:8px;border:1px solid #ddd">Servicio</th><th style="text-align:right;padding:8px;border:1px solid #ddd">Precio</th></tr>';
+    cortesHoy.forEach(function(c) {
+      html += '<tr><td style="padding:8px;border:1px solid #ddd">' + c.cliente + '</td><td style="padding:8px;border:1px solid #ddd">' + c.servicio + '</td><td style="padding:8px;border:1px solid #ddd;text-align:right">' + fmt(c.precio) + '</td></tr>';
+    });
+    html += '</table>';
+  }
+
+  // Resumen del mes
+  html += '<h2 style="color:#c9a84c;border-bottom:2px solid #c9a84c;padding-bottom:8px;margin-top:32px">Resumen del mes — ' + mesLindo + '</h2>';
+  html += '<p style="font-size:18px"><strong>' + cortesMes.length + ' corte' + (cortesMes.length !== 1 ? 's' : '') + '</strong> &nbsp;·&nbsp; <strong style="color:#c9a84c">' + fmt(totalMes) + '</strong></p>';
+  if (cortesMes.length > 0) {
+    var promedio = Math.round(totalMes / cortesMes.length);
+    html += '<p>Promedio por corte: <strong>' + fmt(promedio) + '</strong></p>';
+  }
+
+  html += '</div>';
+  html += '<div style="background:#111;padding:12px;text-align:center;color:#666;font-size:12px">Enviado automáticamente desde el panel de JG Barbería</div>';
+  html += '</div>';
+
+  var asunto = 'JG Barbería ' + fechaLinda + ' — ' + cortesHoy.length + ' cortes hoy · ' + fmt(totalHoy);
+  GmailApp.sendEmail('jgbarberias@gmail.com', asunto, '', { htmlBody: html });
+}
+
 var SPREADSHEET_ID = '17_xOGPKcw76AdiS8AMGk8jF9JydjReIyzC9RlAHBRQE';
 
 function getSpreadsheet() {
@@ -13,6 +94,11 @@ function getSpreadsheet() {
 
 function doGet(e) {
   var params = (e && e.parameter) || {};
+  if (params.action === 'resumen') {
+    enviarResumenDiario();
+    return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
   if (params.action === 'dedup' && params.confirm === 'si') {
     var resultado = deduplicarClientes();
     return ContentService.createTextOutput(JSON.stringify(resultado))
@@ -89,6 +175,13 @@ function doPost(e) {
   if (data.tipo === 'cliente') {
     upsertClienteInfo(ss, data);
     return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (data.tipo === 'clientes_batch') {
+    var clientes = data.clientes || [];
+    clientes.forEach(function(c) { upsertClienteInfo(ss, c); });
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, procesados: clientes.length }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
