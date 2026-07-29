@@ -342,8 +342,7 @@ a { color: inherit; text-decoration: none; }
   }
 
   function renderDashboard(cliente, servicios, promos) {
-    const primerNombre = (cliente.nombre || '').trim().split(' ')[0];
-    document.getElementById('cpNombre').textContent = primerNombre;
+    document.getElementById('cpNombre').textContent = (cliente.nombre || '').trim();
 
     // Puntos
     const puntos = cliente.puntos || 0;
