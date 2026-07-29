@@ -1,3 +1,29 @@
+// Role gate
+(function () {
+  const gate = document.getElementById('roleGate');
+  if (!gate) return;
+
+  // Si ya eligió en esta sesión, quitamos la pantalla
+  if (sessionStorage.getItem('jg_ingreso')) {
+    gate.remove();
+    return;
+  }
+
+  function elegirRol(rol) {
+    sessionStorage.setItem('jg_ingreso', rol);
+    if (rol === 'cliente') {
+      gate.classList.add('is-hiding');
+      setTimeout(() => gate.remove(), 500);
+    } else {
+      window.location.href = 'panel/';
+    }
+  }
+
+  document.getElementById('roleCliente').addEventListener('click', () => elegirRol('cliente'));
+  document.getElementById('roleDueno').addEventListener('click', () => elegirRol('dueno'));
+  document.getElementById('roleEmpleado').addEventListener('click', () => elegirRol('empleado'));
+})();
+
 // Menú mobile
 const navToggle = document.getElementById('navToggle');
 const nav = document.getElementById('nav');
