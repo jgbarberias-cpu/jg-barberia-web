@@ -22,6 +22,21 @@
   document.getElementById('roleCliente').addEventListener('click', () => elegirRol('cliente'));
   document.getElementById('roleDueno').addEventListener('click', () => elegirRol('dueno'));
   document.getElementById('roleEmpleado').addEventListener('click', () => elegirRol('empleado'));
+
+  // Botón "Ingresar" del header → reabre el selector
+  const openBtn = document.getElementById('openRoleGateBtn');
+  if (openBtn) {
+    openBtn.addEventListener('click', () => {
+      // Si el gate fue eliminado del DOM, recreamos la sesión y redirigimos al panel
+      // Si sigue en el DOM, lo mostramos de nuevo
+      const existingGate = document.getElementById('roleGate');
+      if (existingGate) {
+        existingGate.classList.remove('is-hiding');
+      } else {
+        window.location.href = 'panel/';
+      }
+    });
+  }
 })();
 
 // Menú mobile
