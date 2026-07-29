@@ -10,7 +10,6 @@
     window.Panel.Turnos.initTurnos();
     window.Panel.Finanzas.initFinanzas();
     window.Panel.Clientes.initClientes();
-    window.Panel.Planificacion.initPlanificacion();
     window.Panel.Resumen.initResumen();
     window.Panel.Barberos.initBarberos();
 
