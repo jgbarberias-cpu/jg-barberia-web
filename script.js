@@ -22,7 +22,6 @@
   }
 
   document.getElementById('roleCliente').addEventListener('click', () => elegirRol('cliente'));
-  document.getElementById('roleDueno').addEventListener('click', () => elegirRol('dueno'));
   document.getElementById('roleEmpleado').addEventListener('click', () => elegirRol('empleado'));
 
   const openBtn = document.getElementById('openRoleGateBtn');
