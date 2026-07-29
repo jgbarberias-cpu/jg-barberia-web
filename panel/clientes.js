@@ -202,8 +202,7 @@
       renderTable();
     });
 
-    onTurnosChange(turnos => {
-      syncClientesFromTurnos(turnos);
+    onTurnosChange(() => {
       renderTable();
     });
 
