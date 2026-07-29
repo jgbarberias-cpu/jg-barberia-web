@@ -6,7 +6,7 @@
   const clientesCol = collection(db, 'clientes');
   let cache = [];
   let editingCliente = null;
-  const RECORDATORIO_DIAS = 14;
+  const RECORDATORIO_DIAS = 10;
 
   function normTel(tel) {
     return (tel || '').replace(/\D/g, '');
@@ -80,8 +80,12 @@
         const key = claveCliente(c.nombre, c.telefono);
         const s = stats.get(key) || { cantidad: 0, ultima: '', totalGastado: 0, ultimoServicio: '' };
         const dias = diasDesde(s.ultima);
+        const telNorm = normTel(c.telefono);
+        const waLink = telNorm
+          ? `<a href="https://wa.me/549${telNorm}" target="_blank" rel="noopener" class="link-btn">WP</a>`
+          : '';
         const recordatorio = dias !== null && dias >= RECORDATORIO_DIAS
-          ? `<span class="badge badge--recordatorio">Recordar (${dias} días)</span>`
+          ? `<span class="badge badge--recordatorio">Recordar (${dias} días)</span> ${waLink}`
           : '-';
 
         const tr = document.createElement('tr');
