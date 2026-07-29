@@ -12,9 +12,6 @@
   let cacheFinanzas  = [];
   let cacheServicios = [];
   let cacheBarberos  = [];
-  let busqueda = '';
-
-  const RECORDATORIO_DIAS = 14;
 
   const BARBEROS_DEFAULT = [
     { nombre: 'Santiago Barone',  apodo: 'Santy', comision: 5000, activo: true },
@@ -59,19 +56,6 @@
   function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
   // ── Vista Clientes ─────────────────────────────────────────────
-  function statsCliente(cliente) {
-    const key = normTel(cliente.telefono) || cliente.nombre.toLowerCase();
-    let cantidad = 0, ultima = '', ultimoServicio = '';
-    cacheTurnos.forEach(t => {
-      const tKey = normTel(t.telefono) || (t.cliente || '').toLowerCase();
-      if (tKey === key && t.estado === 'completado') {
-        cantidad++;
-        if (!ultima || t.fecha > ultima) { ultima = t.fecha; ultimoServicio = t.servicioNombre; }
-      }
-    });
-    return { cantidad, ultima, ultimoServicio };
-  }
-
   function renderLista() {
     const total = document.getElementById('empTotal');
     if (total) total.textContent = cacheClientes.length;
@@ -331,6 +315,15 @@
     if (activos.length > 0) document.getElementById('empCortePrecio').value = activos[0].precio;
   }
 
+  function populateBarberoSelect() {
+    const sel = document.getElementById('empCorteBarbero');
+    if (!sel) return;
+    const activos = getBarberos().filter(b => b.activo !== false);
+    sel.innerHTML = activos.map(b =>
+      `<option value="${b.nombre}">${b.apodo || b.nombre}</option>`
+    ).join('');
+  }
+
   function renderCortes() {
     const hoy    = todayISO();
     const lista  = document.getElementById('empCortesLista');
@@ -381,6 +374,7 @@
     document.getElementById('empCorteForm').addEventListener('submit', async e => {
       e.preventDefault();
       const cliente        = document.getElementById('empCorteCliente').value.trim();
+      const barbero        = document.getElementById('empCorteBarbero').value;
       const opt            = sel.selectedOptions[0];
       const servicioNombre = opt ? opt.dataset.nombre : '';
       const servicioId     = opt ? opt.value : null;
@@ -399,7 +393,7 @@
       });
 
       const turnoRef = await addDoc(turnosCol, {
-        cliente, telefono, fecha: todayISO(), hora: horaActual(),
+        cliente, telefono, barbero, fecha: todayISO(), hora: horaActual(),
         servicioId, servicioNombre, precio: monto, estado: 'completado',
         notas: '', facturado: true, finanzaId: finanzaRef.id,
         createdAt: serverTimestamp()
@@ -412,7 +406,8 @@
 
       document.getElementById('empCorteForm').reset();
       populateServicios();
-      msg.textContent = `✓ Corte de ${cliente} registrado — ${fmt(monto)}`;
+      populateBarberoSelect();
+      msg.textContent = `✓ Corte de ${cliente} (${barbero}) registrado — ${fmt(monto)}`;
       msg.style.color = 'var(--green)';
       msg.hidden = false;
       setTimeout(() => { msg.hidden = true; }, 3000);
@@ -425,6 +420,7 @@
     initFormClientes();
     initFormCortes();
     initContadores();
+    populateBarberoSelect();
 
     onSnapshot(query(clientesCol, orderBy('nombre')), snap => {
       cacheClientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -453,6 +449,7 @@
       cacheBarberos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderContadores();
       renderResumenMes();
+      populateBarberoSelect();
     });
 
     document.getElementById('empLogoutBtn').addEventListener('click', onLogout);

@@ -1,7 +1,7 @@
 (function () {
   const { db, collection, onSnapshot, query, orderBy } = window.Panel.Storage;
 
-  const RECORDATORIO_DIAS = 14;
+  const RECORDATORIO_DIAS = 10;
 
   function todayISO() {
     return new Date().toISOString().slice(0, 10);

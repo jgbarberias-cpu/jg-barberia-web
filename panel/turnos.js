@@ -24,16 +24,16 @@
   const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const ESTADOS = { pendiente: 'Pendiente', confirmado: 'Confirmado', completado: 'Completado', cancelado: 'Cancelado' };
 
-  const today = new Date();
-  let viewYear = today.getFullYear();
-  let viewMonth = today.getMonth();
+  let viewYear = new Date().getFullYear();
+  let viewMonth = new Date().getMonth();
 
   function toISODate(y, m, d) {
     return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   }
 
   function todayISO() {
-    return toISODate(today.getFullYear(), today.getMonth(), today.getDate());
+    const t = new Date();
+    return toISODate(t.getFullYear(), t.getMonth(), t.getDate());
   }
 
   function turnosByDate(dateStr) {
@@ -210,7 +210,8 @@
       renderCalendar();
     });
     document.getElementById('todayBtn').addEventListener('click', () => {
-      viewYear = today.getFullYear(); viewMonth = today.getMonth();
+      const now = new Date();
+      viewYear = now.getFullYear(); viewMonth = now.getMonth();
       renderCalendar();
     });
     document.getElementById('newTurnoBtn').addEventListener('click', () => openTurnoModal(null));

@@ -136,22 +136,6 @@
     }
   }
 
-  function syncClientesFromTurnos(turnos) {
-    const telsEnCache = new Set(cache.map(c => normTel(c.telefono)).filter(Boolean));
-    const nombresEnCache = new Set(cache.map(c => (c.nombre || '').trim().toLowerCase()));
-    const agregando = new Set();
-
-    turnos.forEach(t => {
-      if (!t.cliente) return;
-      const tel = normTel(t.telefono);
-      const nombre = t.cliente.trim().toLowerCase();
-      if (tel && (telsEnCache.has(tel) || agregando.has(`tel_${tel}`))) return;
-      if (!tel && (nombresEnCache.has(nombre) || agregando.has(`nom_${nombre}`))) return;
-      agregando.add(tel ? `tel_${tel}` : `nom_${nombre}`);
-      addDoc(clientesCol, { nombre: t.cliente, telefono: t.telefono || '', notas: '' });
-    });
-  }
-
   async function sincronizarConSheets() {
     const url = window.PANEL_SHEETS_WEBHOOK_URL;
     if (!cache.length) { alert('No hay clientes para sincronizar.'); return; }

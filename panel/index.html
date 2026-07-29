@@ -107,11 +107,15 @@
       <div class="emp-registro">
         <h2>Registrar corte</h2>
         <form id="empCorteForm" class="emp-form">
-          <div class="emp-form__fields emp-form__fields--3">
+          <div class="emp-form__fields">
             <div class="emp-form__field">
               <label for="empCorteCliente">Apellido y Nombre</label>
               <input type="text" id="empCorteCliente" placeholder="Ej: García Juan" required autocomplete="off" list="empClientesList">
               <datalist id="empClientesList"></datalist>
+            </div>
+            <div class="emp-form__field">
+              <label for="empCorteBarbero">Barbero</label>
+              <select id="empCorteBarbero" required></select>
             </div>
             <div class="emp-form__field">
               <label for="empCorteServicio">Servicio</label>
