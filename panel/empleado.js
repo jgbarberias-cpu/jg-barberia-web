@@ -73,81 +73,14 @@
   }
 
   function renderLista() {
-    const lista = document.getElementById('empLista');
-    const empty = document.getElementById('empEmpty');
     const total = document.getElementById('empTotal');
-    if (!lista) return;
-
-    const hoy = todayISO();
-
-    // Solo clientes atendidos hoy o registrados hoy
-    const nombresHoy = new Set(
-      cacheTurnos
-        .filter(t => t.fecha === hoy && t.estado === 'completado')
-        .map(t => (t.cliente || '').toLowerCase().trim())
-    );
-
-    const clientesHoy = cacheClientes.filter(c => {
-      if (nombresHoy.has((c.nombre || '').toLowerCase().trim())) return true;
-      const ca = c.createdAt || c.created_at || '';
-      return ca && String(ca).slice(0, 10) === hoy;
-    });
-
-    const filtrado = clientesHoy
-      .filter(c => {
-        if (!busqueda) return true;
-        const b = busqueda.toLowerCase();
-        return c.nombre.toLowerCase().includes(b) || (c.telefono || '').includes(b);
-      })
-      .sort((a, b) => {
-        const ua = statsCliente(a).ultima || '';
-        const ub = statsCliente(b).ultima || '';
-        if (!ua && !ub) return a.nombre.localeCompare(b.nombre);
-        if (!ua) return 1;
-        if (!ub) return -1;
-        return ub.localeCompare(ua);
-      });
-
-    total.textContent = `(${clientesHoy.length})`;
-    empty.hidden = filtrado.length > 0;
-    lista.innerHTML = '';
-
-    filtrado.forEach(c => {
-      const s = statsCliente(c);
-      const dias = diasDesde(s.ultima);
-      const recordatorio = dias !== null && dias >= RECORDATORIO_DIAS;
-      const telNorm = normTel(c.telefono);
-      const waHref  = telNorm ? `https://wa.me/549${telNorm}` : null;
-      const card = document.createElement('div');
-      card.className = 'emp-card' + (recordatorio ? ' emp-card--alerta' : '');
-      card.innerHTML = `
-        <div class="emp-card__avatar">${c.nombre.charAt(0).toUpperCase()}</div>
-        <div class="emp-card__info">
-          <div class="emp-card__nombre">${c.nombre}</div>
-          <div class="emp-card__tel">${c.telefono || 'Sin número'}</div>
-          ${s.ultima
-            ? `<div class="emp-card__ultima">Último corte: ${fmtFecha(s.ultima)} · ${s.ultimoServicio}</div>`
-            : '<div class="emp-card__ultima">Sin visitas registradas</div>'}
-        </div>
-        <div class="emp-card__badges">
-          ${s.cantidad > 0 ? `<span class="emp-badge emp-badge--visitas">${s.cantidad} corte${s.cantidad !== 1 ? 's' : ''}</span>` : ''}
-          ${recordatorio ? `<span class="emp-badge emp-badge--recordar">Recordar (${dias}d)</span>` : ''}
-          ${waHref ? `<a href="${waHref}" target="_blank" rel="noopener" class="emp-card__wa${recordatorio ? ' emp-card__wa--urgente' : ''}">WhatsApp</a>` : ''}
-        </div>
-      `;
-      lista.appendChild(card);
-    });
+    if (total) total.textContent = cacheClientes.length;
 
     const dl = document.getElementById('empClientesList');
     if (dl) dl.innerHTML = cacheClientes.map(c => `<option value="${c.nombre}">`).join('');
   }
 
   function initFormClientes() {
-    document.getElementById('empBuscar').addEventListener('input', e => {
-      busqueda = e.target.value.trim();
-      renderLista();
-    });
-
     document.getElementById('empForm').addEventListener('submit', async e => {
       e.preventDefault();
       const nombre   = document.getElementById('empNombre').value.trim();

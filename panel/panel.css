@@ -640,6 +640,29 @@ input, select, textarea {
 
 .emp-msg { font-size: 0.85rem; font-weight: 500; }
 
+.emp-total-contador {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 8px;
+}
+
+.emp-total-contador__num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 5rem;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.emp-total-contador__label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 .emp-clientes__header {
   display: flex;
   align-items: center;
