@@ -78,7 +78,22 @@
     const total = document.getElementById('empTotal');
     if (!lista) return;
 
-    const filtrado = cacheClientes
+    const hoy = todayISO();
+
+    // Solo clientes atendidos hoy o registrados hoy
+    const nombresHoy = new Set(
+      cacheTurnos
+        .filter(t => t.fecha === hoy && t.estado === 'completado')
+        .map(t => (t.cliente || '').toLowerCase().trim())
+    );
+
+    const clientesHoy = cacheClientes.filter(c => {
+      if (nombresHoy.has((c.nombre || '').toLowerCase().trim())) return true;
+      const ca = c.createdAt || c.created_at || '';
+      return ca && String(ca).slice(0, 10) === hoy;
+    });
+
+    const filtrado = clientesHoy
       .filter(c => {
         if (!busqueda) return true;
         const b = busqueda.toLowerCase();
@@ -93,7 +108,7 @@
         return ub.localeCompare(ua);
       });
 
-    total.textContent = `(${cacheClientes.length})`;
+    total.textContent = `(${clientesHoy.length})`;
     empty.hidden = filtrado.length > 0;
     lista.innerHTML = '';
 
