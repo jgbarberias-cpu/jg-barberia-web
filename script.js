@@ -1,19 +1,21 @@
-// Role gate
+// Role gate — se abre solo cuando el usuario toca "Ingresar"
 (function () {
   const gate = document.getElementById('roleGate');
   if (!gate) return;
 
-  // Si ya eligió en esta sesión, quitamos la pantalla
-  if (sessionStorage.getItem('jg_ingreso')) {
-    gate.remove();
-    return;
+  function abrirGate() {
+    gate.style.display = 'flex';
+    gate.classList.remove('is-hiding');
+  }
+
+  function cerrarGate() {
+    gate.classList.add('is-hiding');
+    setTimeout(() => { gate.style.display = 'none'; gate.classList.remove('is-hiding'); }, 500);
   }
 
   function elegirRol(rol) {
-    sessionStorage.setItem('jg_ingreso', rol);
     if (rol === 'cliente') {
-      gate.classList.add('is-hiding');
-      setTimeout(() => gate.remove(), 500);
+      cerrarGate();
     } else {
       window.location.href = 'panel/';
     }
@@ -23,20 +25,8 @@
   document.getElementById('roleDueno').addEventListener('click', () => elegirRol('dueno'));
   document.getElementById('roleEmpleado').addEventListener('click', () => elegirRol('empleado'));
 
-  // Botón "Ingresar" del header → reabre el selector
   const openBtn = document.getElementById('openRoleGateBtn');
-  if (openBtn) {
-    openBtn.addEventListener('click', () => {
-      // Si el gate fue eliminado del DOM, recreamos la sesión y redirigimos al panel
-      // Si sigue en el DOM, lo mostramos de nuevo
-      const existingGate = document.getElementById('roleGate');
-      if (existingGate) {
-        existingGate.classList.remove('is-hiding');
-      } else {
-        window.location.href = 'panel/';
-      }
-    });
-  }
+  if (openBtn) openBtn.addEventListener('click', abrirGate);
 })();
 
 // Menú mobile
