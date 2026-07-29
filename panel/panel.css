@@ -328,6 +328,26 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; }
 }
 .link-btn:hover { color: var(--gold); }
 
+.wa-circle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(37,211,102,0.3);
+  vertical-align: middle;
+}
+.wa-circle-btn:hover {
+  transform: scale(1.13);
+  box-shadow: 0 4px 16px rgba(37,211,102,0.5);
+}
+
 /* ── Summary cards ── */
 .summary-cards {
   display: grid;
