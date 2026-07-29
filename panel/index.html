@@ -54,11 +54,11 @@
         <form id="empForm" class="emp-form">
           <div class="emp-form__fields">
             <div class="emp-form__field">
-              <label for="empNombre">Nombre</label>
-              <input type="text" id="empNombre" placeholder="Nombre del cliente" required autocomplete="off">
+              <label for="empNombre">Apellido y Nombre</label>
+              <input type="text" id="empNombre" placeholder="Ej: García Juan" required autocomplete="off">
             </div>
             <div class="emp-form__field">
-              <label for="empTelefono">WhatsApp</label>
+              <label for="empTelefono">WhatsApp (obligatorio)</label>
               <input type="tel" id="empTelefono" placeholder="Ej: 3855551234" required autocomplete="off">
             </div>
           </div>
@@ -446,11 +446,11 @@
   <form id="clienteForm" class="modal__form">
     <h3>Nuevo cliente</h3>
     <input type="hidden" id="clienteId">
-    <label>Nombre
-      <input type="text" id="clienteNombre" required>
+    <label>Apellido y Nombre
+      <input type="text" id="clienteNombre" placeholder="Ej: García Juan" required>
     </label>
-    <label>WhatsApp / Teléfono
-      <input type="tel" id="clienteTelefono">
+    <label>WhatsApp (obligatorio)
+      <input type="tel" id="clienteTelefono" placeholder="Ej: 3855551234" required>
     </label>
     <details class="cliente-extra">
       <summary>+ Más datos (opcional)</summary>
@@ -509,12 +509,12 @@
   <form id="counterForm" class="modal__form">
     <h3 id="counterModalTitle">Registrar corte</h3>
     <input type="hidden" id="counterBarbero">
-    <label>Cliente
-      <input type="text" id="counterCliente" placeholder="Nombre del cliente" autocomplete="off" list="counterClientesList" required>
+    <label>Apellido y Nombre
+      <input type="text" id="counterCliente" placeholder="Ej: García Juan" autocomplete="off" list="counterClientesList" required>
       <datalist id="counterClientesList"></datalist>
     </label>
-    <label>WhatsApp
-      <input type="tel" id="counterWpp" placeholder="Ej: 3855551234" autocomplete="off">
+    <label>WhatsApp (obligatorio)
+      <input type="tel" id="counterWpp" placeholder="Ej: 3855551234" autocomplete="off" required>
     </label>
     <p id="counterNuevoMsg" class="form-warning" hidden></p>
     <div class="modal__actions">

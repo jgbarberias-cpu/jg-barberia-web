@@ -317,6 +317,8 @@
       const clienteNombre = cliInput.value.trim();
       const wpp           = wppInput.value.trim();
       if (!clienteNombre) return;
+      if (!wpp) { wppInput.focus(); wppInput.style.borderColor = 'red'; return; }
+      wppInput.style.borderColor = '';
 
       const submitBtn = form.querySelector('[type="submit"]');
       submitBtn.disabled = true;
