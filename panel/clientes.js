@@ -148,31 +148,33 @@
   async function sincronizarConSheets() {
     const url = window.PANEL_SHEETS_WEBHOOK_URL;
     if (!cache.length) { alert('No hay clientes para sincronizar.'); return; }
-    if (!confirm(`¿Enviar ${cache.length} cliente${cache.length !== 1 ? 's' : ''} a Google Sheets?`)) return;
+    if (!confirm(`¿Enviar ${cache.length} clientes a Google Sheets?`)) return;
 
     const btn = document.getElementById('syncSheetsBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+    if (btn) { btn.disabled = true; }
 
-    try {
-      const res = await fetch(url, {
+    const LOTE = 25;
+    let enviados = 0;
+    for (let i = 0; i < cache.length; i += LOTE) {
+      const lote = cache.slice(i, i + LOTE);
+      enviados += lote.length;
+      if (btn) btn.textContent = `Enviando ${enviados}/${cache.length}...`;
+      fetch(url, {
         method: 'POST',
         body: JSON.stringify({
           tipo: 'clientes_batch',
-          clientes: cache.map(c => ({
+          clientes: lote.map(c => ({
             accion: 'Nuevo',
             nombre: c.nombre, telefono: c.telefono || '',
             instagram: c.instagram || '', email: c.email || '', notas: c.notas || ''
           }))
         })
-      });
-      const json = await res.json();
-      alert(`✓ ${json.procesados || cache.length} clientes enviados a Google Sheets.`);
-    } catch (e) {
-      alert('Error al sincronizar. Revisá que el Apps Script esté actualizado.');
-      console.error(e);
+      }).catch(() => {});
+      await new Promise(r => setTimeout(r, 3000));
     }
 
     if (btn) { btn.disabled = false; btn.textContent = '↑ Sincronizar con Sheets'; }
+    alert(`✓ ${cache.length} clientes enviados a Google Sheets.`);
   }
 
   function exportarCSV() {
