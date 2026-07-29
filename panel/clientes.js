@@ -136,19 +136,19 @@
     }
   }
 
-  // Crea automáticamente los clientes que aparecen en turnos y todavía no están en la lista.
   function syncClientesFromTurnos(turnos) {
-    const vistos = new Set(cache.map(c => claveCliente(c.nombre, c.telefono)));
-    const nuevos = new Map();
+    const telsEnCache = new Set(cache.map(c => normTel(c.telefono)).filter(Boolean));
+    const nombresEnCache = new Set(cache.map(c => (c.nombre || '').trim().toLowerCase()));
+    const agregando = new Set();
+
     turnos.forEach(t => {
-      const key = claveCliente(t.cliente, t.telefono);
-      if (!vistos.has(key) && !nuevos.has(key) && t.cliente) {
-        nuevos.set(key, { nombre: t.cliente, telefono: (t.telefono || '').trim() });
-      }
-    });
-    nuevos.forEach((c, key) => {
-      vistos.add(key);
-      addDoc(clientesCol, { nombre: c.nombre, telefono: c.telefono, notas: '' });
+      if (!t.cliente) return;
+      const tel = normTel(t.telefono);
+      const nombre = t.cliente.trim().toLowerCase();
+      if (tel && (telsEnCache.has(tel) || agregando.has(`tel_${tel}`))) return;
+      if (!tel && (nombresEnCache.has(nombre) || agregando.has(`nom_${nombre}`))) return;
+      agregando.add(tel ? `tel_${tel}` : `nom_${nombre}`);
+      addDoc(clientesCol, { nombre: t.cliente, telefono: t.telefono || '', notas: '' });
     });
   }
 
