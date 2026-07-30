@@ -91,11 +91,9 @@
 
     <!-- VISTA FINANZAS DEL DÍA -->
     <div id="empViewFinanzas" class="emp-view">
-
-      <!-- Resumen mensual por barbero -->
       <div class="emp-mes-resumen">
         <div class="emp-mes-resumen__header">
-          <h2>Resumen del mes</h2>
+          <h2>Ganancias del mes</h2>
           <span id="finMesPeriodo" class="emp-mes-periodo"></span>
         </div>
         <div class="emp-mes-grid" id="finMesGrid"></div>
@@ -103,44 +101,6 @@
           <div class="emp-contadores-total__label">Total del mes</div>
           <div class="emp-contadores-total__val" id="finMesTotal">0 cortes — $0</div>
         </div>
-      </div>
-
-      <div class="emp-registro">
-        <h2>Registrar corte</h2>
-        <form id="empCorteForm" class="emp-form">
-          <div class="emp-form__fields">
-            <div class="emp-form__field">
-              <label for="empCorteCliente">Apellido y Nombre</label>
-              <input type="text" id="empCorteCliente" placeholder="Ej: García Juan" required autocomplete="off" list="empClientesList">
-              <datalist id="empClientesList"></datalist>
-            </div>
-            <div class="emp-form__field">
-              <label for="empCorteBarbero">Barbero</label>
-              <select id="empCorteBarbero" required></select>
-            </div>
-            <div class="emp-form__field">
-              <label for="empCorteServicio">Servicio</label>
-              <select id="empCorteServicio" required></select>
-            </div>
-            <div class="emp-form__field">
-              <label for="empCortePrecio">Precio</label>
-              <input type="number" id="empCortePrecio" min="0" step="1" required placeholder="$">
-            </div>
-          </div>
-          <button type="submit" class="btn btn--primary">Registrar corte</button>
-          <p id="empCorteMsg" class="emp-msg" hidden></p>
-        </form>
-      </div>
-
-      <div class="emp-finanzas-dia">
-        <div class="emp-clientes__header">
-          <h2>Cortes de hoy</h2>
-          <div class="emp-total-dia">
-            Total: <strong id="empTotalDia">$0</strong>
-          </div>
-        </div>
-        <div id="empCortesLista" class="emp-cortes-lista"></div>
-        <p id="empCortesEmpty" class="empty-state" hidden>No hay cortes registrados hoy.</p>
       </div>
     </div>
 
