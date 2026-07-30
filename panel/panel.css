@@ -316,6 +316,56 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; }
 .badge--success { background: #1a2e1e; color: #7dd4a0; border: 1px solid #1e3a24; }
 .badge--muted   { background: var(--bg-soft); color: var(--text-muted); border: 1px solid var(--border); }
 
+/* ── Notificaciones de beneficios ─────────────────────────────── */
+.notif-beneficio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.notif-beneficio:last-child { border-bottom: none; }
+.notif-beneficio__info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.notif-beneficio__nombre { font-size: 0.88rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-beneficio__label  { font-size: 0.76rem; color: var(--text-muted); }
+.notif-sin-tel { font-size: 0.75rem; color: var(--text-muted); }
+
+.notif-wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #25d366;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.notif-wa-btn:hover { opacity: 0.85; }
+
+/* Panel empleado — contenedor de beneficios */
+.emp-beneficios-notif {
+  margin-bottom: 16px;
+}
+.emp-beneficios-header {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 0 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
 .amount--ingreso { color: var(--green); font-weight: 600; }
 .amount--egreso { color: var(--red); font-weight: 600; }
 
