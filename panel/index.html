@@ -92,6 +92,20 @@
 
     <!-- VISTA FINANZAS DEL DÍA -->
     <div id="empViewFinanzas" class="emp-view">
+
+      <!-- Hoy -->
+      <div class="emp-mes-resumen">
+        <div class="emp-mes-resumen__header">
+          <h2>Ganancias de hoy</h2>
+        </div>
+        <div class="emp-mes-grid" id="finHoyGrid"></div>
+        <div class="emp-contadores-total">
+          <div class="emp-contadores-total__label">Total de hoy</div>
+          <div class="emp-contadores-total__val" id="finHoyTotal">0 cortes — $0</div>
+        </div>
+      </div>
+
+      <!-- Mes -->
       <div class="emp-mes-resumen">
         <div class="emp-mes-resumen__header">
           <h2>Ganancias del mes</h2>
@@ -103,6 +117,7 @@
           <div class="emp-contadores-total__val" id="finMesTotal">0 cortes — $0</div>
         </div>
       </div>
+
     </div>
 
   </main>

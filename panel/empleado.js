@@ -410,7 +410,8 @@
     sel.innerHTML = activos.map(s =>
       `<option value="${s.id}" data-precio="${s.precio}" data-nombre="${s.nombre}">${s.nombre} (${fmt(s.precio)})</option>`
     ).join('');
-    if (activos.length > 0) document.getElementById('empCortePrecio').value = activos[0].precio;
+    const precioEl = document.getElementById('empCortePrecio');
+    if (activos.length > 0 && precioEl) precioEl.value = activos[0].precio;
   }
 
   function populateBarberoSelect() {
@@ -463,6 +464,7 @@
   function initFormCortes() {
     const sel    = document.getElementById('empCorteServicio');
     const precio = document.getElementById('empCortePrecio');
+    if (!sel || !precio) return;
 
     sel.addEventListener('change', () => {
       const opt = sel.selectedOptions[0];
@@ -520,6 +522,38 @@
     });
   }
 
+  // ── Resumen de hoy en Finanzas ────────────────────────────────
+  function renderResumenHoy() {
+    const grid = document.getElementById('finHoyGrid');
+    const totalEl = document.getElementById('finHoyTotal');
+    if (!grid) return;
+
+    const hoy = todayISO();
+    let totalCortes = 0, totalDinero = 0;
+    const activos = getBarberos().filter(b => b.activo !== false);
+
+    grid.innerHTML = activos.map(b => {
+      const cortes = cacheTurnos.filter(t =>
+        t.fecha === hoy && t.barbero === b.nombre && t.estado === 'completado'
+      );
+      const dinero = cortes.reduce((s, t) => s + Number(t.precio || 0), 0);
+      totalCortes += cortes.length;
+      totalDinero += dinero;
+      if (cortes.length === 0) return '';
+      const comision = b.comision != null ? cortes.length * b.comision : 0;
+      return `
+        <div class="emp-mes-card">
+          <div class="emp-mes-card__nombre">${(b.apodo || b.nombre).toUpperCase()}</div>
+          <div class="emp-mes-card__cortes">${cortes.length} corte${cortes.length !== 1 ? 's' : ''}</div>
+          <div class="emp-mes-card__dinero">${fmt(dinero)}</div>
+          ${b.comision != null ? `<div class="emp-mes-card__comision">${fmt(comision)} para ${b.apodo || b.nombre}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    if (!grid.innerHTML.trim()) grid.innerHTML = '<p class="empty-state">Todavía no hay cortes hoy.</p>';
+    if (totalEl) totalEl.textContent = `${totalCortes} corte${totalCortes !== 1 ? 's' : ''} — ${fmt(totalDinero)}`;
+  }
+
   // ── Init principal ─────────────────────────────────────────────
   function initEmpleado(onLogout) {
     initTabs();
@@ -539,6 +573,7 @@
       renderLista();
       renderContadores();
       renderResumenMes();
+      renderResumenHoy();
     });
 
     onSnapshot(query(finanzasCol, orderBy('fecha', 'desc')), snap => {
