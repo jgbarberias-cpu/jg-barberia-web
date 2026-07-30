@@ -26,7 +26,7 @@
     return h ? h.slice(0, 5) : '';
   }
 
-  let cacheTurnos = [], cacheFinanzas = [], cacheClientes = [];
+  let cacheTurnos = [], cacheFinanzas = [], cacheClientes = [], cacheBarberos = [];
 
   function renderTurnos() {
     const hoy = todayISO();
@@ -131,6 +131,29 @@
     }).join('');
   }
 
+  function renderFinanzasDueno() {
+    const elHoy = document.getElementById('resumenDuenoHoy');
+    const elMes = document.getElementById('resumenDuenoMes');
+    if (!elHoy || !elMes) return;
+
+    const dueno = cacheBarberos.find(b => b.comision === null || b.comision === undefined && b.nombre);
+    if (!dueno) { elHoy.textContent = '$0'; elMes.textContent = '$0'; return; }
+
+    const hoy = todayISO();
+    const mes = currentMonth();
+
+    const ganHoy = cacheTurnos
+      .filter(t => t.fecha === hoy && t.barbero === dueno.nombre && t.estado === 'completado')
+      .reduce((s, t) => s + Number(t.precio || 0), 0);
+
+    const ganMes = cacheTurnos
+      .filter(t => t.fecha && t.fecha.startsWith(mes) && t.barbero === dueno.nombre && t.estado === 'completado')
+      .reduce((s, t) => s + Number(t.precio || 0), 0);
+
+    elHoy.textContent = fmt(ganHoy);
+    elMes.textContent = fmt(ganMes);
+  }
+
   function renderRecordatorios() {
     const el = document.getElementById('resumenRecordatorios');
     if (!el) return;
@@ -170,6 +193,7 @@
   function render() {
     renderTurnos();
     renderFinanzas();
+    renderFinanzasDueno();
     renderRecordatorios();
     renderBeneficios();
   }
@@ -189,6 +213,11 @@
       cacheClientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderRecordatorios();
       renderBeneficios();
+    });
+
+    onSnapshot(query(collection(db, 'barberos'), orderBy('nombre')), snap => {
+      cacheBarberos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderFinanzasDueno();
     });
   }
 
