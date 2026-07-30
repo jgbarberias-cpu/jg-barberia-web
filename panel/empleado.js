@@ -249,7 +249,7 @@
     if (!grid) return;
 
     let totalCortes = 0, totalDinero = 0, totalComisiones = 0;
-    const activos = getBarberos().filter(b => b.activo !== false);
+    const activos = getBarberos().filter(b => b.activo !== false && b.comision !== null);
 
     grid.innerHTML = activos.map(b => {
       const cortes = cacheTurnos.filter(t =>
@@ -530,7 +530,7 @@
 
     const hoy = todayISO();
     let totalCortes = 0, totalDinero = 0;
-    const activos = getBarberos().filter(b => b.activo !== false);
+    const activos = getBarberos().filter(b => b.activo !== false && b.comision !== null);
 
     grid.innerHTML = activos.map(b => {
       const cortes = cacheTurnos.filter(t =>
