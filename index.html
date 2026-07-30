@@ -82,22 +82,22 @@
     <h2 class="section-title">Nuestros <span class="section-title__accent">Servicios</span></h2>
     <div class="services__grid">
       <div class="service-card">
-        <div class="service-card__icon-wrap">✂️</div>
+        <div class="service-card__icon-wrap"><i data-feather="scissors"></i></div>
         <h3>Cortes modernos</h3>
         <p>Estilos actuales adaptados a tu cara y personalidad.</p>
       </div>
       <div class="service-card">
-        <div class="service-card__icon-wrap">💈</div>
+        <div class="service-card__icon-wrap"><i data-feather="sliders"></i></div>
         <h3>Degradados</h3>
         <p>Fade prolijo y a la medida, del skin fade al clásico.</p>
       </div>
       <div class="service-card">
-        <div class="service-card__icon-wrap">🎨</div>
+        <div class="service-card__icon-wrap"><i data-feather="edit-2"></i></div>
         <h3>Diseños</h3>
         <p>Líneas, figuras y detalles personalizados al detalle.</p>
       </div>
       <div class="service-card">
-        <div class="service-card__icon-wrap">🪒</div>
+        <div class="service-card__icon-wrap"><i data-feather="crop"></i></div>
         <h3>Barba</h3>
         <p>Perfilado, contorno y arreglo completo de barba.</p>
       </div>
@@ -123,15 +123,15 @@
 <section class="why">
   <div class="container why__grid">
     <div class="why__item">
-      <span class="why__icon">❄️</span>
+      <span class="why__icon"><i data-feather="wind"></i></span>
       <h3>Ambiente climatizado</h3>
     </div>
     <div class="why__item">
-      <span class="why__icon">👤</span>
+      <span class="why__icon"><i data-feather="user-check"></i></span>
       <h3>Atención personalizada</h3>
     </div>
     <div class="why__item">
-      <span class="why__icon">⭐</span>
+      <span class="why__icon"><i data-feather="award"></i></span>
       <h3>Calidad y estilo en cada corte</h3>
     </div>
   </div>
@@ -162,7 +162,7 @@
   <div class="container location__grid">
     <div class="location__info">
       <h2 class="section-title section-title--left">Ubicación y horarios</h2>
-      <p class="location__address">📍 Pellegrini 95, Frías, Santiago del Estero</p>
+      <p class="location__address"><i data-feather="map-pin"></i> Pellegrini 95, Frías, Santiago del Estero</p>
       <table class="hours">
         <tr><td>Lunes a Sábado</td><td>16:00 a 21:00 hs</td></tr>
       </table>
@@ -184,8 +184,8 @@
       <span class="brand__name">JG Barbería</span>
     </div>
     <div class="footer__links">
-      <a href="https://wa.me/5493855720748" target="_blank" rel="noopener">📞 385 572 0748</a>
-      <a href="https://instagram.com/jgpelu._" target="_blank" rel="noopener">📷 @jgpelu._</a>
+      <a href="https://wa.me/5493855720748" target="_blank" rel="noopener"><i data-feather="phone"></i> 385 572 0748</a>
+      <a href="https://instagram.com/jgpelu._" target="_blank" rel="noopener"><i data-feather="instagram"></i> @jgpelu._</a>
     </div>
     <p class="footer__copy">© 2026 JG Barbería · Pellegrini 95, Frías</p>
   </div>
@@ -196,8 +196,10 @@
 </a>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 <script src="reviews-config.js"></script>
 <script src="reviews.js"></script>
 <script src="script.js"></script>
+<script>feather.replace({ 'stroke-width': 1.5 });</script>
 </body>
 </html>

@@ -424,8 +424,12 @@ img { max-width: 100%; display: block; }
   gap: 24px;
   text-align: center;
 }
-.why__icon { font-size: 2rem; display: block; margin-bottom: 10px; }
+.why__icon { display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+.why__icon svg { width: 34px; height: 34px; stroke: var(--gold); }
 .why__item h3 { color: var(--beige); font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.service-card__icon-wrap svg { width: 26px; height: 26px; stroke: var(--gold); }
+.location__address svg { width: 16px; height: 16px; stroke: var(--gold); vertical-align: -3px; margin-right: 6px; }
+.footer__links svg { width: 15px; height: 15px; stroke: var(--gold); vertical-align: -3px; margin-right: 5px; }
 
 .location__grid {
   display: grid;
