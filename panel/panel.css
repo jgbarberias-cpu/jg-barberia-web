@@ -351,6 +351,41 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; }
 }
 .notif-wa-btn:hover { opacity: 0.85; }
 
+/* ── Clientes recientes (hoy/ayer) ────────────────────────────── */
+.emp-recientes-grupo { margin-top: 20px; }
+.emp-recientes-titulo {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.emp-recientes-count {
+  background: var(--gold);
+  color: #0a0a0a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 99px;
+}
+.emp-reciente-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+.emp-reciente-fila:last-child { border-bottom: none; }
+.emp-reciente-hora { color: var(--text-muted); font-size: 0.78rem; min-width: 38px; }
+.emp-reciente-nombre { flex: 1; font-weight: 500; }
+.emp-reciente-barbero { color: var(--text-muted); font-size: 0.8rem; }
+
 /* Panel empleado — contenedor de beneficios */
 .emp-beneficios-notif {
   margin-bottom: 16px;
