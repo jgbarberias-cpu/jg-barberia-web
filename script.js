@@ -1,17 +1,9 @@
-// Role gate — se abre solo cuando el usuario toca "Ingresar"
+// Role gate — se muestra directamente al cargar la página
 (function () {
   const gate = document.getElementById('roleGate');
   if (!gate) return;
 
-  function abrirGate() {
-    gate.style.display = 'flex';
-    gate.classList.remove('is-hiding');
-  }
-
-  function cerrarGate() {
-    gate.classList.add('is-hiding');
-    setTimeout(() => { gate.style.display = 'none'; gate.classList.remove('is-hiding'); }, 500);
-  }
+  gate.style.display = 'flex';
 
   function elegirRol(rol) {
     if (rol === 'cliente') {
@@ -23,9 +15,6 @@
 
   document.getElementById('roleCliente').addEventListener('click', () => elegirRol('cliente'));
   document.getElementById('roleEmpleado').addEventListener('click', () => elegirRol('empleado'));
-
-  const openBtn = document.getElementById('openRoleGateBtn');
-  if (openBtn) openBtn.addEventListener('click', abrirGate);
 })();
 
 // Menú mobile
