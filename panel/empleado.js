@@ -15,7 +15,7 @@
 
   const BARBEROS_DEFAULT = [
     { nombre: 'Santiago Barone',  apodo: 'Santy', comision: 5000, activo: true },
-    { nombre: 'Sebastian Peralta', apodo: 'Seba',  comision: 5000, activo: true },
+    { nombre: 'Sebastian Peralta', apodo: 'Seba',  comision: 5500, activo: true },
     { nombre: 'Juan Griguoli',    apodo: 'Juan',  comision: null,  activo: true },
   ];
 
