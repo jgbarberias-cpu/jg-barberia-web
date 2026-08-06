@@ -1,5 +1,5 @@
 (function () {
-  const { db, collection, onSnapshot, query, orderBy } = window.Panel.Storage;
+  const { db, collection, onSnapshot, query, orderBy, escapeHtml } = window.Panel.Storage;
 
   const RECORDATORIO_DIAS = 10;
 
@@ -64,12 +64,12 @@
 
     el.innerHTML = hoyTurnos.map(t => `
       <div class="resumen-turno">
-        <span class="resumen-turno__hora">${fmtHora(t.hora)}</span>
+        <span class="resumen-turno__hora">${escapeHtml(fmtHora(t.hora))}</span>
         <div class="resumen-turno__info">
-          <span class="resumen-turno__cliente">${t.cliente}</span>
-          <span class="resumen-turno__servicio">${t.servicioNombre}</span>
+          <span class="resumen-turno__cliente">${escapeHtml(t.cliente)}</span>
+          <span class="resumen-turno__servicio">${escapeHtml(t.servicioNombre)}</span>
         </div>
-        <span class="badge badge--${t.estado}">${t.estado}</span>
+        <span class="badge badge--${escapeHtml(t.estado)}">${escapeHtml(t.estado)}</span>
       </div>
     `).join('');
   }
@@ -136,7 +136,7 @@
     const elMes = document.getElementById('resumenDuenoMes');
     if (!elHoy || !elMes) return;
 
-    const dueno = cacheBarberos.find(b => b.comision === null || b.comision === undefined && b.nombre);
+    const dueno = cacheBarberos.find(b => b.comision === null);
     if (!dueno) { elHoy.textContent = '$0'; elMes.textContent = '$0'; return; }
 
     const hoy = todayISO();

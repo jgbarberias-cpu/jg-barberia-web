@@ -1,5 +1,5 @@
 (function () {
-  const { db, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } = window.Panel.Storage;
+  const { db, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, escapeHtml } = window.Panel.Storage;
 
   const clientesCol  = collection(db, 'clientes');
   const turnosCol    = collection(db, 'turnos');
@@ -222,14 +222,14 @@
           ${cortesHoy.map((t, i) => {
             const tel = normTel(t.telefono);
             const waBtn = tel
-              ? `<a href="https://wa.me/549${tel}" target="_blank" rel="noopener" class="cnt-clientes-hoy__wa">WP</a>`
+              ? `<a href="https://wa.me/549${escapeHtml(tel)}" target="_blank" rel="noopener" class="cnt-clientes-hoy__wa">WP</a>`
               : '';
             return `
             <div class="cnt-clientes-hoy__fila">
               <span class="cnt-clientes-hoy__num">${i + 1}</span>
-              <span class="cnt-clientes-hoy__nombre">${t.cliente || '—'}</span>
-              <span class="cnt-clientes-hoy__barbero">${t.barbero || '—'}</span>
-              <span class="cnt-clientes-hoy__hora">${t.hora || ''}</span>
+              <span class="cnt-clientes-hoy__nombre">${escapeHtml(t.cliente || '—')}</span>
+              <span class="cnt-clientes-hoy__barbero">${escapeHtml(t.barbero || '—')}</span>
+              <span class="cnt-clientes-hoy__hora">${escapeHtml(t.hora || '')}</span>
               ${waBtn}
             </div>`;
           }).join('')}`;
@@ -341,7 +341,7 @@
 
       try {
         const servicio       = cacheServicios[0];
-        const precio         = servicio ? servicio.precio : 9000;
+        const precio         = servicio ? servicio.precio : 10000;
         const servicioNombre = servicio ? servicio.nombre : 'Corte';
         const servicioId     = servicio ? servicio.id : null;
 
@@ -590,6 +590,7 @@
       cacheBarberos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderContadores();
       renderResumenMes();
+      renderResumenHoy();
       populateBarberoSelect();
     });
 
