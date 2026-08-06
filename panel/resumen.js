@@ -100,7 +100,8 @@
 
     const conBeneficio = cacheClientes.filter(c => {
       const n = c.cantidadCortes || 0;
-      return n > 0 && n % 5 === 0;
+      const mod = n % 10;
+      return n > 0 && (mod === 3 || mod === 6 || mod === 0);
     });
 
     if (conBeneficio.length === 0) {
@@ -109,14 +110,16 @@
     }
 
     el.innerHTML = conBeneficio.map(c => {
-      const n    = c.cantidadCortes || 0;
-      const free = n % 10 === 0;
-      const tel  = normTelR(c.telefono);
+      const n   = c.cantidadCortes || 0;
+      const mod = n % 10;
+      const tel = normTelR(c.telefono);
       const pNombre = (c.nombre || '').split(' ')[0];
-      const label   = free ? '🎁 Corte gratis' : '✂️ 50% de descuento';
-      const msg = free
+      const label = mod === 0 ? '🎁 Corte gratis' : mod === 6 ? '✂️ 50% de descuento' : '🥤 Bebida gratis';
+      const msg = mod === 0
         ? `Hola ${pNombre}! 🎁 Llegaste a tu corte N°${n} en JG Barbería. ¡Tu próximo corte es GRATIS! Escribinos para reservar 💈`
-        : `Hola ${pNombre}! ✂️ Llegaste a tu corte N°${n} en JG Barbería. ¡Tu próximo corte tiene 50% de descuento! Escribinos para reservar 💈`;
+        : mod === 6
+        ? `Hola ${pNombre}! ✂️ Llegaste a tu corte N°${n} en JG Barbería. ¡Tu próximo corte tiene 50% de descuento! Escribinos para reservar 💈`
+        : `Hola ${pNombre}! 🥤 Llegaste a tu corte N°${n} en JG Barbería. ¡Tenés una bebida gratis esperándote! Pasá cuando quieras 💈`;
       const waUrl = tel ? `https://wa.me/549${tel}?text=${encodeURIComponent(msg)}` : null;
       return `
         <div class="notif-beneficio">

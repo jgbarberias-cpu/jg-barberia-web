@@ -267,6 +267,7 @@ a { color: inherit; text-decoration: none; }
       <span class="cp-card__value" id="cpPuntos">0</span>
       <div class="cp-points-bar"><div class="cp-points-bar__fill" id="cpPuntosBar" style="width:0%"></div></div>
       <span class="cp-card__sub" id="cpPuntosSub"></span>
+      <div class="cp-discount-badge" id="cpBadgeDrink" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.4);color:#60a5fa">🥤 ¡Bebida gratis disponible! Avisale al barbero</div>
       <div class="cp-discount-badge" id="cpBadgeHalf" style="background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.4);color:var(--gold)">✂️ ¡50% de descuento en tu próximo corte! Avisale al barbero</div>
       <div class="cp-discount-badge" id="cpBadgeFree">🎁 ¡Corte gratis disponible! Avisale al barbero</div>
     </div>
@@ -298,13 +299,17 @@ a { color: inherit; text-decoration: none; }
     <!-- Beneficios fijos -->
     <p class="cp-section-title">Beneficios del programa</p>
     <div class="cp-promos">
-      <div class="cp-promo">
-        <div class="cp-promo__titulo">✂️ 5º corte — 50% de descuento</div>
-        <div class="cp-promo__desc">Al llegar a tu 5º corte (y luego cada 5 cortes intermedios), el siguiente tiene 50% de descuento.</div>
+      <div class="cp-promo" style="border-left-color:#60a5fa">
+        <div class="cp-promo__titulo" style="color:#60a5fa">🥤 3° corte — Bebida gratis</div>
+        <div class="cp-promo__desc">Al llegar a tu 3° corte (y luego en el 13°, 23°…), tenés una bebida gratis en la barbería.</div>
       </div>
       <div class="cp-promo">
-        <div class="cp-promo__titulo">🎁 Cada 10 cortes — 1 gratis</div>
-        <div class="cp-promo__desc">Al completar 10 cortes en la barbería, el siguiente es completamente gratis.</div>
+        <div class="cp-promo__titulo">✂️ 6° corte — 50% de descuento</div>
+        <div class="cp-promo__desc">En el 6° corte (y luego en el 16°, 26°…), el siguiente corte tiene 50% de descuento.</div>
+      </div>
+      <div class="cp-promo" style="border-left-color:#25d366">
+        <div class="cp-promo__titulo" style="color:#25d366">🎁 10° corte — Corte gratis</div>
+        <div class="cp-promo__desc">Al completar 10 cortes, el siguiente es completamente gratis. ¡Y el ciclo se repite!</div>
       </div>
     </div>
 
@@ -358,36 +363,39 @@ a { color: inherit; text-decoration: none; }
     const puntos = cliente.puntos || 0;
     document.getElementById('cpPuntos').textContent = puntos;
 
-    const badgeHalf = document.getElementById('cpBadgeHalf');
-    const badgeFree = document.getElementById('cpBadgeFree');
-    badgeHalf.classList.remove('is-active');
-    badgeFree.classList.remove('is-active');
+    const badgeDrink = document.getElementById('cpBadgeDrink');
+    const badgeHalf  = document.getElementById('cpBadgeHalf');
+    const badgeFree  = document.getElementById('cpBadgeFree');
+    [badgeDrink, badgeHalf, badgeFree].forEach(b => b.classList.remove('is-active'));
 
-    let pct = 0;
+    const mod  = puntos % 10;
+    let pct = 0, subText = '';
+
     if (puntos === 0) {
-      pct = 0;
-      document.getElementById('cpPuntosSub').textContent = `Faltan 5 cortes para tu primer 50% de descuento`;
-    } else if (puntos % 10 === 0) {
-      // Milestone: corte gratis (10, 20, 30...)
-      pct = 100;
-      badgeFree.classList.add('is-active');
-      document.getElementById('cpPuntosSub').textContent = `¡Llegaste a ${puntos} cortes! El próximo es gratis ✓`;
-    } else if (puntos % 5 === 0) {
-      // Milestone: 50% descuento (5, 15, 25...)
-      pct = 100;
-      badgeHalf.classList.add('is-active');
-      document.getElementById('cpPuntosSub').textContent = `¡Llegaste a ${puntos} cortes! El próximo tiene 50% de descuento ✓`;
+      subText = 'Faltan 3 cortes para tu primera bebida gratis';
+    } else if (mod === 3) {
+      pct = 100; badgeDrink.classList.add('is-active');
+      subText = `¡Llegaste al corte N°${puntos}! Tenés una bebida gratis ✓`;
+    } else if (mod === 6) {
+      pct = 100; badgeHalf.classList.add('is-active');
+      subText = `¡Llegaste al corte N°${puntos}! Tu próximo corte tiene 50% de descuento ✓`;
+    } else if (mod === 0) {
+      pct = 100; badgeFree.classList.add('is-active');
+      subText = `¡Llegaste al corte N°${puntos}! El próximo es completamente gratis ✓`;
+    } else if (mod < 3) {
+      const faltan = 3 - mod;
+      pct = (mod / 3) * 100;
+      subText = `Faltan ${faltan} corte${faltan !== 1 ? 's' : ''} para tu bebida gratis`;
+    } else if (mod < 6) {
+      const faltan = 6 - mod;
+      pct = ((mod - 3) / 3) * 100;
+      subText = `Faltan ${faltan} corte${faltan !== 1 ? 's' : ''} para el 50% de descuento`;
     } else {
-      // En camino al próximo milestone
-      const nextMilestone = (Math.floor(puntos / 5) + 1) * 5;
-      const segStart      = nextMilestone - 5;
-      const faltan        = nextMilestone - puntos;
-      pct = ((puntos - segStart) / 5) * 100;
-      const esFree = nextMilestone % 10 === 0;
-      document.getElementById('cpPuntosSub').textContent = esFree
-        ? `Faltan ${faltan} corte${faltan !== 1 ? 's' : ''} para un corte gratis`
-        : `Faltan ${faltan} corte${faltan !== 1 ? 's' : ''} para el 50% de descuento`;
+      const faltan = 10 - mod;
+      pct = ((mod - 6) / 4) * 100;
+      subText = `Faltan ${faltan} corte${faltan !== 1 ? 's' : ''} para un corte gratis`;
     }
+    document.getElementById('cpPuntosSub').textContent = subText;
     document.getElementById('cpPuntosBar').style.width = pct + '%';
 
     // Stats
