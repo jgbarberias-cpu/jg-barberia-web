@@ -1221,6 +1221,33 @@ input, select, textarea {
 
 .resumen-card--wide { grid-column: span 2; }
 
+.resumen-card--recordatorios-hoy {
+  border-color: rgba(37, 211, 102, 0.3);
+  background: rgba(37, 211, 102, 0.04);
+}
+.resumen-card--recordatorios-hoy .resumen-card__title { color: #25d366; }
+.resumen-card__sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: -8px;
+}
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: #25d366;
+  color: #000;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
 .resumen-card__title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.1rem;
