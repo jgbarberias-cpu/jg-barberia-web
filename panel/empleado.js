@@ -289,28 +289,40 @@
 
   // ── Inicializar modal de contador ──────────────────────────────
   function initContadores() {
-    const modal     = document.getElementById('counterModal');
-    const form      = document.getElementById('counterForm');
-    const barbInput = document.getElementById('counterBarbero');
-    const cliInput  = document.getElementById('counterCliente');
-    const wppInput  = document.getElementById('counterWpp');
-    const titleEl   = document.getElementById('counterModalTitle');
-    const nuevoMsg  = document.getElementById('counterNuevoMsg');
+    const modal       = document.getElementById('counterModal');
+    const form        = document.getElementById('counterForm');
+    const successDiv  = document.getElementById('counterSuccess');
+    const successTitle = document.getElementById('counterSuccessTitle');
+    const successPts  = document.getElementById('counterSuccessPts');
+    const waLink      = document.getElementById('counterWaLink');
+    const barbInput   = document.getElementById('counterBarbero');
+    const cliInput    = document.getElementById('counterCliente');
+    const wppInput    = document.getElementById('counterWpp');
+    const titleEl     = document.getElementById('counterModalTitle');
+    const nuevoMsg    = document.getElementById('counterNuevoMsg');
+
+    function resetModal() {
+      form.hidden = false;
+      successDiv.hidden = true;
+      cliInput.value = '';
+      wppInput.value = '';
+      nuevoMsg.hidden = true;
+    }
 
     function refreshDatalist() {
       const dl = document.getElementById('counterClientesList');
       if (dl) dl.innerHTML = cacheClientes.map(c => `<option value="${c.nombre}">`).join('');
     }
 
+    modal.addEventListener('close', resetModal);
+
     // Event delegation: el grid se regenera en cada render
     document.getElementById('empContadoresGrid').addEventListener('click', e => {
       const btn = e.target.closest('.emp-counter-btn');
       if (!btn) return;
+      resetModal();
       barbInput.value = btn.dataset.barbero;
       titleEl.textContent = `Corte — ${btn.dataset.display}`;
-      cliInput.value = '';
-      wppInput.value = '';
-      nuevoMsg.hidden = true;
       refreshDatalist();
       modal.showModal();
       setTimeout(() => cliInput.focus(), 80);
@@ -395,7 +407,27 @@
             cantidadCortes: currentCortes + 1
           });
         }
-        modal.close();
+
+        // Mostrar estado de éxito con botón WA
+        const nuevoPuntos  = currentPuntos + 1;
+        const nuevosCortes = currentCortes + 1;
+        const pNombre      = clienteNombre.split(' ')[0];
+        const telNorm      = normTel(telefono);
+        const waMsg = `Hola ${pNombre}, gracias por tu visita a JG Barberia! Ya tenes ${nuevoPuntos} punto${nuevoPuntos !== 1 ? 's' : ''} acumulado${nuevoPuntos !== 1 ? 's' : ''}. Podes ver tu estado en: https://pagina-web-barberia-xi.vercel.app/cliente.html`;
+
+        successTitle.textContent = `Corte de ${clienteNombre} registrado`;
+        successPts.textContent   = `Corte N° ${nuevosCortes} — ${nuevoPuntos} punto${nuevoPuntos !== 1 ? 's' : ''} acumulado${nuevoPuntos !== 1 ? 's' : ''}`;
+
+        if (telNorm) {
+          waLink.href    = `https://wa.me/549${telNorm}?text=${encodeURIComponent(waMsg)}`;
+          waLink.hidden  = false;
+        } else {
+          waLink.hidden = true;
+        }
+
+        form.hidden      = true;
+        successDiv.hidden = false;
+
       } catch (err) { console.error(err); }
 
       submitBtn.disabled = false;

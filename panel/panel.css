@@ -540,6 +540,41 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; }
 .modal__actions { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
 .modal__actions-right { display: flex; gap: 10px; }
 
+.counter-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 4px 4px;
+  text-align: center;
+}
+.counter-success__check {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(76, 175, 80, 0.15);
+  border: 2px solid var(--green);
+  color: var(--green);
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.counter-success__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.counter-success__pts {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.counter-success__wa {
+  width: 100%;
+  background: #25d366;
+  color: #fff;
+}
+
 .day-list { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; }
 .day-list__item {
   display: flex;
