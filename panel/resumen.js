@@ -179,7 +179,8 @@
     el.innerHTML = paraHoy.map(c => {
       const pNombre = (c.nombre || '').split(' ')[0];
       const tel = normTelR(c.telefono);
-      const msg = `Hola ${pNombre}, como estas? Ya pasaron 10 dias desde tu ultimo corte en JG Barberia. Cuando quieras renovar el look avisanos y te sacamos turno, te esperamos!`;
+      const puntos = c.puntos || 0;
+      const msg = `Hola ${pNombre}, como estas? Ya pasaron 10 dias desde tu ultimo corte en JG Barberia. Tenes ${puntos} punto${puntos !== 1 ? 's' : ''} acumulado${puntos !== 1 ? 's' : ''}, podes ver tu estado en: https://pagina-web-barberia-xi.vercel.app/cliente.html — Cuando quieras renovar el look avisanos y te sacamos turno, te esperamos!`;
       const waUrl = `https://wa.me/549${tel}?text=${encodeURIComponent(msg)}`;
       return `
         <div class="notif-beneficio">
