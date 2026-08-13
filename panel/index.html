@@ -135,9 +135,7 @@
       <button class="tab" data-view="turnos">Turnos</button>
       <button class="tab" data-view="finanzas">Finanzas</button>
       <button class="tab" data-view="clientes">Clientes</button>
-      <button class="tab" data-view="barberos">Barberos</button>
-      <button class="tab" data-view="servicios">Servicios</button>
-      <button class="tab" data-view="promociones">Promos</button>
+      <button class="tab" data-view="configuracion">Configuración</button>
     </nav>
     <div class="sidebar__footer">
       <span id="sidebarRole" class="sidebar__role"></span>
@@ -284,54 +282,42 @@
 
     <!-- PLANIFICACION VIEW -->
     <!-- BARBEROS VIEW -->
-    <section id="view-barberos" class="view">
-      <div class="view__header">
-        <h2>Barberos</h2>
-        <button id="newBarberoBtn" class="btn btn--primary btn--small">+ Nuevo barbero</button>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table" id="barberosTable">
-          <thead><tr><th>Nombre completo</th><th>Apodo</th><th>Comisión</th><th>Estado</th><th></th></tr></thead>
-          <tbody id="barberosTbody"></tbody>
-        </table>
-        <p id="barberosEmpty" class="empty-state" hidden>No hay barberos registrados.</p>
+    <!-- CONFIGURACIÓN: Barberos + Servicios -->
+    <section id="view-configuracion" class="view">
+      <div class="config-grid">
+
+        <div class="config-block">
+          <div class="view__header">
+            <h2>Barberos</h2>
+            <button id="newBarberoBtn" class="btn btn--primary btn--small">+ Nuevo</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="barberosTable">
+              <thead><tr><th>Nombre</th><th>Apodo</th><th>Comisión</th><th>Estado</th><th></th></tr></thead>
+              <tbody id="barberosTbody"></tbody>
+            </table>
+            <p id="barberosEmpty" class="empty-state" hidden>No hay barberos registrados.</p>
+          </div>
+        </div>
+
+        <div class="config-block">
+          <div class="view__header">
+            <h2>Servicios y precios</h2>
+            <button id="newServicioBtn" class="btn btn--primary btn--small">+ Nuevo</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="serviciosTable">
+              <thead><tr><th>Servicio</th><th>Precio</th><th>Activo</th><th></th></tr></thead>
+              <tbody id="serviciosTbody"></tbody>
+            </table>
+            <p id="serviciosEmpty" class="empty-state" hidden>No hay servicios cargados.</p>
+          </div>
+        </div>
+
       </div>
     </section>
 
-    <!-- PROMOCIONES VIEW -->
-    <section id="view-promociones" class="view">
-      <div class="view__header">
-        <h2>Promociones</h2>
-        <button id="newPromoBtn" class="btn btn--primary btn--small">+ Nueva promo</button>
-      </div>
-      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px">
-        Las promociones activas se muestran a los clientes en su portal. Podés crear descuentos, 2x1, promos de temporada, etc.
-      </p>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr><th>Título</th><th>Descripción</th><th>Estado</th><th></th></tr>
-          </thead>
-          <tbody id="promosTbody"></tbody>
-        </table>
-        <p id="promosEmpty" class="empty-state" hidden>No hay promociones. Creá una para que los clientes la vean.</p>
-      </div>
-    </section>
-
-    <!-- SERVICIOS (oculto, necesario para el formulario de turnos) -->
-    <section id="view-servicios" class="view">
-      <div class="view__header">
-        <h2>Servicios y precios</h2>
-        <button id="newServicioBtn" class="btn btn--primary btn--small">+ Nuevo servicio</button>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table" id="serviciosTable">
-          <thead><tr><th>Servicio</th><th>Precio</th><th>Activo</th><th></th></tr></thead>
-          <tbody id="serviciosTbody"></tbody>
-        </table>
-        <p id="serviciosEmpty" class="empty-state" hidden>Todavía no agregaste servicios.</p>
-      </div>
-    </section>
+    <!-- view-barberos, view-servicios y view-promociones eliminados; reemplazados por view-configuracion -->
 
   </main>
 </div>

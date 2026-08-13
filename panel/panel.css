@@ -1256,6 +1256,17 @@ input, select, textarea {
 
 .resumen-card--wide { grid-column: span 2; }
 
+.config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+.config-block { display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 768px) {
+  .config-grid { grid-template-columns: 1fr; }
+}
+
 .resumen-card--recordatorios-hoy {
   border-color: rgba(37, 211, 102, 0.3);
   background: rgba(37, 211, 102, 0.04);
