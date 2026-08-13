@@ -179,7 +179,7 @@
     el.innerHTML = paraHoy.map(c => {
       const pNombre = (c.nombre || '').split(' ')[0];
       const tel = normTelR(c.telefono);
-      const msg = `Hola ${pNombre}! 👋 Ya pasaron 10 días desde tu último corte en JG Barbería. ¿Se viene una vuelta por la barbe? ✂️ Escribinos para sacar turno 💈`;
+      const msg = `Hola ${pNombre}, como estas? Ya pasaron 10 dias desde tu ultimo corte en JG Barberia. Cuando quieras renovar el look avisanos y te sacamos turno, te esperamos!`;
       const waUrl = `https://wa.me/549${tel}?text=${encodeURIComponent(msg)}`;
       return `
         <div class="notif-beneficio">
