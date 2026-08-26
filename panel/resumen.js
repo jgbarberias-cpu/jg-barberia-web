@@ -51,12 +51,12 @@
       el.innerHTML = '<p class="resumen-empty" style="margin-bottom:10px">No hay turnos hoy. Próximos:</p>' +
         proximos.map(t => `
           <div class="resumen-turno">
-            <span class="resumen-turno__hora">${fmtHora(t.hora)}</span>
+            <span class="resumen-turno__hora">${escapeHtml(fmtHora(t.hora))}</span>
             <div class="resumen-turno__info">
-              <span class="resumen-turno__cliente">${t.cliente}</span>
-              <span class="resumen-turno__servicio">${t.servicioNombre} · ${t.fecha}</span>
+              <span class="resumen-turno__cliente">${escapeHtml(t.cliente)}</span>
+              <span class="resumen-turno__servicio">${escapeHtml(t.servicioNombre)} · ${escapeHtml(t.fecha)}</span>
             </div>
-            <span class="badge badge--${t.estado}">${t.estado}</span>
+            <span class="badge badge--${escapeHtml(t.estado)}">${escapeHtml(t.estado)}</span>
           </div>
         `).join('');
       return;
@@ -124,8 +124,8 @@
       return `
         <div class="notif-beneficio">
           <div class="notif-beneficio__info">
-            <span class="notif-beneficio__nombre">${c.nombre}</span>
-            <span class="notif-beneficio__label">${label} — corte N°${n}</span>
+            <span class="notif-beneficio__nombre">${escapeHtml(c.nombre)}</span>
+            <span class="notif-beneficio__label">${escapeHtml(label)} — corte N°${n}</span>
           </div>
           ${waUrl
             ? `<a href="${waUrl}" target="_blank" rel="noopener" class="notif-wa-btn">${WA_ICON} Avisar</a>`
@@ -223,8 +223,8 @@
 
     el.innerHTML = pendientes.map(c => `
       <div class="resumen-recordatorio">
-        <span class="resumen-recordatorio__nombre">${c.nombre}</span>
-        <span class="resumen-recordatorio__dias">${c.dias} días sin corte</span>
+        <span class="resumen-recordatorio__nombre">${escapeHtml(c.nombre)}</span>
+        <span class="resumen-recordatorio__dias">${Number(c.dias)} días sin corte</span>
       </div>
     `).join('');
   }
