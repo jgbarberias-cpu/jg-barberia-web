@@ -49,6 +49,19 @@
 
     <!-- VISTA CLIENTES -->
     <div id="empViewClientes" class="emp-view is-active">
+
+      <!-- Avisos rápidos -->
+      <div id="empAvisos" class="emp-avisos">
+        <div class="emp-aviso-card emp-aviso-card--green" id="empAvisoBeneficios">
+          <div class="emp-aviso-card__title">🎁 Beneficios disponibles</div>
+          <div id="empBeneficiosClientes"><p class="emp-aviso-empty">Sin beneficios pendientes.</p></div>
+        </div>
+        <div class="emp-aviso-card emp-aviso-card--blue" id="empAvisoRecordatorios">
+          <div class="emp-aviso-card__title">📲 Recordatorios (+10 días)</div>
+          <div id="empRecordatoriosList"><p class="emp-aviso-empty">Nadie lleva más de 10 días.</p></div>
+        </div>
+      </div>
+
       <div class="emp-registro">
         <h2>Registrar cliente</h2>
         <form id="empForm" class="emp-form">

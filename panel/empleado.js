@@ -178,6 +178,74 @@
       }).join('')}`;
   }
 
+  // ── Avisos en vista Clientes ──────────────────────────────────
+  function renderAvisos() {
+    // — Beneficios —
+    const elBen = document.getElementById('empBeneficiosClientes');
+    if (elBen) {
+      const conBeneficio = cacheClientes.filter(c => {
+        const n = c.cantidadCortes || 0;
+        const mod = n % 10;
+        return n > 0 && (mod === 3 || mod === 6 || mod === 0);
+      });
+      if (conBeneficio.length === 0) {
+        elBen.innerHTML = '<p class="emp-aviso-empty">Sin beneficios pendientes.</p>';
+      } else {
+        elBen.innerHTML = conBeneficio.map(c => {
+          const n   = c.cantidadCortes || 0;
+          const mod = n % 10;
+          const tel = normTel(c.telefono);
+          const pNombre = (c.nombre || '').split(' ')[0];
+          const label = mod === 0 ? '🎁 Corte gratis' : mod === 6 ? '✂️ 50% desc.' : '🥤 Bebida gratis';
+          const msg = mod === 0
+            ? `Hola ${pNombre}, llegaste a tu corte N${n} en JG Barberia. Tu proximo corte es GRATIS! Escribinos para reservar`
+            : mod === 6
+            ? `Hola ${pNombre}, llegaste a tu corte N${n} en JG Barberia. Tu proximo corte tiene 50% de descuento! Escribinos para reservar`
+            : `Hola ${pNombre}, llegaste a tu corte N${n} en JG Barberia. Tenes una bebida gratis esperandote! Pasa cuando quieras`;
+          const waUrl = tel ? `https://wa.me/549${tel}?text=${encodeURIComponent(msg)}` : null;
+          return `
+            <div class="notif-beneficio">
+              <div class="notif-beneficio__info">
+                <span class="notif-beneficio__nombre">${escapeHtml(c.nombre)}</span>
+                <span class="notif-beneficio__label">${label} — corte N°${n}</span>
+              </div>
+              ${waUrl
+                ? `<a href="${waUrl}" target="_blank" rel="noopener" class="notif-wa-btn">${WA_ICON_SMALL} Avisar</a>`
+                : '<span class="notif-sin-tel">Sin WA</span>'}
+            </div>`;
+        }).join('');
+      }
+    }
+
+    // — Recordatorios 10+ días —
+    const elRec = document.getElementById('empRecordatoriosList');
+    if (elRec) {
+      const pendientes = cacheClientes
+        .map(c => ({ ...c, dias: diasDesde(c.ultimaVisita) }))
+        .filter(c => c.dias !== null && c.dias >= 10 && c.telefono)
+        .sort((a, b) => b.dias - a.dias);
+
+      if (pendientes.length === 0) {
+        elRec.innerHTML = '<p class="emp-aviso-empty">Nadie lleva más de 10 días.</p>';
+      } else {
+        elRec.innerHTML = pendientes.map(c => {
+          const pNombre = (c.nombre || '').split(' ')[0];
+          const tel     = normTel(c.telefono);
+          const puntos  = c.puntos || 0;
+          const msg     = `Hola ${pNombre}, como estas? Ya pasaron ${c.dias} dias desde tu ultimo corte en JG Barberia. Tenes ${puntos} punto${puntos !== 1 ? 's' : ''} acumulado${puntos !== 1 ? 's' : ''}. Podes ver tu estado en: https://pagina-web-barberia-xi.vercel.app/cliente.html — Cuando quieras renovar el look avisanos y te sacamos turno, te esperamos!`;
+          return `
+            <div class="notif-beneficio">
+              <div class="notif-beneficio__info">
+                <span class="notif-beneficio__nombre">${escapeHtml(c.nombre)}</span>
+                <span class="notif-beneficio__label">${Number(c.dias)} días sin corte</span>
+              </div>
+              <a href="https://wa.me/549${tel}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="notif-wa-btn">${WA_ICON_SMALL} Avisar</a>
+            </div>`;
+        }).join('');
+      }
+    }
+  }
+
   // ── Contadores por barbero (dinámico desde DB) ─────────────────
   function renderContadores() {
     const hoy  = todayISO();
@@ -601,6 +669,7 @@
       cacheClientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderLista();
       renderBeneficiosNotif();
+      renderAvisos();
     });
 
     onSnapshot(query(turnosCol, orderBy('fecha')), snap => {

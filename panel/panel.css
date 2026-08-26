@@ -387,6 +387,40 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; }
 .emp-reciente-barbero { color: var(--text-muted); font-size: 0.8rem; }
 
 /* Panel empleado — contenedor de beneficios */
+.emp-avisos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+@media (max-width: 640px) { .emp-avisos { grid-template-columns: 1fr; } }
+
+.emp-aviso-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.emp-aviso-card--green { border-color: rgba(76,175,80,0.3); }
+.emp-aviso-card--blue  { border-color: rgba(59,130,246,0.3); }
+.emp-aviso-card__title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+.emp-aviso-card--green .emp-aviso-card__title { color: var(--green); }
+.emp-aviso-card--blue  .emp-aviso-card__title { color: #60a5fa; }
+.emp-aviso-empty { color: var(--text-muted); font-size: 0.8rem; }
+
 .emp-beneficios-notif {
   margin-bottom: 16px;
 }
