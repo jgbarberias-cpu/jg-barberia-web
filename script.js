@@ -15,6 +15,23 @@
 
   document.getElementById('roleCliente').addEventListener('click', () => elegirRol('cliente'));
   document.getElementById('roleEmpleado').addEventListener('click', () => elegirRol('empleado'));
+
+  // Botón "Ver la página" — cierra el gate y muestra la landing
+  document.getElementById('roleVerSitio').addEventListener('click', () => {
+    gate.classList.add('is-hiding');
+    gate.addEventListener('transitionend', () => {
+      gate.style.display = 'none';
+    }, { once: true });
+  });
+
+  // También permite reabrirlo desde el nav
+  const openBtn = document.getElementById('openRoleGateBtn');
+  if (openBtn) {
+    openBtn.addEventListener('click', () => {
+      gate.style.display = 'flex';
+      requestAnimationFrame(() => gate.classList.remove('is-hiding'));
+    });
+  }
 })();
 
 // Menú mobile

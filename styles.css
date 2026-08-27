@@ -70,6 +70,22 @@
   margin-top: -8px;
 }
 
+.role-gate__site-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: 0.6;
+  margin-top: -8px;
+  transition: opacity 0.2s, color 0.2s;
+  padding: 6px 0;
+}
+.role-gate__site-btn:hover { opacity: 1; color: var(--gold); }
+
 .role-gate__cards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
