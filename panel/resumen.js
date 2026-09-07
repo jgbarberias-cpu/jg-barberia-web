@@ -216,11 +216,11 @@
     // Clientes entre 10 y 15 días sin corte (con teléfono)
     const pendientes = cacheClientes
       .map(c => ({ ...c, dias: diasDesde(c.ultimaVisita) }))
-      .filter(c => c.dias !== null && c.dias >= RECORDATORIO_DIAS && c.dias <= 15 && c.telefono)
+      .filter(c => c.dias !== null && c.dias >= 15 && c.dias <= 18 && c.telefono)
       .sort((a, b) => b.dias - a.dias);
 
     if (pendientes.length === 0) {
-      el.innerHTML = '<p class="resumen-empty">No hay recordatorios en el rango de 10 a 15 días.</p>';
+      el.innerHTML = '<p class="resumen-empty">No hay recordatorios en el rango de 15 a 18 días.</p>';
       return;
     }
 
