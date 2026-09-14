@@ -16,7 +16,7 @@
   const BARBEROS_DEFAULT = [
     { nombre: 'Santiago Barone',  apodo: 'Santy', comision: 5000, activo: true },
     { nombre: 'Sebastian Peralta', apodo: 'Seba',  comision: 5500, activo: true },
-    { nombre: 'Tomas Griguoli',   apodo: 'Tomi',  comision: 5500, activo: true },
+    { nombre: 'Tomas Ramos',      apodo: 'Tomi',  comision: 5500, activo: true },
     { nombre: 'Juan Griguoli',    apodo: 'Juan',  comision: null,  activo: true },
   ];
 
@@ -68,7 +68,7 @@
     if (total) total.textContent = cacheClientes.length;
 
     const dl = document.getElementById('empClientesList');
-    if (dl) dl.innerHTML = cacheClientes.map(c => `<option value="${c.nombre}">`).join('');
+    if (dl) dl.innerHTML = cacheClientes.map(c => `<option value="${escapeHtml(c.nombre)}">`).join('');
 
     const contenedor = document.getElementById('empClientesRecientes');
     if (!contenedor) return;
@@ -169,8 +169,8 @@
         return `
           <div class="notif-beneficio">
             <div class="notif-beneficio__info">
-              <span class="notif-beneficio__nombre">${c.nombre}</span>
-              <span class="notif-beneficio__label">${label} — corte N°${n}</span>
+              <span class="notif-beneficio__nombre">${escapeHtml(c.nombre)}</span>
+              <span class="notif-beneficio__label">${escapeHtml(label)} — corte N°${n}</span>
             </div>
             ${waUrl
               ? `<a href="${waUrl}" target="_blank" rel="noopener" class="notif-wa-btn">${WA_ICON_SMALL} Avisar</a>`
@@ -380,7 +380,7 @@
 
     function refreshDatalist() {
       const dl = document.getElementById('counterClientesList');
-      if (dl) dl.innerHTML = cacheClientes.map(c => `<option value="${c.nombre}">`).join('');
+      if (dl) dl.innerHTML = cacheClientes.map(c => `<option value="${escapeHtml(c.nombre)}">`).join('');
     }
 
     modal.addEventListener('close', resetModal);
@@ -497,7 +497,14 @@
         form.hidden      = true;
         successDiv.hidden = false;
 
-      } catch (err) { console.error(err); }
+      } catch (err) {
+        console.error(err);
+        const errMsg = document.createElement('p');
+        errMsg.textContent = 'Error al registrar el corte. Revisá la conexión e intentá de nuevo.';
+        errMsg.style.cssText = 'color:var(--red);font-size:0.82rem;margin-top:8px;text-align:center';
+        form.appendChild(errMsg);
+        setTimeout(() => errMsg.remove(), 4000);
+      }
 
       submitBtn.disabled = false;
     });
