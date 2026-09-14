@@ -672,74 +672,6 @@ input:focus, select:focus, textarea:focus {
 }
 .cliente-extra label { margin-top: 10px; }
 
-/* ── Tareas ── */
-.tarea--hecha td { color: var(--text-muted); text-decoration: line-through; }
-.tarea--hecha td:first-child, .tarea--hecha td:last-child { text-decoration: none; }
-
-/* ── Planificación semanal ── */
-.plan-legend { display: flex; gap: 8px; align-items: center; }
-.plan-badge { font-size: 0.7rem; padding: 3px 10px; border-radius: 20px; font-weight: 500; letter-spacing: 0.3px; }
-.plan-badge--limpieza { background: rgba(79,195,247,0.12); color: #4fc3f7; border: 1px solid rgba(79,195,247,0.25); }
-.plan-badge--marketing { background: rgba(206,147,216,0.12); color: #ce93d8; border: 1px solid rgba(206,147,216,0.25); }
-.plan-badge--otra { background: rgba(176,176,176,0.1); color: var(--text-muted); border: 1px solid var(--border); }
-
-.plan-board {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  align-items: flex-start;
-}
-
-.plan-col {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.plan-col__header {
-  color: var(--gold);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.05rem;
-  font-weight: 600;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  letter-spacing: 0.3px;
-}
-
-.plan-list { display: flex; flex-direction: column; gap: 5px; min-height: 40px; }
-
-.plan-card {
-  background: var(--bg-soft);
-  border-radius: 6px;
-  padding: 8px 10px;
-  border-left: 2px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  transition: border-color 0.15s;
-}
-.plan-card--limpieza { border-left-color: #4fc3f7; }
-.plan-card--marketing { border-left-color: #ce93d8; }
-.plan-card--otra { border-left-color: var(--text-muted); }
-
-.plan-card__text { flex: 1; line-height: 1.4; }
-.plan-card__actions { display: flex; gap: 3px; opacity: 0; transition: opacity 0.15s; flex-shrink: 0; }
-.plan-card:hover .plan-card__actions { opacity: 1; }
-.plan-edit-btn, .plan-del-btn { background: none; border: none; cursor: pointer; font-size: 0.78rem; color: var(--text-muted); padding: 2px 3px; }
-.plan-edit-btn:hover { color: var(--gold); }
-.plan-del-btn:hover { color: var(--red); }
-
-.plan-add-form { display: flex; flex-direction: column; gap: 5px; padding-top: 8px; border-top: 1px solid var(--border); }
-.plan-input { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 8px; border-radius: 6px; font-size: 0.78rem; width: 100%; }
-.plan-input:focus { outline: none; border-color: var(--gold); }
-.plan-cat { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 5px 6px; border-radius: 6px; font-size: 0.72rem; width: 100%; font-family: 'Poppins', sans-serif; }
-.plan-save-btn { width: 100%; margin-top: 2px; }
-
 /* ── Dashboard Empleado ── */
 .emp-dashboard { display: flex; flex-direction: column; min-height: 100vh; }
 
@@ -1372,24 +1304,24 @@ input:focus, select:focus, textarea:focus {
 
 .resumen-stat {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  flex-direction: column;
+  gap: 3px;
 }
 .resumen-stat__num {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 700;
   line-height: 1;
   color: var(--gold);
   text-shadow: 0 0 20px rgba(201,168,76,0.3);
 }
-.resumen-stat__label { color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
-.resumen-stat__sub { color: var(--text-muted); font-size: 0.7rem; opacity: 0.7; margin-top: 2px; }
+.resumen-stat__label { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.resumen-stat__sub { color: var(--text-muted); font-size: 0.68rem; opacity: 0.7; }
 .resumen-stat--ingreso .resumen-stat__num { color: var(--green); }
 .resumen-stat--egreso .resumen-stat__num { color: var(--red); }
 .resumen-stat--balance .resumen-stat__num { color: var(--gold); }
 
-.resumen-stats-row { display: flex; gap: 24px; flex-wrap: wrap; }
+.resumen-stats-row { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
 
 .resumen-turno {
   display: flex;

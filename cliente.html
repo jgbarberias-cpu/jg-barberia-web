@@ -170,6 +170,21 @@ a { color: inherit; text-decoration: none; }
   position: relative;
 }
 .cp-points-bar__fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 99px; transition: width 1s cubic-bezier(.22,.68,0,1.2); box-shadow: 0 0 8px rgba(201,168,76,0.5); }
+.cp-bar-labels {
+  position: relative;
+  height: 36px;
+  margin-top: 2px;
+}
+.cp-bar-label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.3;
+  letter-spacing: 0.3px;
+}
+.cp-bar-label small { font-size: 0.72rem; }
 .cp-discount-badge {
   display: none;
   align-items: center;
@@ -248,7 +263,6 @@ a { color: inherit; text-decoration: none; }
     <span>JG Barbería</span>
   </a>
   <div class="cp-header-right">
-    <a href="index.html" class="cp-header-link">← Volver</a>
     <button id="cpLogoutBtn">Salir</button>
   </div>
 </header>
@@ -297,6 +311,11 @@ a { color: inherit; text-decoration: none; }
       <span class="cp-card__label">Mis puntos</span>
       <span class="cp-card__value" id="cpPuntos">0</span>
       <div class="cp-points-bar"><div class="cp-points-bar__fill" id="cpPuntosBar" style="width:0%"></div></div>
+      <div class="cp-bar-labels">
+        <span class="cp-bar-label" style="left:30%">3°<br><small>🥤</small></span>
+        <span class="cp-bar-label" style="left:60%">6°<br><small>✂️</small></span>
+        <span class="cp-bar-label" style="left:100%">10°<br><small>🎁</small></span>
+      </div>
       <span class="cp-card__sub" id="cpPuntosSub"></span>
       <div class="cp-discount-badge" id="cpBadgeDrink" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.4);color:#60a5fa">🥤 ¡Bebida gratis disponible! Avisale al barbero</div>
       <div class="cp-discount-badge" id="cpBadgeHalf" style="background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.4);color:var(--gold)">✂️ ¡50% de descuento en tu próximo corte! Avisale al barbero</div>
