@@ -246,7 +246,6 @@
     renderFinanzas();
     renderFinanzasDueno();
     renderRecordatoriosHoy();
-    renderRecordatorios();
     renderBeneficios();
   }
 
@@ -264,7 +263,6 @@
     onSnapshot(query(collection(db, 'clientes'), orderBy('nombre')), snap => {
       cacheClientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderRecordatoriosHoy();
-      renderRecordatorios();
       renderBeneficios();
     });
 

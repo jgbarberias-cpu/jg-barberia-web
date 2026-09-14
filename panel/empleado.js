@@ -223,8 +223,8 @@
     if (elRec) {
       const pendientes = cacheClientes
         .map(c => ({ ...c, dias: diasDesde(c.ultimaVisita) }))
-        .filter(c => c.dias !== null && c.dias >= 10 && c.telefono)
-        .sort((a, b) => b.dias - a.dias);
+        .filter(c => c.dias === 10 && c.telefono)
+        .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
 
       if (pendientes.length === 0) {
         elRec.innerHTML = '<p class="emp-aviso-empty">Nadie lleva más de 10 días.</p>';
