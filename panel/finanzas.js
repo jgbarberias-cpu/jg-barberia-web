@@ -1,5 +1,5 @@
 (function () {
-  const { db, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } = window.Panel.Storage;
+  const { db, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, escapeHtml } = window.Panel.Storage;
 
   const finanzasCol = collection(db, 'finanzas');
   let cache = [];
@@ -66,8 +66,8 @@
       tr.innerHTML = `
         <td>${m.fecha}</td>
         <td>${m.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}</td>
-        <td>${m.descripcion}</td>
-        <td>${m.categoria || '-'}</td>
+        <td>${escapeHtml(m.descripcion)}</td>
+        <td>${escapeHtml(m.categoria) || '-'}</td>
         <td>${origenBadge}</td>
         <td class="amount--${m.tipo}">${m.tipo === 'ingreso' ? '+' : '-'}${fmt(m.monto)}</td>
         <td>
@@ -102,11 +102,18 @@
     const descInput = document.getElementById('movDescripcion');
     const catInput = document.getElementById('movCategoria');
 
+    // Devuelve true si se eliminó (false si se canceló o falló)
     async function eliminarMov(mov) {
-      if (!confirm('¿Eliminar este movimiento?')) return;
-      await deleteDoc(doc(db, 'finanzas', mov.id));
-      if (mov.origen === 'turno' && mov.turnoId) {
-        await updateDoc(doc(db, 'turnos', mov.turnoId), { facturado: false, finanzaId: null });
+      if (!confirm('¿Eliminar este movimiento?')) return false;
+      try {
+        await deleteDoc(doc(db, 'finanzas', mov.id));
+        if (mov.origen === 'turno' && mov.turnoId) {
+          await updateDoc(doc(db, 'turnos', mov.turnoId), { facturado: false, finanzaId: null });
+        }
+        return true;
+      } catch (err) {
+        alert('No se pudo eliminar el movimiento. Revisá la conexión e intentá de nuevo.');
+        return false;
       }
     }
 
@@ -144,14 +151,14 @@
     });
 
     deleteBtn.addEventListener('click', async () => {
-      if (editingMov) {
-        await eliminarMov(editingMov);
+      if (editingMov && await eliminarMov(editingMov)) {
         modal.close();
       }
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const submitBtn = form.querySelector('[type="submit"]');
       const data = {
         tipo: tipoInput.value,
         fecha: fechaInput.value,
@@ -159,12 +166,19 @@
         descripcion: descInput.value.trim(),
         categoria: catInput.value.trim()
       };
-      if (editingMov) {
-        await updateDoc(doc(db, 'finanzas', editingMov.id), data);
-      } else {
-        await addDoc(finanzasCol, { ...data, origen: 'manual', turnoId: null, createdAt: serverTimestamp() });
+      submitBtn.disabled = true;
+      try {
+        if (editingMov) {
+          await updateDoc(doc(db, 'finanzas', editingMov.id), data);
+        } else {
+          await addDoc(finanzasCol, { ...data, origen: 'manual', turnoId: null, createdAt: serverTimestamp() });
+        }
+        modal.close();
+      } catch (err) {
+        alert('No se pudo guardar el movimiento. Revisá la conexión e intentá de nuevo.');
+      } finally {
+        submitBtn.disabled = false;
       }
-      modal.close();
     });
   }
 

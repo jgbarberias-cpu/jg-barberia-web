@@ -1,5 +1,5 @@
 (function () {
-  const { db, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } = window.Panel.Storage;
+  const { db, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, escapeHtml } = window.Panel.Storage;
 
   const barberosCol = collection(db, 'barberos');
 
@@ -14,8 +14,8 @@
     cache.forEach(b => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${b.nombre}</strong></td>
-        <td>${b.apodo}</td>
+        <td><strong>${escapeHtml(b.nombre)}</strong></td>
+        <td>${escapeHtml(b.apodo)}</td>
         <td>${b.comision != null ? fmt(b.comision) + ' por corte' : '<span style="color:var(--text-muted)">Total (dueño)</span>'}</td>
         <td><span class="badge badge--${b.activo !== false ? 'completado' : 'cancelado'}">${b.activo !== false ? 'Activo' : 'Inactivo'}</span></td>
         <td><button class="link-btn" data-edit="${b.id}">Editar</button></td>
@@ -78,20 +78,32 @@
       const comision = esDuenio ? null : Number(document.getElementById('barberoComision').value);
       const activo   = document.getElementById('barberoActivo').checked;
       const data     = { nombre, apodo, comision, activo };
+      const submitBtn = form.querySelector('[type="submit"]');
 
-      if (id) {
-        await updateDoc(doc(db, 'barberos', id), data);
-      } else {
-        await addDoc(barberosCol, { ...data, createdAt: serverTimestamp() });
+      submitBtn.disabled = true;
+      try {
+        if (id) {
+          await updateDoc(doc(db, 'barberos', id), data);
+        } else {
+          await addDoc(barberosCol, { ...data, createdAt: serverTimestamp() });
+        }
+        modal.close();
+      } catch (err) {
+        alert('No se pudo guardar el barbero. Revisá la conexión e intentá de nuevo.');
+      } finally {
+        submitBtn.disabled = false;
       }
-      modal.close();
     });
 
     delBtn.addEventListener('click', async () => {
       const id = document.getElementById('barberoId').value;
       if (id && confirm('¿Eliminar este barbero? Los cortes registrados no se borran.')) {
-        await deleteDoc(doc(db, 'barberos', id));
-        modal.close();
+        try {
+          await deleteDoc(doc(db, 'barberos', id));
+          modal.close();
+        } catch (err) {
+          alert('No se pudo eliminar el barbero. Revisá la conexión e intentá de nuevo.');
+        }
       }
     });
 

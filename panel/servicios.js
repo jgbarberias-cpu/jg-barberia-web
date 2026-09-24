@@ -1,5 +1,5 @@
 (function () {
-  const { db, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy } = window.Panel.Storage;
+  const { db, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, escapeHtml } = window.Panel.Storage;
 
   const serviciosCol = collection(db, 'servicios');
   let cache = [];
@@ -31,7 +31,7 @@
     cache.forEach(s => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${s.nombre}</td>
+        <td>${escapeHtml(s.nombre)}</td>
         <td>$${s.precio}</td>
         <td>${badge(s.activo)}</td>
         <td><button class="link-btn" data-edit-servicio="${s.id}">Editar</button> ·
@@ -78,24 +78,34 @@
       }
       if (delId) {
         if (confirm('¿Eliminar este servicio? Esto no afecta los turnos ya creados.')) {
-          deleteDoc(doc(db, 'servicios', delId));
+          deleteDoc(doc(db, 'servicios', delId)).catch(() => {
+            alert('No se pudo eliminar el servicio. Si ya tiene turnos cargados, marcalo como inactivo en vez de eliminarlo.');
+          });
         }
       }
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const submitBtn = form.querySelector('[type="submit"]');
       const data = {
         nombre: nombreInput.value.trim(),
         precio: Number(precioInput.value),
         activo: activoInput.checked
       };
-      if (idInput.value) {
-        await updateDoc(doc(db, 'servicios', idInput.value), data);
-      } else {
-        await addDoc(serviciosCol, data);
+      submitBtn.disabled = true;
+      try {
+        if (idInput.value) {
+          await updateDoc(doc(db, 'servicios', idInput.value), data);
+        } else {
+          await addDoc(serviciosCol, data);
+        }
+        modal.close();
+      } catch (err) {
+        alert('No se pudo guardar el servicio. Revisá la conexión e intentá de nuevo.');
+      } finally {
+        submitBtn.disabled = false;
       }
-      modal.close();
     });
   }
 

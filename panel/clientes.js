@@ -22,9 +22,17 @@
     return `${d}/${m}/${y}`;
   }
 
+  function todayISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   function statsPorTelefono() {
     const stats = new Map();
+    const hoy = todayISO();
     getTurnos().forEach(t => {
+      // "Último corte": no cuentan turnos cancelados ni turnos agendados a futuro
+      if (t.estado === 'cancelado' || !t.fecha || t.fecha > hoy) return;
       const key = claveCliente(t.cliente, t.telefono);
       const actual = stats.get(key) || { ultima: '' };
       if (!actual.ultima || t.fecha >= actual.ultima) actual.ultima = t.fecha;
@@ -102,11 +110,17 @@
     modal.showModal();
   }
 
+  // Devuelve true si se eliminó (false si se canceló o falló)
   async function eliminarCliente(cliente) {
-    if (confirm(`¿Eliminar a ${cliente.nombre} de la lista de clientes? (No borra sus turnos pasados)`)) {
+    if (!confirm(`¿Eliminar a ${cliente.nombre} de la lista de clientes? (No borra sus turnos pasados)`)) return false;
+    try {
       await deleteDoc(doc(db, 'clientes', cliente.id));
-      logCliente(cliente, 'Eliminado');
+    } catch (err) {
+      alert('No se pudo eliminar el cliente. Revisá la conexión e intentá de nuevo.');
+      return false;
     }
+    logCliente(cliente, 'Eliminado');
+    return true;
   }
 
   async function sincronizarConSheets() {
@@ -148,9 +162,10 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `clientes-jg-barberia-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `clientes-jg-barberia-${todayISO()}.csv`;
     a.click();
-    URL.revokeObjectURL(url);
+    // Revocar en el mismo tick puede cancelar la descarga en algunos navegadores
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   function initClientes() {
@@ -181,14 +196,14 @@
     });
 
     document.getElementById('deleteClienteBtn').addEventListener('click', async () => {
-      if (editingCliente) {
-        await eliminarCliente(editingCliente);
+      if (editingCliente && await eliminarCliente(editingCliente)) {
         document.getElementById('clienteModal').close();
       }
     });
 
     document.getElementById('clienteForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const submitBtn = e.target.querySelector('[type="submit"]');
       const data = {
         nombre: document.getElementById('clienteNombre').value.trim(),
         telefono: document.getElementById('clienteTelefono').value.trim(),
@@ -196,14 +211,21 @@
         email: document.getElementById('clienteEmail').value.trim(),
         notas: document.getElementById('clienteNotas').value.trim()
       };
-      if (editingCliente) {
-        await updateDoc(doc(db, 'clientes', editingCliente.id), data);
-        logCliente(data, 'Actualizado');
-      } else {
-        await addDoc(clientesCol, data);
-        logCliente(data, 'Nuevo');
+      submitBtn.disabled = true;
+      try {
+        if (editingCliente) {
+          await updateDoc(doc(db, 'clientes', editingCliente.id), data);
+          logCliente(data, 'Actualizado');
+        } else {
+          await addDoc(clientesCol, data);
+          logCliente(data, 'Nuevo');
+        }
+        document.getElementById('clienteModal').close();
+      } catch (err) {
+        alert('No se pudo guardar el cliente. Revisá la conexión e intentá de nuevo.');
+      } finally {
+        submitBtn.disabled = false;
       }
-      document.getElementById('clienteModal').close();
     });
   }
 

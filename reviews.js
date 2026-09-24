@@ -6,6 +6,16 @@
     return '★'.repeat(n) + '☆'.repeat(5 - n);
   }
 
+  // Nombre y comentario los escribe cualquier visitante: no pueden ir crudos a innerHTML
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   async function loadReviews() {
     const { data, error } = await client
       .from('resenas')
@@ -24,8 +34,8 @@
     list.innerHTML = data.map(r => `
       <div class="review-card">
         <div class="review-card__stars">${renderStars(r.calificacion)}</div>
-        <p class="review-card__comentario">"${r.comentario}"</p>
-        <p class="review-card__nombre">— ${r.nombre}</p>
+        <p class="review-card__comentario">"${escapeHtml(r.comentario)}"</p>
+        <p class="review-card__nombre">— ${escapeHtml(r.nombre)}</p>
       </div>
     `).join('');
   }

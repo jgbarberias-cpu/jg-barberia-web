@@ -53,7 +53,7 @@
     const { data, error } = await q;
     if (error) {
       console.error(`Error leyendo "${name}":`, error.message);
-      return { docs: [] };
+      return null;
     }
     return {
       docs: data.map(row => {
@@ -64,29 +64,64 @@
     };
   }
 
+  // Si la lectura falla (red caída) se conservan los datos anteriores en vez de
+  // vaciar la vista (con la lista de clientes vacía, el contador creaba clientes
+  // duplicados). Una respuesta que llega tarde no pisa otra más nueva.
+  function refresh(name, sub) {
+    const seq = ++sub.seq;
+    fetchSnapshot(name, sub)
+      .then(snap => {
+        if (!snap || seq < sub.delivered) return;
+        sub.delivered = seq;
+        sub.callback(snap);
+      })
+      .catch(err => console.error(`Error leyendo "${name}":`, err));
+  }
+
   function notifyTable(name) {
     const subs = listenersByTable[name];
     if (!subs) return;
-    subs.forEach(sub => fetchSnapshot(name, sub).then(sub.callback));
+    subs.forEach(sub => refresh(name, sub));
   }
 
   function onSnapshot(refOrQuery, callback) {
     const name = refOrQuery.name;
-    const sub = { orderByField: refOrQuery.orderByField, orderDirection: refOrQuery.orderDirection, callback };
+    const sub = { orderByField: refOrQuery.orderByField, orderDirection: refOrQuery.orderDirection, callback, seq: 0, delivered: 0 };
     if (!listenersByTable[name]) listenersByTable[name] = new Set();
     listenersByTable[name].add(sub);
 
-    fetchSnapshot(name, sub).then(callback);
+    refresh(name, sub);
 
     if (!channelsByTable[name]) {
       channelsByTable[name] = client
         .channel(`realtime-${name}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: name }, () => notifyTable(name))
-        .subscribe();
+        // Al reconectarse el realtime, relee: los cambios hechos mientras estuvo caído no llegan como evento
+        .subscribe(status => { if (status === 'SUBSCRIBED') notifyTable(name); });
     }
 
     return () => listenersByTable[name].delete(sub);
   }
+
+  // Relee todo al volver a la pestaña (con el celular bloqueado el realtime pierde
+  // eventos) y al cambiar el día (si el panel quedaba abierto de un día para otro,
+  // "hoy", contadores y recordatorios seguían mostrando el día anterior).
+  function refreshAll() {
+    Object.keys(listenersByTable).forEach(notifyTable);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshAll();
+  });
+
+  let lastDay = new Date().toDateString();
+  setInterval(() => {
+    const day = new Date().toDateString();
+    if (day !== lastDay) {
+      lastDay = day;
+      refreshAll();
+    }
+  }, 60000);
 
   async function addDoc(collectionRef, data) {
     const row = dataToSnake(data);
@@ -99,16 +134,24 @@
     return { name: collectionRef.name, id: inserted.id };
   }
 
+  // Igual que addDoc, tiran el error: antes lo tragaban y el panel seguía como si
+  // se hubiera guardado (modal cerrado, puntos "sumados" que nunca se grabaron).
   async function updateDoc(docRef, data) {
     const row = dataToSnake(data);
     const { error } = await client.from(docRef.name).update(row).eq('id', docRef.id);
-    if (error) console.error(`Error actualizando "${docRef.name}":`, error.message);
+    if (error) {
+      console.error(`Error actualizando "${docRef.name}":`, error.message);
+      throw error;
+    }
     notifyTable(docRef.name);
   }
 
   async function deleteDoc(docRef) {
     const { error } = await client.from(docRef.name).delete().eq('id', docRef.id);
-    if (error) console.error(`Error eliminando en "${docRef.name}":`, error.message);
+    if (error) {
+      console.error(`Error eliminando en "${docRef.name}":`, error.message);
+      throw error;
+    }
     notifyTable(docRef.name);
   }
 
