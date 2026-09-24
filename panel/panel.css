@@ -358,28 +358,45 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; }
 }
 .notif-wa-btn:hover { filter: brightness(1.1); box-shadow: 0 4px 12px rgba(37,211,102,0.35); }
 
-/* ── Clientes recientes (hoy/ayer) ────────────────────────────── */
-.emp-recientes-grupo { margin-top: 20px; }
-.emp-recientes-titulo {
+/* ── Vista Clientes del empleado ─────────────────────────────── */
+.emp-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.emp-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 22px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.emp-stat__num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.4rem;
+  color: var(--gold);
+  line-height: 1;
+}
+.emp-stat__label {
   font-size: 0.72rem;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--text-muted);
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
-.emp-recientes-count {
-  background: var(--gold);
-  color: #0a0a0a;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 1px 7px;
-  border-radius: 99px;
+.emp-stat--rec { border-top-color: #60a5fa; }
+.emp-stat--rec .emp-stat__num { color: #60a5fa; }
+@media (max-width: 640px) {
+  .emp-stats { gap: 8px; }
+  .emp-stat { padding: 16px 6px; }
+  .emp-stat__num { font-size: 2.4rem; }
+  .emp-stat__label { font-size: 0.62rem; letter-spacing: 0.5px; }
 }
+
 .emp-reciente-fila {
   display: flex;
   align-items: center;
@@ -718,182 +735,10 @@ input:focus, select:focus, textarea:focus {
   gap: 36px;
 }
 
-.emp-registro h2,
-.emp-clientes__header h2 {
+.emp-registro h2 {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.7rem;
   margin-bottom: 16px;
-}
-
-.emp-form {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-top: 2px solid var(--gold);
-  border-radius: var(--radius);
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.emp-form__fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.emp-form__field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.emp-form__field label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
-}
-
-.emp-form__field input {
-  background: var(--bg-soft);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 12px 14px;
-  border-radius: var(--radius);
-  font-size: 0.92rem;
-  font-family: 'Poppins', sans-serif;
-  transition: border-color 0.15s;
-}
-
-.emp-form__field input:focus { outline: none; border-color: var(--gold); }
-
-.emp-msg { font-size: 0.85rem; font-weight: 500; }
-
-.emp-total-contador {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  gap: 8px;
-}
-
-.emp-total-contador__num {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 5rem;
-  color: var(--gold);
-  line-height: 1;
-}
-
-.emp-total-contador__label {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.emp-clientes__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-
-.emp-clientes__header h2 { margin-bottom: 0; }
-
-.emp-buscar {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 9px 14px;
-  border-radius: var(--radius);
-  font-size: 0.84rem;
-  font-family: 'Poppins', sans-serif;
-  width: 240px;
-  transition: border-color 0.15s;
-}
-.emp-buscar:focus { outline: none; border-color: var(--gold); }
-
-.emp-lista {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
-}
-
-.emp-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  transition: border-color 0.15s;
-}
-
-.emp-card:hover { border-color: #3a3a3a; }
-.emp-card--alerta { border-color: rgba(201,168,76,0.4); }
-
-.emp-card__avatar {
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  background: rgba(201,168,76,0.15);
-  border: 1px solid rgba(201,168,76,0.3);
-  color: var(--gold);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.3rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.emp-card__info { flex: 1; display: flex; flex-direction: column; gap: 3px; }
-.emp-card__nombre { font-weight: 500; font-size: 0.95rem; }
-.emp-card__tel { color: var(--text-muted); font-size: 0.8rem; }
-.emp-card__ultima { color: var(--text-muted); font-size: 0.75rem; margin-top: 2px; }
-
-.emp-card__badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0; }
-
-.emp-badge {
-  font-size: 0.67rem;
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-.emp-badge--visitas { background: rgba(255,255,255,0.06); color: var(--text-muted); border: 1px solid var(--border); }
-.emp-badge--recordar { background: rgba(201,168,76,0.12); color: var(--gold-light); border: 1px solid rgba(201,168,76,0.3); }
-
-.emp-card__wa {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.67rem;
-  font-weight: 600;
-  text-decoration: none;
-  background: rgba(37,211,102,0.1);
-  color: #25d366;
-  border: 1px solid rgba(37,211,102,0.25);
-  letter-spacing: 0.3px;
-  transition: background 0.15s;
-  white-space: nowrap;
-}
-.emp-card__wa:hover { background: rgba(37,211,102,0.22); }
-.emp-card__wa--urgente {
-  background: rgba(37,211,102,0.18);
-  border-color: rgba(37,211,102,0.5);
-  animation: pulse-wa 2s infinite;
-}
-@keyframes pulse-wa {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.4); }
-  50%       { box-shadow: 0 0 0 5px rgba(37,211,102,0); }
 }
 
 /* Tabs empleado */
@@ -917,9 +762,6 @@ input:focus, select:focus, textarea:focus {
 
 .emp-view { display: none; }
 .emp-view.is-active { display: flex; flex-direction: column; gap: 36px; }
-
-/* Formulario cortes */
-.emp-form__fields--3 { grid-template-columns: 2fr 2fr 1fr; }
 
 .emp-finanzas-dia { display: flex; flex-direction: column; gap: 16px; }
 
@@ -1448,8 +1290,6 @@ input:focus, select:focus, textarea:focus {
   .plan-board { grid-template-columns: repeat(4, 1fr); }
   .resumen-grid { grid-template-columns: 1fr; }
   .resumen-card--wide { grid-column: span 1; }
-  .emp-form__fields, .emp-form__fields--3 { grid-template-columns: 1fr; }
-  .emp-buscar { width: 100%; }
   .emp-contadores-grid { grid-template-columns: 1fr; }
   .emp-mes-grid { grid-template-columns: 1fr; }
 }

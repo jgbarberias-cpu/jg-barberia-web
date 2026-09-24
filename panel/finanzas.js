@@ -122,7 +122,8 @@
         descInput.value = mov.descripcion;
         catInput.value = mov.categoria || '';
       } else {
-        fechaInput.value = new Date().toISOString().slice(0, 10);
+        const d = new Date();
+        fechaInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       }
       modal.showModal();
     }

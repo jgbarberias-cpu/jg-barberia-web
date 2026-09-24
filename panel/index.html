@@ -50,42 +50,30 @@
     <!-- VISTA CLIENTES -->
     <div id="empViewClientes" class="emp-view is-active">
 
-      <!-- Avisos rápidos -->
-      <div id="empAvisos" class="emp-avisos">
-        <div class="emp-aviso-card emp-aviso-card--green" id="empAvisoBeneficios">
-          <div class="emp-aviso-card__title">🎁 Beneficios disponibles</div>
-          <div id="empBeneficiosClientes"><p class="emp-aviso-empty">Sin beneficios pendientes.</p></div>
+      <div class="emp-stats">
+        <div class="emp-stat">
+          <span class="emp-stat__num" id="empTotal">0</span>
+          <span class="emp-stat__label">Clientes en total</span>
         </div>
-        <div class="emp-aviso-card emp-aviso-card--blue" id="empAvisoRecordatorios">
+        <div class="emp-stat">
+          <span class="emp-stat__num" id="empHoyCount">0</span>
+          <span class="emp-stat__label">Anotados hoy</span>
+        </div>
+        <div class="emp-stat emp-stat--rec">
+          <span class="emp-stat__num" id="empRecCount">0</span>
+          <span class="emp-stat__label">Recordatorios hoy</span>
+        </div>
+      </div>
+
+      <div class="emp-avisos">
+        <div class="emp-aviso-card">
+          <div class="emp-aviso-card__title">Anotados hoy</div>
+          <div id="empClientesRecientes"><p class="emp-aviso-empty">Todavía no se anotó nadie hoy.</p></div>
+        </div>
+        <div class="emp-aviso-card emp-aviso-card--blue">
           <div class="emp-aviso-card__title">📲 Recordatorios de hoy (10 días)</div>
           <div id="empRecordatoriosList"><p class="emp-aviso-empty">Nadie cumple 10 días hoy.</p></div>
         </div>
-      </div>
-
-      <div class="emp-registro">
-        <h2>Registrar cliente</h2>
-        <form id="empForm" class="emp-form">
-          <div class="emp-form__fields">
-            <div class="emp-form__field">
-              <label for="empNombre">Apellido y Nombre</label>
-              <input type="text" id="empNombre" placeholder="Ej: García Juan" required autocomplete="off">
-            </div>
-            <div class="emp-form__field">
-              <label for="empTelefono">WhatsApp (obligatorio)</label>
-              <input type="tel" id="empTelefono" placeholder="Ej: 3855551234" required autocomplete="off">
-            </div>
-          </div>
-          <button type="submit" class="btn btn--primary">Registrar</button>
-          <p id="empMsg" class="emp-msg" hidden></p>
-        </form>
-      </div>
-
-      <div class="emp-clientes">
-        <div class="emp-total-contador">
-          <div class="emp-total-contador__num" id="empTotal">0</div>
-          <div class="emp-total-contador__label">clientes registrados en total</div>
-        </div>
-        <div id="empClientesRecientes"></div>
       </div>
     </div>
 

@@ -25,7 +25,11 @@
   }
 
   function normTel(t) { return (t || '').replace(/\D/g, ''); }
-  function todayISO() { return new Date().toISOString().slice(0, 10); }
+  // Fecha local (no UTC): con toISOString, después de las 21 h en Argentina ya daba el día siguiente
+  function todayISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
   function horaActual() {
     const now = new Date();
     return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -57,81 +61,38 @@
   function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
   // ── Vista Clientes ─────────────────────────────────────────────
-  function yesterdayISO() {
-    const d = new Date();
-    d.setDate(d.getDate() - 1);
-    return d.toISOString().slice(0, 10);
-  }
-
   function renderLista() {
     const total = document.getElementById('empTotal');
     if (total) total.textContent = cacheClientes.length;
 
-    const dl = document.getElementById('empClientesList');
-    if (dl) dl.innerHTML = cacheClientes.map(c => `<option value="${escapeHtml(c.nombre)}">`).join('');
+    const hoy = todayISO();
+    const cortesHoy = cacheTurnos
+      .filter(t => t.fecha === hoy && t.estado === 'completado')
+      .sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+
+    const hoyCount = document.getElementById('empHoyCount');
+    if (hoyCount) hoyCount.textContent = cortesHoy.length;
 
     const contenedor = document.getElementById('empClientesRecientes');
     if (!contenedor) return;
 
-    const hoy  = todayISO();
-    const ayer = yesterdayISO();
+    if (cortesHoy.length === 0) {
+      contenedor.innerHTML = '<p class="emp-aviso-empty">Todavía no se anotó nadie hoy.</p>';
+      return;
+    }
 
-    const grupos = [
-      { label: 'Hoy',  fecha: hoy },
-      { label: 'Ayer', fecha: ayer }
-    ];
-
-    let html = '';
-    grupos.forEach(({ label, fecha }) => {
-      const cortes = cacheTurnos
-        .filter(t => t.fecha === fecha && t.estado === 'completado')
-        .sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
-      if (cortes.length === 0) return;
-      html += `<div class="emp-recientes-grupo">
-        <div class="emp-recientes-titulo">${label} <span class="emp-recientes-count">${cortes.length}</span></div>
-        ${cortes.map(t => {
-          const tel = normTel(t.telefono);
-          const waBtn = tel
-            ? `<a href="https://wa.me/549${tel}" target="_blank" class="wa-circle-btn" title="WhatsApp"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>`
-            : '';
-          return `<div class="emp-reciente-fila">
-            <span class="emp-reciente-hora">${t.hora || '—'}</span>
-            <span class="emp-reciente-nombre">${t.cliente || '—'}</span>
-            <span class="emp-reciente-barbero">${t.barbero || ''}</span>
-            ${waBtn}
-          </div>`;
-        }).join('')}
+    contenedor.innerHTML = cortesHoy.map(t => {
+      const tel = normTel(t.telefono);
+      const waBtn = tel
+        ? `<a href="https://wa.me/549${tel}" target="_blank" rel="noopener" class="wa-circle-btn" title="WhatsApp">${WA_ICON_SMALL}</a>`
+        : '';
+      return `<div class="emp-reciente-fila">
+        <span class="emp-reciente-hora">${escapeHtml(t.hora || '—')}</span>
+        <span class="emp-reciente-nombre">${escapeHtml(t.cliente || '—')}</span>
+        <span class="emp-reciente-barbero">${escapeHtml(t.barbero || '')}</span>
+        ${waBtn}
       </div>`;
-    });
-
-    contenedor.innerHTML = html || '<p class="empty-state" style="margin-top:16px">No hay clientes de hoy ni de ayer.</p>';
-  }
-
-  function initFormClientes() {
-    document.getElementById('empForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const nombre   = document.getElementById('empNombre').value.trim();
-      const telRaw   = document.getElementById('empTelefono').value.trim();
-      const telefono = normTel(telRaw);
-      const msg      = document.getElementById('empMsg');
-
-      const existe = cacheClientes.find(c => normTel(c.telefono) === telefono && telefono);
-      if (existe) {
-        msg.textContent = `${existe.nombre} ya está registrado.`;
-        msg.style.color = 'var(--gold)';
-        msg.hidden = false;
-        setTimeout(() => { msg.hidden = true; }, 3000);
-        return;
-      }
-
-      await addDoc(clientesCol, { nombre, telefono: telRaw, notas: '' });
-      window.Panel.Sheets.logCliente({ nombre, telefono: telRaw, notas: '' }, 'Nuevo');
-      document.getElementById('empForm').reset();
-      msg.textContent = `✓ ${nombre} registrado correctamente.`;
-      msg.style.color = 'var(--green)';
-      msg.hidden = false;
-      setTimeout(() => { msg.hidden = true; }, 3000);
-    });
+    }).join('');
   }
 
   // ── Avisos de beneficios ───────────────────────────────────────
@@ -181,44 +142,7 @@
 
   // ── Avisos en vista Clientes ──────────────────────────────────
   function renderAvisos() {
-    // — Beneficios —
-    const elBen = document.getElementById('empBeneficiosClientes');
-    if (elBen) {
-      const conBeneficio = cacheClientes.filter(c => {
-        const n = c.cantidadCortes || 0;
-        const mod = n % 10;
-        return n > 0 && (mod === 3 || mod === 6 || mod === 0);
-      });
-      if (conBeneficio.length === 0) {
-        elBen.innerHTML = '<p class="emp-aviso-empty">Sin beneficios pendientes.</p>';
-      } else {
-        elBen.innerHTML = conBeneficio.map(c => {
-          const n   = c.cantidadCortes || 0;
-          const mod = n % 10;
-          const tel = normTel(c.telefono);
-          const pNombre = (c.nombre || '').split(' ')[0];
-          const label = mod === 0 ? '🎁 Corte gratis' : mod === 6 ? '✂️ 50% desc.' : '🥤 Bebida gratis';
-          const msg = mod === 0
-            ? `Hola ${pNombre}, llegaste a tu corte N${n} en JG Barberia. Tu proximo corte es GRATIS! Escribinos para reservar`
-            : mod === 6
-            ? `Hola ${pNombre}, llegaste a tu corte N${n} en JG Barberia. Tu proximo corte tiene 50% de descuento! Escribinos para reservar`
-            : `Hola ${pNombre}, llegaste a tu corte N${n} en JG Barberia. Tenes una bebida gratis esperandote! Pasa cuando quieras`;
-          const waUrl = tel ? `https://wa.me/549${tel}?text=${encodeURIComponent(msg)}` : null;
-          return `
-            <div class="notif-beneficio">
-              <div class="notif-beneficio__info">
-                <span class="notif-beneficio__nombre">${escapeHtml(c.nombre)}</span>
-                <span class="notif-beneficio__label">${label} — corte N°${n}</span>
-              </div>
-              ${waUrl
-                ? `<a href="${waUrl}" target="_blank" rel="noopener" class="notif-wa-btn">${WA_ICON_SMALL} Avisar</a>`
-                : '<span class="notif-sin-tel">Sin WA</span>'}
-            </div>`;
-        }).join('');
-      }
-    }
-
-    // — Recordatorios 10+ días —
+    // — Recordatorios: clientes que hoy cumplen 10 días sin corte —
     const elRec = document.getElementById('empRecordatoriosList');
     if (elRec) {
       const pendientes = cacheClientes
@@ -226,8 +150,11 @@
         .filter(c => c.dias === 10 && c.telefono)
         .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
 
+      const recCount = document.getElementById('empRecCount');
+      if (recCount) recCount.textContent = pendientes.length;
+
       if (pendientes.length === 0) {
-        elRec.innerHTML = '<p class="emp-aviso-empty">Nadie lleva más de 10 días.</p>';
+        elRec.innerHTML = '<p class="emp-aviso-empty">Nadie cumple 10 días hoy.</p>';
       } else {
         elRec.innerHTML = pendientes.map(c => {
           const pNombre = (c.nombre || '').split(' ')[0];
@@ -715,7 +642,6 @@
   // ── Init principal ─────────────────────────────────────────────
   function initEmpleado(onLogout) {
     initTabs();
-    initFormClientes();
     initFormCortes();
     initContadores();
     populateBarberoSelect();
