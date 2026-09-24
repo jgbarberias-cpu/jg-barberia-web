@@ -25,6 +25,12 @@
   }
 
   function normTel(t) { return (t || '').replace(/\D/g, ''); }
+  // WhatsApp de agradecimiento para los clientes atendidos hoy
+  function waGraciasUrl(tel, cliente) {
+    const pNombre = (cliente || '').trim().split(' ')[0];
+    const msg = pNombre ? `Gracias por venir, ${pNombre}!` : 'Gracias por venir!';
+    return `https://wa.me/549${tel}?text=${encodeURIComponent(msg)}`;
+  }
   // Fecha local (no UTC): con toISOString, después de las 21 h en Argentina ya daba el día siguiente
   function todayISO() {
     const d = new Date();
@@ -84,7 +90,7 @@
     contenedor.innerHTML = cortesHoy.map(t => {
       const tel = normTel(t.telefono);
       const waBtn = tel
-        ? `<a href="https://wa.me/549${tel}" target="_blank" rel="noopener" class="wa-circle-btn" title="WhatsApp">${WA_ICON_SMALL}</a>`
+        ? `<a href="${waGraciasUrl(tel, t.cliente)}" target="_blank" rel="noopener" class="wa-circle-btn" title="WhatsApp">${WA_ICON_SMALL}</a>`
         : '';
       return `<div class="emp-reciente-fila">
         <span class="emp-reciente-hora">${escapeHtml(t.hora || '—')}</span>
@@ -221,7 +227,7 @@
           ${cortesHoy.map((t, i) => {
             const tel = normTel(t.telefono);
             const waBtn = tel
-              ? `<a href="https://wa.me/549${escapeHtml(tel)}" target="_blank" rel="noopener" class="cnt-clientes-hoy__wa">WP</a>`
+              ? `<a href="${waGraciasUrl(tel, t.cliente)}" target="_blank" rel="noopener" class="cnt-clientes-hoy__wa">WP</a>`
               : '';
             return `
             <div class="cnt-clientes-hoy__fila">
