@@ -1047,6 +1047,61 @@ input:focus, select:focus, textarea:focus {
   letter-spacing: 0.3px;
 }
 
+/* ── Empleado del mes ── */
+.emp-del-mes {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 24px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.04));
+  animation: del-mes-glow 1.6s ease-in-out infinite;
+}
+.emp-del-mes::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,235,170,0.35) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: del-mes-shine 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+.emp-del-mes__corona { font-size: 2.4rem; line-height: 1; flex-shrink: 0; }
+.emp-del-mes__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.emp-del-mes__titulo {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gold-light);
+}
+.emp-del-mes__nombre {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  letter-spacing: 3px;
+  color: var(--gold);
+  line-height: 1.05;
+  text-shadow: 0 0 18px rgba(201,168,76,0.45);
+}
+.emp-del-mes__cortes { font-size: 0.8rem; color: var(--text-muted); }
+.emp-del-mes--vacio { animation: none; border-color: var(--border); background: var(--bg-card); }
+.emp-del-mes--vacio::after { display: none; }
+.emp-del-mes--vacio .emp-del-mes__corona { opacity: 0.4; }
+@keyframes del-mes-glow {
+  0%, 100% { box-shadow: 0 0 12px rgba(201,168,76,0.15); }
+  50%      { box-shadow: 0 0 0 4px rgba(201,168,76,0.15), 0 0 32px rgba(201,168,76,0.45); }
+}
+@keyframes del-mes-shine {
+  0%       { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .emp-del-mes, .emp-del-mes::after { animation: none; }
+}
+
 .emp-contadores-total {
   background: var(--bg-card);
   border: 1px solid var(--border);

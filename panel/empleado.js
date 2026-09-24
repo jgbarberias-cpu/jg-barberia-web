@@ -307,6 +307,53 @@
           }).join('')}`;
       }
     }
+
+    renderEmpleadoMes();
+  }
+
+  // ── Empleado del mes (más cortes del mes, sin contar al dueño) ──
+  function renderEmpleadoMes() {
+    const el = document.getElementById('empDelMes');
+    if (!el) return;
+
+    const ahora     = new Date();
+    const mesISO    = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+    const mesNombre = ahora.toLocaleString('es-AR', { month: 'long' });
+
+    const ranking = getBarberos()
+      .filter(b => b.activo !== false && b.comision !== null)
+      .map(b => ({
+        display: (b.apodo || b.nombre).toUpperCase(),
+        cortes: cacheTurnos.filter(t =>
+          t.fecha && t.fecha.startsWith(mesISO) && t.barbero === b.nombre && t.estado === 'completado'
+        ).length
+      }));
+    const max = Math.max(0, ...ranking.map(r => r.cortes));
+
+    if (max === 0) {
+      el.className = 'emp-del-mes emp-del-mes--vacio';
+      el.innerHTML = `
+        <div class="emp-del-mes__corona">👑</div>
+        <div class="emp-del-mes__info">
+          <span class="emp-del-mes__titulo">Empleado del mes</span>
+          <span class="emp-del-mes__cortes">Todavía no hay cortes en ${mesNombre}. ¿Quién arranca?</span>
+        </div>`;
+      return;
+    }
+
+    const ganadores = ranking.filter(r => r.cortes === max).map(r => escapeHtml(r.display));
+    const nombres = ganadores.length > 1
+      ? ganadores.slice(0, -1).join(', ') + ' y ' + ganadores[ganadores.length - 1]
+      : ganadores[0];
+
+    el.className = 'emp-del-mes';
+    el.innerHTML = `
+      <div class="emp-del-mes__corona">👑</div>
+      <div class="emp-del-mes__info">
+        <span class="emp-del-mes__titulo">Empleado del mes</span>
+        <span class="emp-del-mes__nombre">${nombres}</span>
+        <span class="emp-del-mes__cortes">${max} corte${max !== 1 ? 's' : ''} en ${mesNombre}${ganadores.length > 1 ? ' — ¡empate!' : ''}</span>
+      </div>`;
   }
 
   // ── Resumen mensual en Finanzas ────────────────────────────────
