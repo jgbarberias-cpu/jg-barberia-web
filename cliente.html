@@ -502,16 +502,16 @@ a { color: inherit; text-decoration: none; }
     document.getElementById('cpLoginError').hidden = true;
 
     try {
+      // La base devuelve solo el cliente de ese teléfono (la tabla de clientes ya no es pública)
       const [clientesRes, svcRes] = await Promise.all([
-        sb.from('clientes').select('*'),
+        sb.rpc('portal_cliente', { p_tel: tel }),
         sb.from('servicios').select('*').order('nombre')
       ]);
 
       // supabase-js no tira excepción si falla la red: devuelve { error }. Sin esto,
       // un corte de conexión mostraba "No te encontramos" a un cliente registrado.
       if (clientesRes.error) throw clientesRes.error;
-      const todos = clientesRes.data || [];
-      const cliente = todos.find(c => normTel(c.telefono) === tel);
+      const cliente = (clientesRes.data || [])[0];
 
       if (!cliente) {
         showScreen('notfound');
