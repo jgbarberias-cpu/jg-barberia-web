@@ -845,7 +845,7 @@ input:focus, select:focus, textarea:focus {
   transition: transform 0.12s, opacity 0.15s, box-shadow 0.15s;
   box-shadow: 0 4px 20px rgba(201,168,76,0.25);
 }
-.emp-counter-btn:hover { opacity: 0.88; transform: scale(1.06); box-shadow: 0 6px 28px rgba(76,175,80,0.4); }
+.emp-counter-btn:hover { opacity: 0.88; transform: scale(1.06); box-shadow: 0 6px 28px rgba(201,168,76,0.45); }
 .emp-counter-btn:active { transform: scale(0.94); }
 .emp-counter-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -1287,9 +1287,108 @@ input:focus, select:focus, textarea:focus {
     background: none;
   }
   .sidebar__footer { margin-top: 0; padding: 0; border-top: none; flex-direction: row; align-items: center; }
-  .plan-board { grid-template-columns: repeat(4, 1fr); }
   .resumen-grid { grid-template-columns: 1fr; }
   .resumen-card--wide { grid-column: span 1; }
   .emp-contadores-grid { grid-template-columns: 1fr; }
   .emp-mes-grid { grid-template-columns: 1fr; }
+}
+
+/* ══ Mejoras visuales ═══════════════════════════════════════════ */
+
+/* Botón "+" del contador: anillo dorado al tocarlo */
+.emp-counter-btn:active { animation: counter-tap 0.35s ease-out; }
+@keyframes counter-tap {
+  0%   { box-shadow: 0 0 0 0 rgba(201,168,76,0.6); }
+  100% { box-shadow: 0 0 0 18px rgba(201,168,76,0); }
+}
+
+/* Tarjetas del Resumen admin: color de acento por tema */
+.resumen-card { border-top: 3px solid var(--card-accent, var(--border)); }
+.resumen-card:has(#resumenTurnosList)       { --card-accent: var(--gold); }
+.resumen-card:has(#resumenIngresos)         { --card-accent: var(--green); }
+.resumen-card:has(#resumenDuenoHoy)         { --card-accent: var(--gold-light); }
+.resumen-card--recordatorios-hoy            { --card-accent: #25d366; }
+.resumen-card:has(#resumenRecordatorios)    { --card-accent: #60a5fa; }
+.resumen-card:has(#resumenRecordatorios) .resumen-card__title { color: #60a5fa; border-bottom-color: rgba(96,165,250,0.2); }
+.resumen-card:has(#resumenBeneficios)       { --card-accent: #c084fc; }
+
+/* Listas largas del Resumen con scroll interno (no estiran la página) */
+#resumenTurnosList,
+#resumenRecordatoriosHoy,
+#resumenRecordatorios,
+#resumenBeneficios {
+  max-height: 340px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201,168,76,0.5) transparent;
+}
+#resumenTurnosList { display: flex; flex-direction: column; gap: 6px; }
+
+/* Modales: animación de entrada y scroll interno si no entran */
+.modal { max-height: calc(100vh - 32px); overflow-y: auto; }
+.modal[open] { animation: modal-in 0.22s cubic-bezier(.2,.8,.2,1); }
+.modal[open]::backdrop { animation: backdrop-in 0.22s ease; }
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+.modal__actions { flex-wrap: wrap; gap: 10px; }
+
+@media (max-width: 760px) {
+  /* Menú admin: logo y Salir arriba, pestañas en una fila deslizable */
+  .sidebar { padding: 12px 14px 0; gap: 6px; }
+  .sidebar__brand { padding: 0; border-bottom: none; }
+  .sidebar__role { display: none; }
+  .tabs--vertical {
+    order: 3;
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs--vertical::-webkit-scrollbar { display: none; }
+  .tabs--vertical .tab { flex-shrink: 0; white-space: nowrap; padding: 11px 14px; }
+
+  /* Contadores: 2 por fila y más compactos */
+  .emp-contadores-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .emp-counter-card { padding: 16px 8px 14px; gap: 10px; }
+  .emp-counter-name { font-size: 1.35rem; letter-spacing: 2px; }
+  .emp-counter-btn { width: 68px; height: 68px; font-size: 2.4rem; }
+  .emp-counter-num { font-size: 2.5rem; }
+  .emp-counter-money { font-size: 1.3rem; }
+  .emp-counter-comision { font-size: 0.66rem; padding: 3px 8px; }
+  .emp-contadores-total { padding: 14px 16px; }
+  .emp-contadores-total__val { font-size: 1.5rem; }
+  .emp-del-mes { padding: 14px 16px; gap: 12px; }
+  .emp-del-mes__nombre { font-size: 1.8rem; }
+
+  /* Tablas: se deslizan de costado en vez de aplastarse */
+  .data-table { min-width: 520px; }
+  #finanzasTable { min-width: 680px; }
+}
+
+@media (max-width: 640px) {
+  /* Header del empleado: logo y Salir arriba, pestañas abajo a lo ancho */
+  .emp-header { flex-wrap: wrap; padding: 10px 14px 0; gap: 4px; }
+  .emp-header__brand span { font-size: 1rem; }
+  .emp-tabs { order: 3; width: 100%; }
+  .emp-tab { flex: 1; text-align: center; padding: 11px 4px; font-size: 0.72rem; }
+  .emp-main { padding: 20px 14px 60px; gap: 24px; }
+  .emp-view.is-active { gap: 24px; }
+
+  /* Modales a lo ancho del celular */
+  .modal { width: calc(100% - 24px); }
+  .modal__form { padding: 22px 18px; }
+
+  /* Botones de WhatsApp más fáciles de tocar */
+  .notif-wa-btn { padding: 9px 14px; font-size: 0.8rem; }
+  .wa-circle-btn { width: 36px; height: 36px; }
+  .cnt-clientes-hoy__wa { padding: 7px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emp-counter-btn:active,
+  .modal[open],
+  .modal[open]::backdrop { animation: none; }
 }
