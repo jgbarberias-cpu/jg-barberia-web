@@ -194,14 +194,14 @@
       const display = (b.apodo || b.nombre).toUpperCase();
       return `
         <div class="emp-counter-card">
-          <div class="emp-counter-name">${display}</div>
-          <button class="emp-counter-btn" data-barbero="${b.nombre}" data-display="${display}">+</button>
+          <div class="emp-counter-name">${escapeHtml(display)}</div>
+          <button class="emp-counter-btn" data-barbero="${escapeHtml(b.nombre)}" data-display="${escapeHtml(display)}">+</button>
           <div class="emp-counter-stats">
             <span class="emp-counter-num">${cortes.length}</span>
             <span class="emp-counter-label">cortes hoy</span>
           </div>
           <div class="emp-counter-money">${fmt(dinero)}</div>
-          ${para !== null ? `<div class="emp-counter-comision">${fmt(para)} para ${b.apodo || b.nombre}</div>` : ''}
+          ${para !== null ? `<div class="emp-counter-comision">${fmt(para)} para ${escapeHtml(b.apodo || b.nombre)}</div>` : ''}
         </div>`;
     }).join('');
 
@@ -295,23 +295,26 @@
     if (!grid) return;
 
     let totalCortes = 0, totalDinero = 0, totalComisiones = 0;
-    const activos = getBarberos().filter(b => b.activo !== false && b.comision !== null);
+    // También los empleados ya inactivos que cortaron este mes: si no, sus cortes y
+    // comisiones desaparecían del total y del neto al desactivarlos
+    const empleados = getBarberos().filter(b => b.comision !== null);
 
-    grid.innerHTML = activos.map(b => {
+    grid.innerHTML = empleados.map(b => {
       const cortes = cacheTurnos.filter(t =>
         t.fecha && t.fecha.startsWith(mesISO) && t.barbero === b.nombre && t.estado === 'completado'
       );
+      if (b.activo === false && cortes.length === 0) return '';
       const dinero = cortes.reduce((s, t) => s + Number(t.precio || 0), 0);
       totalCortes += cortes.length;
       totalDinero += dinero;
       const comision = b.comision != null ? cortes.length * b.comision : 0;
       totalComisiones += comision;
       const comisionLine = b.comision != null
-        ? `<div class="emp-mes-card__comision">${fmt(comision)} para ${b.apodo || b.nombre}</div>`
+        ? `<div class="emp-mes-card__comision">${fmt(comision)} para ${escapeHtml(b.apodo || b.nombre)}</div>`
         : '';
       return `
         <div class="emp-mes-card">
-          <div class="emp-mes-card__nombre">${(b.apodo || b.nombre).toUpperCase()}</div>
+          <div class="emp-mes-card__nombre">${escapeHtml((b.apodo || b.nombre).toUpperCase())}</div>
           <div class="emp-mes-card__cortes">${cortes.length} corte${cortes.length !== 1 ? 's' : ''}</div>
           <div class="emp-mes-card__dinero">${fmt(dinero)}</div>
           ${comisionLine}
@@ -398,7 +401,8 @@
       submitBtn.disabled = true;
 
       try {
-        const servicio       = cacheServicios[0];
+        // Primer servicio activo (antes tomaba el primero aunque estuviera desactivado)
+        const servicio       = cacheServicios.find(s => s.activo !== false);
         const precio         = servicio ? servicio.precio : 10000;
         const servicioNombre = servicio ? servicio.nombre : 'Corte';
         const servicioId     = servicio ? servicio.id : null;
@@ -443,12 +447,19 @@
           servicioNombre, precio, estado: 'completado', notas: ''
         }, 'Nuevo');
 
+        // El corte y el ingreso ya quedaron grabados: si falla solo la suma de puntos se
+        // avisa, pero sin pedir que se reintente (duplicaría el corte y el ingreso)
+        let puntosOk = true;
         if (clienteId) {
-          await updateDoc(doc(db, 'clientes', clienteId), {
-            puntos: currentPuntos + 1,
-            ultimaVisita: todayISO(),
-            cantidadCortes: currentCortes + 1
-          });
+          try {
+            await updateDoc(doc(db, 'clientes', clienteId), {
+              puntos: currentPuntos + 1,
+              ultimaVisita: todayISO(),
+              cantidadCortes: currentCortes + 1
+            });
+          } catch (err) {
+            puntosOk = false;
+          }
         }
 
         // Mostrar estado de éxito con botón WA
@@ -459,9 +470,11 @@
         const waMsg = `Hola ${pNombre}, gracias por tu visita a JG Barberia! Ya tenes ${nuevoPuntos} punto${nuevoPuntos !== 1 ? 's' : ''} acumulado${nuevoPuntos !== 1 ? 's' : ''}. Podes ver tu estado en: https://pagina-web-barberia-xi.vercel.app/cliente.html`;
 
         successTitle.textContent = `Corte de ${clienteNombre} registrado`;
-        successPts.textContent   = `Corte N° ${nuevosCortes} — ${nuevoPuntos} punto${nuevoPuntos !== 1 ? 's' : ''} acumulado${nuevoPuntos !== 1 ? 's' : ''}`;
+        successPts.textContent   = puntosOk
+          ? `Corte N° ${nuevosCortes} — ${nuevoPuntos} punto${nuevoPuntos !== 1 ? 's' : ''} acumulado${nuevoPuntos !== 1 ? 's' : ''}`
+          : 'El corte quedó registrado, pero no se pudieron sumar los puntos del cliente. Avisale al dueño.';
 
-        if (telNorm) {
+        if (telNorm && puntosOk) {
           waLink.href    = `https://wa.me/549${telNorm}?text=${encodeURIComponent(waMsg)}`;
           waLink.hidden  = false;
         } else {
@@ -615,9 +628,10 @@
 
     const hoy = todayISO();
     let totalCortes = 0, totalDinero = 0;
-    const activos = getBarberos().filter(b => b.activo !== false && b.comision !== null);
+    // Sin filtrar por activo: solo se muestran los que cortaron hoy (igual que en el mes)
+    const empleados = getBarberos().filter(b => b.comision !== null);
 
-    grid.innerHTML = activos.map(b => {
+    grid.innerHTML = empleados.map(b => {
       const cortes = cacheTurnos.filter(t =>
         t.fecha === hoy && t.barbero === b.nombre && t.estado === 'completado'
       );
@@ -628,10 +642,10 @@
       const comision = b.comision != null ? cortes.length * b.comision : 0;
       return `
         <div class="emp-mes-card">
-          <div class="emp-mes-card__nombre">${(b.apodo || b.nombre).toUpperCase()}</div>
+          <div class="emp-mes-card__nombre">${escapeHtml((b.apodo || b.nombre).toUpperCase())}</div>
           <div class="emp-mes-card__cortes">${cortes.length} corte${cortes.length !== 1 ? 's' : ''}</div>
           <div class="emp-mes-card__dinero">${fmt(dinero)}</div>
-          ${b.comision != null ? `<div class="emp-mes-card__comision">${fmt(comision)} para ${b.apodo || b.nombre}</div>` : ''}
+          ${b.comision != null ? `<div class="emp-mes-card__comision">${fmt(comision)} para ${escapeHtml(b.apodo || b.nombre)}</div>` : ''}
         </div>`;
     }).join('');
 
@@ -640,7 +654,12 @@
   }
 
   // ── Init principal ─────────────────────────────────────────────
+  let initialized = false;
+
   function initEmpleado(onLogout) {
+    // Un doble envío del login lo llamaba dos veces: listeners duplicados y cada corte se registraba dos veces
+    if (initialized) return;
+    initialized = true;
     initTabs();
     initFormCortes();
     initContadores();

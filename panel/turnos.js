@@ -1,5 +1,5 @@
 (function () {
-  const { db, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } = window.Panel.Storage;
+  const { db, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, escapeHtml } = window.Panel.Storage;
   const { getServicios, onServiciosChange } = window.Panel.Servicios;
   const { createTurnoIncome, deleteFinanzaEntry } = window.Panel.Finanzas;
   const { logTurno } = window.Panel.Sheets;
@@ -47,7 +47,7 @@
     const current = select.value;
     const activos = getServicios().filter(s => s.activo !== false);
     select.innerHTML = activos
-      .map(s => `<option value="${s.id}" data-precio="${s.precio}">${s.nombre} ($${s.precio})</option>`)
+      .map(s => `<option value="${s.id}" data-precio="${s.precio}">${escapeHtml(s.nombre)} ($${s.precio})</option>`)
       .join('') || '<option value="">Sin servicios — creá uno en la pestaña Servicios</option>';
     if (current) select.value = current;
   }
@@ -108,8 +108,8 @@
       ? turnos.map(t => `
         <div class="day-list__item">
           <div class="day-list__info">
-            <strong>${t.hora} · ${t.cliente}</strong>
-            <small>${t.servicioNombre} · <span class="badge badge--${t.estado}">${ESTADOS[t.estado]}</span></small>
+            <strong>${escapeHtml(t.hora)} · ${escapeHtml(t.cliente)}</strong>
+            <small>${escapeHtml(t.servicioNombre)} · <span class="badge badge--${escapeHtml(t.estado)}">${ESTADOS[t.estado] || escapeHtml(t.estado)}</span></small>
           </div>
           <div>
             <button class="link-btn" data-edit-turno="${t.id}">Editar</button> ·
@@ -124,7 +124,8 @@
       dayModal.close();
       openTurnoModal(null, dateStr);
     };
-    dayModal.showModal();
+    // Se vuelve a llamar con el modal abierto (tras eliminar un turno)
+    if (!dayModal.open) dayModal.showModal();
 
     list.querySelectorAll('[data-edit-turno]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -137,7 +138,11 @@
       btn.addEventListener('click', async () => {
         const t = cache.find(x => x.id === btn.dataset.deleteTurno);
         if (t && confirm(`¿Eliminar el turno de ${t.cliente}?`)) {
-          await deleteTurno(t);
+          try {
+            await deleteTurno(t);
+          } catch (err) {
+            alert('No se pudo eliminar el turno. Revisá la conexión e intentá de nuevo.');
+          }
           openDayModal(dateStr);
         }
       });
@@ -145,7 +150,9 @@
   }
 
   function checkConflict(fecha, hora, excludeId) {
-    const conflict = cache.find(t => t.fecha === fecha && t.hora === hora && t.id !== excludeId);
+    // La base devuelve la hora como "HH:MM:SS" y el input como "HH:MM": se comparan los primeros 5
+    const hhmm = h => (h || '').slice(0, 5);
+    const conflict = cache.find(t => t.fecha === fecha && hhmm(t.hora) === hhmm(hora) && t.id !== excludeId);
     const warning = document.getElementById('turnoWarning');
     if (conflict) {
       warning.textContent = `Ya hay un turno a esa hora: ${conflict.cliente} (${conflict.servicioNombre}).`;
@@ -189,6 +196,8 @@
       await deleteFinanzaEntry(turno.finanzaId);
     }
     await deleteDoc(doc(db, 'turnos', turno.id));
+    // Se saca ya del cache: la relectura es asíncrona y el modal del día se redibuja enseguida
+    cache = cache.filter(x => x.id !== turno.id);
     logTurno(turno, 'Eliminado');
   }
 
@@ -225,8 +234,12 @@
 
     document.getElementById('deleteTurnoBtn').addEventListener('click', async () => {
       if (editingTurno && confirm(`¿Eliminar el turno de ${editingTurno.cliente}?`)) {
-        await deleteTurno(editingTurno);
-        document.getElementById('turnoModal').close();
+        try {
+          await deleteTurno(editingTurno);
+          document.getElementById('turnoModal').close();
+        } catch (err) {
+          alert('No se pudo eliminar el turno. Revisá la conexión e intentá de nuevo.');
+        }
       }
     });
 
@@ -238,6 +251,7 @@
         alert('Creá al menos un servicio antes de agendar turnos.');
         return;
       }
+      const submitBtn = e.target.querySelector('[type="submit"]');
 
       const data = {
         cliente: document.getElementById('turnoCliente').value.trim(),
@@ -251,34 +265,46 @@
         notas: document.getElementById('turnoNotas').value.trim()
       };
 
-      if (editingTurno) {
-        const oldFacturado = editingTurno.facturado;
-        const oldFinanzaId = editingTurno.finanzaId;
+      submitBtn.disabled = true;
+      try {
+        if (editingTurno) {
+          const oldFacturado = editingTurno.facturado;
+          const oldFinanzaId = editingTurno.finanzaId;
 
-        if (data.estado === 'completado' && !oldFacturado) {
-          data.finanzaId = await createTurnoIncome({ ...data, id: editingTurno.id });
-          data.facturado = true;
-        } else if (data.estado !== 'completado' && oldFacturado) {
-          await deleteFinanzaEntry(oldFinanzaId);
-          data.facturado = false;
-          data.finanzaId = null;
+          if (data.estado === 'completado' && !oldFacturado) {
+            data.finanzaId = await createTurnoIncome({ ...data, id: editingTurno.id });
+            data.facturado = true;
+            // Si falla el update de abajo, el reintento no vuelve a crear el ingreso
+            editingTurno = { ...editingTurno, facturado: true, finanzaId: data.finanzaId };
+          } else if (data.estado !== 'completado' && oldFacturado) {
+            await deleteFinanzaEntry(oldFinanzaId);
+            data.facturado = false;
+            data.finanzaId = null;
+          } else {
+            data.facturado = !!oldFacturado;
+            data.finanzaId = oldFinanzaId || null;
+          }
+
+          await updateDoc(doc(db, 'turnos', editingTurno.id), data);
+          logTurno({ ...data, id: editingTurno.id }, 'Actualizado');
         } else {
-          data.facturado = !!oldFacturado;
-          data.finanzaId = oldFinanzaId || null;
+          const newDocRef = await addDoc(turnosCol, { ...data, facturado: false, finanzaId: null, createdAt: serverTimestamp() });
+          // Si falla lo que sigue, el reintento edita este turno en vez de duplicarlo
+          editingTurno = { ...data, id: newDocRef.id, facturado: false, finanzaId: null };
+          if (data.estado === 'completado') {
+            const finanzaId = await createTurnoIncome({ ...data, id: newDocRef.id });
+            editingTurno = { ...editingTurno, facturado: true, finanzaId };
+            await updateDoc(newDocRef, { facturado: true, finanzaId });
+          }
+          logTurno({ ...data, id: newDocRef.id }, 'Nuevo');
         }
 
-        await updateDoc(doc(db, 'turnos', editingTurno.id), data);
-        logTurno({ ...data, id: editingTurno.id }, 'Actualizado');
-      } else {
-        const newDocRef = await addDoc(turnosCol, { ...data, facturado: false, finanzaId: null, createdAt: serverTimestamp() });
-        if (data.estado === 'completado') {
-          const finanzaId = await createTurnoIncome({ ...data, id: newDocRef.id });
-          await updateDoc(newDocRef, { facturado: true, finanzaId });
-        }
-        logTurno({ ...data, id: newDocRef.id }, 'Nuevo');
+        document.getElementById('turnoModal').close();
+      } catch (err) {
+        alert('No se pudo guardar el turno. Revisá la conexión e intentá de nuevo.');
+      } finally {
+        submitBtn.disabled = false;
       }
-
-      document.getElementById('turnoModal').close();
     });
   }
 

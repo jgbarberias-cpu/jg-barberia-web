@@ -398,6 +398,15 @@ a { color: inherit; text-decoration: none; }
 
   function fmtPesos(n) { return '$' + Number(n || 0).toLocaleString('es-AR'); }
 
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function showScreen(name) {
     loginEl.classList.toggle('is-active',    name === 'login');
     loadingEl.classList.toggle('is-active',  name === 'loading');
@@ -419,30 +428,31 @@ a { color: inherit; text-decoration: none; }
     [badgeDrink, badgeHalf, badgeFree].forEach(b => b.classList.remove('is-active'));
 
     const mod  = puntos % 10;
-    let pct = 0, subText = '';
+    let subText = '';
+    // La barra es el ciclo completo de 10 cortes, con las marcas 3° / 6° / 10° al 30% / 60% / 100%.
+    // Antes se llenaba por tramo (con 2 cortes quedaba en 66%, pasando la marca del 6°,
+    // y con 3 cortes llegaba al 100%, sobre el 🎁 del 10°).
+    const pct = puntos > 0 && mod === 0 ? 100 : mod * 10;
 
     if (puntos === 0) {
       subText = 'Faltan 3 cortes para tu primera bebida gratis';
     } else if (mod === 3) {
-      pct = 100; badgeDrink.classList.add('is-active');
+      badgeDrink.classList.add('is-active');
       subText = `¡Llegaste al corte N°${puntos}! Tenés una bebida gratis ✓`;
     } else if (mod === 6) {
-      pct = 100; badgeHalf.classList.add('is-active');
+      badgeHalf.classList.add('is-active');
       subText = `¡Llegaste al corte N°${puntos}! Tu próximo corte tiene 50% de descuento ✓`;
     } else if (mod === 0) {
-      pct = 100; badgeFree.classList.add('is-active');
+      badgeFree.classList.add('is-active');
       subText = `¡Llegaste al corte N°${puntos}! El próximo es completamente gratis ✓`;
     } else if (mod < 3) {
       const faltan = 3 - mod;
-      pct = (mod / 3) * 100;
       subText = `Faltan ${faltan} corte${faltan !== 1 ? 's' : ''} para tu bebida gratis`;
     } else if (mod < 6) {
       const faltan = 6 - mod;
-      pct = ((mod - 3) / 3) * 100;
       subText = `Faltan ${faltan} corte${faltan !== 1 ? 's' : ''} para el 50% de descuento`;
     } else {
       const faltan = 10 - mod;
-      pct = ((mod - 6) / 4) * 100;
       subText = `Faltan ${faltan} corte${faltan !== 1 ? 's' : ''} para un corte gratis`;
     }
     document.getElementById('cpPuntosSub').textContent = subText;
@@ -465,7 +475,7 @@ a { color: inherit; text-decoration: none; }
     svcEl.innerHTML = activos.length
       ? activos.map(s => `
           <div class="cp-servicio">
-            <span class="cp-servicio__nombre">${s.nombre}</span>
+            <span class="cp-servicio__nombre">${escapeHtml(s.nombre)}</span>
             <span class="cp-servicio__precio">${fmtPesos(s.precio)}</span>
           </div>`).join('')
       : '<p class="cp-empty">Sin servicios cargados.</p>';
@@ -481,6 +491,9 @@ a { color: inherit; text-decoration: none; }
         sb.from('servicios').select('*').order('nombre')
       ]);
 
+      // supabase-js no tira excepción si falla la red: devuelve { error }. Sin esto,
+      // un corte de conexión mostraba "No te encontramos" a un cliente registrado.
+      if (clientesRes.error) throw clientesRes.error;
       const todos = clientesRes.data || [];
       const cliente = todos.find(c => normTel(c.telefono) === tel);
 

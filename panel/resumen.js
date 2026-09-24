@@ -201,7 +201,7 @@
         <div class="notif-beneficio">
           <div class="notif-beneficio__info">
             <span class="notif-beneficio__nombre">${escapeHtml(c.nombre)}</span>
-            <span class="notif-beneficio__label">10 días sin corte — último: ${c.ultimaVisita || '—'}</span>
+            <span class="notif-beneficio__label">10 días sin corte — último: ${escapeHtml(c.ultimaVisita) || '—'}</span>
           </div>
           <a href="${waUrl}" target="_blank" rel="noopener" class="notif-wa-btn">${WA_ICON} Avisar</a>
         </div>`;
