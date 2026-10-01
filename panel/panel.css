@@ -417,6 +417,63 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; }
   letter-spacing: 2px;
   color: var(--gold);
 }
+.emp-recordar-card .notif-beneficio { flex-wrap: wrap; }
+.emp-recordar-card .notif-beneficio__info { min-width: 140px; }
+.notif-acciones { display: flex; gap: 6px; flex-shrink: 0; margin-left: auto; }
+.btn-avisado {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.btn-avisado:hover { color: var(--green); border-color: var(--green); }
+.emp-recordar-avisados { font-size: 0.72rem; color: var(--text-muted); text-align: right; }
+
+.emp-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100% - 32px);
+  padding: 10px 10px 10px 18px;
+  background: #222;
+  border: 1px solid var(--gold);
+  border-radius: 99px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  font-size: 0.85rem;
+  animation: toast-in 0.2s ease-out;
+}
+.emp-toast button {
+  background: none;
+  border: none;
+  color: var(--gold);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+@media (max-width: 640px) {
+  .btn-avisado { padding: 9px 14px; font-size: 0.8rem; }
+}
+
 .emp-recordar-count {
   font-family: 'Poppins', sans-serif;
   font-size: 0.72rem;

@@ -93,7 +93,7 @@
         ? `<a href="${waGraciasUrl(tel, t.cliente)}" target="_blank" rel="noopener" class="wa-circle-btn" title="WhatsApp">${WA_ICON_SMALL}</a>`
         : '';
       return `<div class="emp-reciente-fila">
-        <span class="emp-reciente-hora">${escapeHtml(t.hora || '—')}</span>
+        <span class="emp-reciente-hora">${escapeHtml((t.hora || '').slice(0, 5) || '—')}</span>
         <span class="emp-reciente-nombre">${escapeHtml(t.cliente || '—')}</span>
         <span class="emp-reciente-barbero">${escapeHtml(t.barbero || '')}</span>
         ${waBtn}
@@ -185,6 +185,68 @@
   const RECORDAR_MIN_DIAS = 15;
   const RECORDAR_MAX_DIAS = 30;
 
+  // "Ya avisado": se guarda en este dispositivo, atado a la fecha del último corte
+  // (si el cliente vuelve a cortarse y después cae otra vez en el rango, reaparece)
+  const AVISADOS_KEY = 'jg_recordar_avisados';
+  let ultimoAvisado = null;
+  let toastTimer = null;
+
+  function leerAvisados() {
+    try { return JSON.parse(localStorage.getItem(AVISADOS_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function guardarAvisados(avisados) {
+    try { localStorage.setItem(AVISADOS_KEY, JSON.stringify(avisados)); } catch (e) {}
+  }
+  function claveAviso(tel, fechaCorte) { return `${tel}_${fechaCorte}`; }
+
+  function marcarAvisado(clave, nombre) {
+    const avisados = leerAvisados();
+    // Limpieza: las marcas de cortes que ya quedaron fuera del rango no sirven más
+    Object.keys(avisados).forEach(k => {
+      const dias = diasDesde(k.split('_')[1]);
+      if (dias === null || dias > RECORDAR_MAX_DIAS + 10) delete avisados[k];
+    });
+    avisados[clave] = todayISO();
+    guardarAvisados(avisados);
+    ultimoAvisado = clave;
+    renderRecordar();
+    mostrarToastAviso(`${nombre} marcado como avisado`);
+  }
+
+  function deshacerAviso() {
+    if (!ultimoAvisado) return;
+    const avisados = leerAvisados();
+    delete avisados[ultimoAvisado];
+    guardarAvisados(avisados);
+    ultimoAvisado = null;
+    renderRecordar();
+    ocultarToastAviso();
+  }
+
+  function mostrarToastAviso(texto) {
+    const toast = document.getElementById('empRecordarToast');
+    if (!toast) return;
+    document.getElementById('empRecordarToastMsg').textContent = texto;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(ocultarToastAviso, 6000);
+  }
+
+  function ocultarToastAviso() {
+    const toast = document.getElementById('empRecordarToast');
+    if (toast) toast.hidden = true;
+  }
+
+  function initRecordar() {
+    const grid = document.getElementById('empRecordarGrid');
+    if (grid) grid.addEventListener('click', e => {
+      const btn = e.target.closest('[data-avisado]');
+      if (btn) marcarAvisado(btn.dataset.avisado, btn.dataset.nombre || 'Cliente');
+    });
+    const deshacer = document.getElementById('empRecordarDeshacer');
+    if (deshacer) deshacer.addEventListener('click', deshacerAviso);
+  }
+
   function renderRecordar() {
     const grid = document.getElementById('empRecordarGrid');
     if (!grid) return;
@@ -202,20 +264,28 @@
     });
 
     const puntosPorTel = new Map(cacheClientes.map(c => [normTel(c.telefono), c.puntos || 0]));
+    const avisados = leerAvisados();
     const porBarbero = new Map();
+    const avisadosPorBarbero = new Map();
     ultimoCorte.forEach(t => {
       const tel  = normTel(t.telefono);
       const dias = diasDesde(t.fecha);
       if (!tel || dias === null || dias < RECORDAR_MIN_DIAS || dias > RECORDAR_MAX_DIAS) return;
       const barbero = t.barbero || 'Sin barbero';
+      const clave   = claveAviso(tel, t.fecha);
+      if (avisados[clave]) {
+        avisadosPorBarbero.set(barbero, (avisadosPorBarbero.get(barbero) || 0) + 1);
+        return;
+      }
       if (!porBarbero.has(barbero)) porBarbero.set(barbero, []);
-      porBarbero.get(barbero).push({ nombre: t.cliente || '', tel, dias, puntos: puntosPorTel.get(tel) || 0 });
+      porBarbero.get(barbero).push({ nombre: t.cliente || '', tel, dias, clave, puntos: puntosPorTel.get(tel) || 0 });
     });
 
     // Todos los barberos activos (aunque no tengan a nadie) y cualquier otro que tenga clientes
     const barberos = getBarberos();
     const grupos = barberos.filter(b => b.activo !== false).map(b => b.nombre);
     porBarbero.forEach((_, nombre) => { if (!grupos.includes(nombre)) grupos.push(nombre); });
+    avisadosPorBarbero.forEach((_, nombre) => { if (!grupos.includes(nombre)) grupos.push(nombre); });
 
     let total = 0;
     grid.innerHTML = grupos.map(nombre => {
@@ -234,11 +304,15 @@
                   <span class="notif-beneficio__nombre">${escapeHtml(c.nombre)}</span>
                   <span class="notif-beneficio__label">${c.dias} días sin venir</span>
                 </div>
-                <a href="https://wa.me/549${c.tel}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="notif-wa-btn">${WA_ICON_SMALL} Recordar</a>
+                <div class="notif-acciones">
+                  <a href="https://wa.me/549${c.tel}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="notif-wa-btn">${WA_ICON_SMALL} Recordar</a>
+                  <button type="button" class="btn-avisado" data-avisado="${escapeHtml(c.clave)}" data-nombre="${escapeHtml(c.nombre)}">✓ Avisado</button>
+                </div>
               </div>`;
           }).join('')
         : '<p class="emp-aviso-empty">Nadie para recordar.</p>';
 
+      const yaAvisados = avisadosPorBarbero.get(nombre) || 0;
       return `
         <div class="emp-aviso-card emp-recordar-card">
           <div class="emp-aviso-card__title">
@@ -246,6 +320,7 @@
             <span class="emp-recordar-count">${lista.length}</span>
           </div>
           ${filas}
+          ${yaAvisados ? `<p class="emp-recordar-avisados">✓ ${yaAvisados} ya avisado${yaAvisados !== 1 ? 's' : ''}</p>` : ''}
         </div>`;
     }).join('');
 
@@ -307,7 +382,7 @@
               <span class="cnt-clientes-hoy__num">${i + 1}</span>
               <span class="cnt-clientes-hoy__nombre">${escapeHtml(t.cliente || '—')}</span>
               <span class="cnt-clientes-hoy__barbero">${escapeHtml(t.barbero || '—')}</span>
-              <span class="cnt-clientes-hoy__hora">${escapeHtml(t.hora || '')}</span>
+              <span class="cnt-clientes-hoy__hora">${escapeHtml((t.hora || '').slice(0, 5))}</span>
               ${waBtn}
             </div>`;
           }).join('')}`;
@@ -742,6 +817,7 @@
     initTabs();
     initFormCortes();
     initContadores();
+    initRecordar();
     populateBarberoSelect();
 
     onSnapshot(query(clientesCol, orderBy('nombre')), snap => {
