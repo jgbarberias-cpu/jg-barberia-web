@@ -180,6 +180,79 @@
     }
   }
 
+  // ── Recordar: clientes de cada barbero que no vienen hace 15 a 30 días ──
+  // Cada cliente queda asignado al barbero que le hizo el último corte.
+  const RECORDAR_MIN_DIAS = 15;
+  const RECORDAR_MAX_DIAS = 30;
+
+  function renderRecordar() {
+    const grid = document.getElementById('empRecordarGrid');
+    if (!grid) return;
+
+    // Último corte de cada cliente (por teléfono, o por nombre si no tiene)
+    const ultimoCorte = new Map();
+    cacheTurnos.forEach(t => {
+      if (t.estado !== 'completado' || !t.fecha) return;
+      const tel = normTel(t.telefono);
+      const key = tel ? `tel_${tel}` : `nombre_${(t.cliente || '').trim().toLowerCase()}`;
+      const prev = ultimoCorte.get(key);
+      if (!prev || t.fecha > prev.fecha || (t.fecha === prev.fecha && (t.hora || '') >= (prev.hora || ''))) {
+        ultimoCorte.set(key, t);
+      }
+    });
+
+    const puntosPorTel = new Map(cacheClientes.map(c => [normTel(c.telefono), c.puntos || 0]));
+    const porBarbero = new Map();
+    ultimoCorte.forEach(t => {
+      const tel  = normTel(t.telefono);
+      const dias = diasDesde(t.fecha);
+      if (!tel || dias === null || dias < RECORDAR_MIN_DIAS || dias > RECORDAR_MAX_DIAS) return;
+      const barbero = t.barbero || 'Sin barbero';
+      if (!porBarbero.has(barbero)) porBarbero.set(barbero, []);
+      porBarbero.get(barbero).push({ nombre: t.cliente || '', tel, dias, puntos: puntosPorTel.get(tel) || 0 });
+    });
+
+    // Todos los barberos activos (aunque no tengan a nadie) y cualquier otro que tenga clientes
+    const barberos = getBarberos();
+    const grupos = barberos.filter(b => b.activo !== false).map(b => b.nombre);
+    porBarbero.forEach((_, nombre) => { if (!grupos.includes(nombre)) grupos.push(nombre); });
+
+    let total = 0;
+    grid.innerHTML = grupos.map(nombre => {
+      const b       = barberos.find(x => x.nombre === nombre);
+      const display = capitalize(b ? (b.apodo || b.nombre) : nombre);
+      const lista   = (porBarbero.get(nombre) || []).sort((a, z) => z.dias - a.dias);
+      total += lista.length;
+
+      const filas = lista.length
+        ? lista.map(c => {
+            const pNombre = c.nombre.trim().split(' ')[0];
+            const msg = `Hola ${pNombre}, como estas? Ya pasaron ${c.dias} dias desde tu ultimo corte con ${display} en JG Barberia. Tenes ${c.puntos} punto${c.puntos !== 1 ? 's' : ''} acumulado${c.puntos !== 1 ? 's' : ''}, podes ver tu estado en: https://pagina-web-barberia-xi.vercel.app/cliente.html — Cuando quieras renovar el look avisanos y te sacamos turno, te esperamos!`;
+            return `
+              <div class="notif-beneficio">
+                <div class="notif-beneficio__info">
+                  <span class="notif-beneficio__nombre">${escapeHtml(c.nombre)}</span>
+                  <span class="notif-beneficio__label">${c.dias} días sin venir</span>
+                </div>
+                <a href="https://wa.me/549${c.tel}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="notif-wa-btn">${WA_ICON_SMALL} Recordar</a>
+              </div>`;
+          }).join('')
+        : '<p class="emp-aviso-empty">Nadie para recordar.</p>';
+
+      return `
+        <div class="emp-aviso-card emp-recordar-card">
+          <div class="emp-aviso-card__title">
+            <span>${escapeHtml(display.toUpperCase())}</span>
+            <span class="emp-recordar-count">${lista.length}</span>
+          </div>
+          ${filas}
+        </div>`;
+    }).join('');
+
+    const totalEl = document.getElementById('empRecordarTotal');
+    if (totalEl) totalEl.textContent = total;
+  }
+
   // ── Contadores por barbero (dinámico desde DB) ─────────────────
   function renderContadores() {
     const hoy  = todayISO();
@@ -676,6 +749,7 @@
       renderLista();
       renderBeneficiosNotif();
       renderAvisos();
+      renderRecordar();
     });
 
     onSnapshot(query(turnosCol, orderBy('fecha')), snap => {
@@ -684,6 +758,7 @@
       renderContadores();
       renderResumenMes();
       renderResumenHoy();
+      renderRecordar();
     });
 
     onSnapshot(query(finanzasCol, orderBy('fecha', 'desc')), snap => {
@@ -701,6 +776,7 @@
       renderContadores();
       renderResumenMes();
       renderResumenHoy();
+      renderRecordar();
       populateBarberoSelect();
     });
 

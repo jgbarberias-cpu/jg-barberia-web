@@ -397,6 +397,38 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; }
   .emp-stat__label { font-size: 0.62rem; letter-spacing: 0.5px; }
 }
 
+/* ── Recordar: tarjeta por barbero ── */
+.emp-recordar-sub { color: var(--text-muted); font-size: 0.85rem; margin-top: -8px; }
+.emp-recordar-sub strong { color: var(--gold); font-weight: 600; }
+.emp-recordar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.emp-recordar-card { max-height: 440px; border-top: 3px solid var(--gold); }
+.emp-recordar-card .emp-aviso-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: var(--gold);
+}
+.emp-recordar-count {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--gold);
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 99px;
+  padding: 1px 10px;
+}
+
 .emp-reciente-fila {
   display: flex;
   align-items: center;

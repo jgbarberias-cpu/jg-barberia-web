@@ -39,6 +39,7 @@
     </a>
     <nav class="emp-tabs">
       <button class="emp-tab is-active" data-emp-view="clientes">Clientes</button>
+      <button class="emp-tab" data-emp-view="recordar">Recordar</button>
       <button class="emp-tab" data-emp-view="finanzas">Finanzas</button>
       <button class="emp-tab" data-emp-view="contadores">Contadores</button>
     </nav>
@@ -75,6 +76,18 @@
           <div id="empRecordatoriosList"><p class="emp-aviso-empty">Nadie cumple 10 días hoy.</p></div>
         </div>
       </div>
+    </div>
+
+    <!-- VISTA RECORDAR: clientes de cada barbero que no vienen hace 15 a 30 días -->
+    <div id="empViewRecordar" class="emp-view">
+      <div class="emp-registro">
+        <h2>Para recordar</h2>
+        <p class="emp-recordar-sub">
+          Clientes que no vienen hace 15 a 30 días, según el barbero que les hizo el último corte.
+          En total: <strong id="empRecordarTotal">0</strong>
+        </p>
+      </div>
+      <div id="empRecordarGrid" class="emp-recordar-grid"></div>
     </div>
 
     <!-- VISTA CONTADORES -->
