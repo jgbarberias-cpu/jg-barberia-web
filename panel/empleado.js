@@ -622,14 +622,15 @@
         const nuevosCortes = currentCortes + 1;
         const pNombre      = clienteNombre.split(' ')[0];
         const telNorm      = normTel(telefono);
-        const waMsg = `Hola ${pNombre}, gracias por tu visita a JG Barberia! Ya tenes ${nuevoPuntos} punto${nuevoPuntos !== 1 ? 's' : ''} acumulado${nuevoPuntos !== 1 ? 's' : ''}. Podes ver tu estado en: https://pagina-web-barberia-xi.vercel.app/cliente.html`;
+        const waMsg = pNombre ? `${pNombre}, gracias por elegirnos!` : 'Gracias por elegirnos!';
 
         successTitle.textContent = `Corte de ${clienteNombre} registrado`;
         successPts.textContent   = puntosOk
           ? `Corte N° ${nuevosCortes} — ${nuevoPuntos} punto${nuevoPuntos !== 1 ? 's' : ''} acumulado${nuevoPuntos !== 1 ? 's' : ''}`
           : 'El corte quedó registrado, pero no se pudieron sumar los puntos del cliente. Avisale al dueño.';
 
-        if (telNorm && puntosOk) {
+        // El mensaje ya no menciona los puntos: se puede mandar aunque no se hayan podido sumar
+        if (telNorm) {
           waLink.href    = `https://wa.me/549${telNorm}?text=${encodeURIComponent(waMsg)}`;
           waLink.hidden  = false;
         } else {
