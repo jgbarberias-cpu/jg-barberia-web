@@ -75,3 +75,6 @@ lightbox.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeLightbox();
 });
+
+// Íconos (antes en un <script> en línea de index.html; movido para la política de seguridad CSP)
+if (window.feather) feather.replace({ 'stroke-width': 1.5 });

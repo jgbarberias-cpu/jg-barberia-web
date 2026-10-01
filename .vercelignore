@@ -1,0 +1,14 @@
+# Archivos que quedan en el repositorio pero NO se publican en la web
+
+# Estructura de la base de datos y script de Google (tiene el ID de la planilla y el email)
+panel/supabase-setup.sql
+panel/apps-script-turnos.gs
+
+# Notas
+pagina.md
+
+# Módulos del panel que ya no se usan
+panel/planificacion.js
+panel/promociones.js
+panel/resenas.js
+panel/tareas.js

@@ -124,7 +124,6 @@
   }
 
   async function sincronizarConSheets() {
-    const url = window.PANEL_SHEETS_WEBHOOK_URL;
     if (!cache.length) { alert('No hay clientes para sincronizar.'); return; }
     if (!confirm(`¿Enviar ${cache.length} clientes a Google Sheets? Tarda ~${Math.ceil(cache.length * 0.8 / 60)} min, no cierres la pestaña.`)) return;
 
@@ -135,13 +134,10 @@
       const c = cache[i];
       if (btn) btn.textContent = `Enviando ${i + 1}/${cache.length}...`;
       try {
-        await fetch(url, {
-          method: 'POST',
-          body: JSON.stringify({
-            tipo: 'cliente', accion: 'Nuevo',
-            nombre: c.nombre, telefono: c.telefono || '',
-            instagram: c.instagram || '', email: c.email || '', notas: c.notas || ''
-          })
+        await window.Panel.Sheets.post({
+          tipo: 'cliente', accion: 'Nuevo',
+          nombre: c.nombre, telefono: c.telefono || '',
+          instagram: c.instagram || '', email: c.email || '', notas: c.notas || ''
         });
       } catch (e) {}
       await new Promise(r => setTimeout(r, 800));

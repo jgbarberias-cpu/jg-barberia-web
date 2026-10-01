@@ -92,25 +92,43 @@ function getSpreadsheet() {
   return SpreadsheetApp.openById(SPREADSHEET_ID);
 }
 
+// ── Seguridad ──────────────────────────────────────────────────────────────
+// La URL de este script es pública (está en el código del panel), así que solo
+// se acepta lo que manda el personal logueado: el panel envía su sesión
+// (accessToken) y se verifica contra Supabase que sea dueño o empleado.
+var SUPABASE_URL = 'https://nfkmkchjcpmingbsrkda.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ma21rY2hqY3BtaW5nYnNya2RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MTYzNDMsImV4cCI6MjA5Nzk5MjM0M30.VSJPD5gaOpU62oI9pOVtzIA7e9o917YCiLxdA36LO98';
+
+function esPersonalBarberia(accessToken) {
+  if (!accessToken) return false;
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'tok_' + Utilities.base64EncodeWebSafe(
+    Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, accessToken));
+  if (cache.get(cacheKey) === 'ok') return true;
+
+  // Con una sesión válida, Supabase devuelve la fila de barberia_roles del usuario;
+  // con una sesión inválida da error, y con un usuario que no es del personal, nada.
+  var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/barberia_roles?select=rol', {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + accessToken },
+    muteHttpExceptions: true
+  });
+  if (res.getResponseCode() !== 200) return false;
+  var filas = JSON.parse(res.getContentText() || '[]');
+  var ok = Array.isArray(filas) && filas.length > 0;
+  if (ok) cache.put(cacheKey, 'ok', 300);
+  return ok;
+}
+
+// Por GET no se hace nada: el resumen diario corre solo a las 22 h y la
+// deduplicación se ejecuta a mano desde el editor (▶ Ejecutar).
 function doGet(e) {
-  var params = (e && e.parameter) || {};
-  if (params.action === 'resumen') {
-    enviarResumenDiario();
-    return ContentService.createTextOutput(JSON.stringify({ ok: true }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-  if (params.action === 'dedup' && params.confirm === 'si') {
-    var resultado = deduplicarClientes();
-    return ContentService.createTextOutput(JSON.stringify(resultado))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
   return ContentService.createTextOutput('OK');
 }
 
 // Fusiona filas duplicadas en "Clientes" (mismo teléfono normalizado, o mismo
 // nombre si no hay teléfono), sumando cantidad de turnos y quedándose con el
-// dato más completo de cada columna. Se llama solo manualmente vía GET con
-// ?action=dedup&confirm=si.
+// dato más completo de cada columna. Ejecutar a mano desde el editor
+// (elegir deduplicarClientes en el desplegable y ▶ Ejecutar).
 function deduplicarClientes() {
   var ss = getSpreadsheet();
   var sheet = ss.getSheetByName('Clientes');
@@ -170,6 +188,11 @@ function deduplicarClientes() {
 
 function doPost(e) {
   var data = JSON.parse(e.postData.contents);
+  if (!esPersonalBarberia(data.accessToken)) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: 'no autorizado' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  delete data.accessToken;
   var ss = getSpreadsheet();
 
   if (data.tipo === 'cliente') {
