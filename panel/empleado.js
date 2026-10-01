@@ -25,6 +25,11 @@
   }
 
   function normTel(t) { return (t || '').replace(/\D/g, ''); }
+  // Texto del recordatorio de corte (el mismo está en resumen.js para el panel del admin)
+  function msgRecordatorio(nombre) {
+    const pNombre = (nombre || '').trim().split(' ')[0];
+    return `Hola ${pNombre}! Ya tenés el pelo largooo amigooo 💈 Avisame si querés que reservemos un turnito ✂️`;
+  }
   // WhatsApp de agradecimiento para los clientes atendidos hoy
   function waGraciasUrl(tel, cliente) {
     const pNombre = (cliente || '').trim().split(' ')[0];
@@ -163,10 +168,8 @@
         elRec.innerHTML = '<p class="emp-aviso-empty">Nadie cumple 10 días hoy.</p>';
       } else {
         elRec.innerHTML = pendientes.map(c => {
-          const pNombre = (c.nombre || '').split(' ')[0];
           const tel     = normTel(c.telefono);
-          const puntos  = c.puntos || 0;
-          const msg     = `Hola ${pNombre}, como estas? Ya pasaron ${c.dias} dias desde tu ultimo corte en JG Barberia. Tenes ${puntos} punto${puntos !== 1 ? 's' : ''} acumulado${puntos !== 1 ? 's' : ''}. Podes ver tu estado en: https://pagina-web-barberia-xi.vercel.app/cliente.html — Cuando quieras renovar el look avisanos y te sacamos turno, te esperamos!`;
+          const msg     = msgRecordatorio(c.nombre);
           return `
             <div class="notif-beneficio">
               <div class="notif-beneficio__info">
@@ -263,7 +266,6 @@
       }
     });
 
-    const puntosPorTel = new Map(cacheClientes.map(c => [normTel(c.telefono), c.puntos || 0]));
     const avisados = leerAvisados();
     const porBarbero = new Map();
     const avisadosPorBarbero = new Map();
@@ -278,7 +280,7 @@
         return;
       }
       if (!porBarbero.has(barbero)) porBarbero.set(barbero, []);
-      porBarbero.get(barbero).push({ nombre: t.cliente || '', tel, dias, clave, puntos: puntosPorTel.get(tel) || 0 });
+      porBarbero.get(barbero).push({ nombre: t.cliente || '', tel, dias, clave });
     });
 
     // Todos los barberos activos (aunque no tengan a nadie) y cualquier otro que tenga clientes
@@ -296,8 +298,7 @@
 
       const filas = lista.length
         ? lista.map(c => {
-            const pNombre = c.nombre.trim().split(' ')[0];
-            const msg = `Hola ${pNombre}, como estas? Ya pasaron ${c.dias} dias desde tu ultimo corte con ${display} en JG Barberia. Tenes ${c.puntos} punto${c.puntos !== 1 ? 's' : ''} acumulado${c.puntos !== 1 ? 's' : ''}, podes ver tu estado en: https://pagina-web-barberia-xi.vercel.app/cliente.html — Cuando quieras renovar el look avisanos y te sacamos turno, te esperamos!`;
+            const msg = msgRecordatorio(c.nombre);
             return `
               <div class="notif-beneficio">
                 <div class="notif-beneficio__info">
