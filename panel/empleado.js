@@ -33,7 +33,7 @@
   // WhatsApp de agradecimiento para los clientes atendidos hoy
   function waGraciasUrl(tel, cliente) {
     const pNombre = (cliente || '').trim().split(' ')[0];
-    const msg = pNombre ? `Gracias por venir, ${pNombre}!` : 'Gracias por venir!';
+    const msg = pNombre ? `${pNombre}, gracias por venir!` : 'Gracias por venir!';
     return `https://wa.me/549${tel}?text=${encodeURIComponent(msg)}`;
   }
   // Fecha local (no UTC): con toISOString, después de las 21 h en Argentina ya daba el día siguiente
