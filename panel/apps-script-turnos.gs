@@ -30,15 +30,25 @@ function enviarResumenDiario() {
   var hoy = Utilities.formatDate(ahoraAr, 'UTC', 'yyyy-MM-dd');
   var mes = hoy.substring(0, 7);
   var fechaLinda = Utilities.formatDate(ahoraAr, 'UTC', 'dd/MM/yyyy');
-  var mesLindo = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][ahoraAr.getMonth()] + ' ' + ahoraAr.getFullYear();
+  // El mes sale de "hoy" (hora argentina); getMonth() usa la zona del proyecto y podía no coincidir.
+  var mesLindo = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][Number(hoy.substring(5, 7)) - 1] + ' ' + hoy.substring(0, 4);
 
   var cortesHoy = [], cortesMes = [];
 
   if (sheet && sheet.getLastRow() > 1) {
+    var tz = ss.getSpreadsheetTimeZone();
     var data = sheet.getDataRange().getValues();
+    // Cada alta/edición/baja de un turno agrega una fila. Las filas con Id de turno
+    // (columna K) cuentan solo si son la última de ese turno: antes un turno completado
+    // que se editaba se sumaba dos veces, y uno eliminado se seguía sumando.
+    var ultimaFilaPorId = {};
+    for (var j = 1; j < data.length; j++) {
+      if (data[j][10]) ultimaFilaPorId[String(data[j][10])] = j;
+    }
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      var fecha = String(row[2] || '').substring(0, 10);
+      if (row[10] && ultimaFilaPorId[String(row[10])] !== i) continue;
+      var fecha = fechaISO(row[2], tz);
       var estado = String(row[8] || '').toLowerCase();
       var accion = String(row[1] || '').toLowerCase();
       if (estado !== 'completado' || accion === 'eliminado') continue;
@@ -65,7 +75,7 @@ function enviarResumenDiario() {
     html += '<table style="width:100%;border-collapse:collapse;margin-top:8px">';
     html += '<tr style="background:#f5f5f5"><th style="text-align:left;padding:8px;border:1px solid #ddd">Cliente</th><th style="text-align:left;padding:8px;border:1px solid #ddd">Servicio</th><th style="text-align:right;padding:8px;border:1px solid #ddd">Precio</th></tr>';
     cortesHoy.forEach(function(c) {
-      html += '<tr><td style="padding:8px;border:1px solid #ddd">' + c.cliente + '</td><td style="padding:8px;border:1px solid #ddd">' + c.servicio + '</td><td style="padding:8px;border:1px solid #ddd;text-align:right">' + fmt(c.precio) + '</td></tr>';
+      html += '<tr><td style="padding:8px;border:1px solid #ddd">' + escapeHtml(c.cliente) + '</td><td style="padding:8px;border:1px solid #ddd">' + escapeHtml(c.servicio) + '</td><td style="padding:8px;border:1px solid #ddd;text-align:right">' + fmt(c.precio) + '</td></tr>';
     });
     html += '</table>';
   }
@@ -84,6 +94,32 @@ function enviarResumenDiario() {
 
   var asunto = 'JG Barbería ' + fechaLinda + ' — ' + cortesHoy.length + ' cortes hoy · ' + fmt(totalHoy);
   GmailApp.sendEmail('jgbarberias@gmail.com', asunto, '', { htmlBody: html });
+}
+
+// Nombres y servicios los escribe el personal: no pueden ir crudos al HTML del email.
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// La fecha se manda como texto "2026-10-06", pero la planilla la convierte en fecha al
+// escribirla y getValues() devuelve un Date: String(Date) da "Tue Oct 06 2026..." y no
+// coincidía nunca con el día (el resumen salía siempre con 0 cortes).
+function fechaISO(v, tz) {
+  if (v instanceof Date) return Utilities.formatDate(v, tz, 'yyyy-MM-dd');
+  return String(v || '').substring(0, 10);
+}
+
+// Lo que escribe el personal (nombre, teléfono, notas...) se guarda como texto: si empieza
+// con = (o + - @) la planilla lo toma como fórmula, ej. un cliente "=IMPORTXML(...)".
+// El apóstrofe inicial no se ve en la celda y getValues() devuelve el texto sin él.
+function textoSeguro(v) {
+  if (typeof v === 'string' && /^[=+\-@]/.test(v)) return "'" + v;
+  return v;
 }
 
 var SPREADSHEET_ID = '17_xOGPKcw76AdiS8AMGk8jF9JydjReIyzC9RlAHBRQE';
@@ -130,9 +166,22 @@ function doGet(e) {
 // dato más completo de cada columna. Ejecutar a mano desde el editor
 // (elegir deduplicarClientes en el desplegable y ▶ Ejecutar).
 function deduplicarClientes() {
+  // Mismo candado que doPost: si entraba un turno mientras se borraban filas, se
+  // escribía sobre la fila equivocada.
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    return deduplicarClientesSinLock();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deduplicarClientesSinLock() {
   var ss = getSpreadsheet();
   var sheet = ss.getSheetByName('Clientes');
   if (!sheet) return { clientesFusionados: [], filasEliminadas: 0 };
+  var tz = ss.getSpreadsheetTimeZone();
 
   var values = sheet.getDataRange().getValues();
   var grupos = {};
@@ -167,11 +216,18 @@ function deduplicarClientes() {
       if (!email && row[3]) email = row[3];
       if (!notas && row[4]) notas = row[4];
       cantidad += Number(row[5]) || 0;
-      if (row[6] && (!ultima || String(row[6]) > String(ultima))) ultima = row[6];
+      // Las fechas vuelven de la planilla como Date: comparar String(Date) ordenaba por
+      // el nombre del día ("Tue" > "Mon") y podía quedar una visita vieja como la última.
+      if (row[6] && (!ultima || fechaISO(row[6], tz) > fechaISO(ultima, tz))) ultima = row[6];
     });
 
     var filaPrincipal = g.indices[0];
-    sheet.getRange(filaPrincipal, 1, 1, 7).setValues([[nombre, telefono, instagram, email, notas, cantidad, ultima]]);
+    // Se vuelven a escribir textos leídos de la planilla: "=..." guardado como texto
+    // pasaría a ser una fórmula si no se protege otra vez.
+    sheet.getRange(filaPrincipal, 1, 1, 7).setValues([[
+      textoSeguro(nombre), textoSeguro(telefono), textoSeguro(instagram),
+      textoSeguro(email), textoSeguro(notas), cantidad, ultima
+    ]]);
 
     for (var k = 1; k < g.indices.length; k++) {
       filasABorrar.push(g.indices[k]);
@@ -193,6 +249,20 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
   delete data.accessToken;
+
+  // El contador del panel manda el alta del cliente y la del turno casi a la vez: las dos
+  // ejecuciones buscaban al cliente, no lo encontraban y lo agregaban dos veces en
+  // "Clientes". Con el candado se procesan de a una.
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    return procesarPost(data);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function procesarPost(data) {
   var ss = getSpreadsheet();
 
   if (data.tipo === 'cliente') {
@@ -212,14 +282,16 @@ function doPost(e) {
   if (turnos.getLastRow() === 0) {
     turnos.appendRow([
       'Fecha registro', 'Acción', 'Fecha turno', 'Hora', 'Cliente',
-      'Teléfono', 'Servicio', 'Precio', 'Estado', 'Notas'
+      'Teléfono', 'Servicio', 'Precio', 'Estado', 'Notas', 'Id turno'
     ]);
   }
+  // "Id turno" (columna K) permite que el resumen diario cuente cada turno una sola vez
   turnos.appendRow([
     new Date(), data.accion || '', data.fecha || '', data.hora || '',
-    data.cliente || '', data.telefono || '', data.servicioNombre || '',
-    data.precio || '', data.estado || '', data.notas || ''
+    textoSeguro(data.cliente || ''), textoSeguro(data.telefono || ''), textoSeguro(data.servicioNombre || ''),
+    data.precio || '', data.estado || '', textoSeguro(data.notas || ''), data.id || ''
   ]);
+  if (turnos.getRange(1, 11).getValue() === '') turnos.getRange(1, 11).setValue('Id turno');
 
   if (data.accion !== 'Eliminado') {
     upsertClienteVisita(ss, data);
@@ -269,7 +341,10 @@ function sincronizarCalendario(ss, data) {
 
   // Se fija la hora de Argentina (UTC-3, sin horario de verano) en el string ISO,
   // así no depende de la zona horaria configurada en el proyecto de Apps Script.
-  var inicio = new Date(data.fecha + 'T' + data.hora + ':00-03:00');
+  // La base guarda la hora como "HH:MM:SS": al editar un turno sin tocar la hora llegaba
+  // con segundos, la fecha quedaba inválida y createEvent/setTime tiraban error.
+  var inicio = new Date(data.fecha + 'T' + String(data.hora).substring(0, 5) + ':00-03:00');
+  if (isNaN(inicio.getTime())) return;
   var fin = new Date(inicio.getTime() + 45 * 60000);
   var titulo = data.cliente + ' - ' + (data.servicioNombre || '');
   var descripcion = 'Servicio: ' + (data.servicioNombre || '') +
@@ -328,10 +403,10 @@ function upsertClienteVisita(ss, data) {
   var fila = findClienteRow(sheet, telefono, nombre);
 
   if (fila === -1) {
-    sheet.appendRow([nombre, telefono, '', '', '', 1, data.fecha || '']);
+    sheet.appendRow([textoSeguro(nombre), textoSeguro(telefono), '', '', '', 1, data.fecha || '']);
   } else {
     var actual = sheet.getRange(fila, 1, 1, 7).getValues()[0];
-    sheet.getRange(fila, 1).setValue(nombre || actual[0]);
+    sheet.getRange(fila, 1).setValue(textoSeguro(nombre || actual[0]));
     if (data.accion === 'Nuevo') {
       sheet.getRange(fila, 6).setValue((actual[5] || 0) + 1);
     }
@@ -352,12 +427,15 @@ function upsertClienteInfo(ss, data) {
   }
 
   if (fila === -1) {
-    sheet.appendRow([nombre, telefono, data.instagram || '', data.email || '', data.notas || '', 0, '']);
+    sheet.appendRow([
+      textoSeguro(nombre), textoSeguro(telefono), textoSeguro(data.instagram || ''),
+      textoSeguro(data.email || ''), textoSeguro(data.notas || ''), 0, ''
+    ]);
   } else {
-    sheet.getRange(fila, 1).setValue(nombre);
-    sheet.getRange(fila, 2).setValue(telefono);
-    sheet.getRange(fila, 3).setValue(data.instagram || '');
-    sheet.getRange(fila, 4).setValue(data.email || '');
-    sheet.getRange(fila, 5).setValue(data.notas || '');
+    sheet.getRange(fila, 1).setValue(textoSeguro(nombre));
+    sheet.getRange(fila, 2).setValue(textoSeguro(telefono));
+    sheet.getRange(fila, 3).setValue(textoSeguro(data.instagram || ''));
+    sheet.getRange(fila, 4).setValue(textoSeguro(data.email || ''));
+    sheet.getRange(fila, 5).setValue(textoSeguro(data.notas || ''));
   }
 }
