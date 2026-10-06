@@ -13,6 +13,18 @@
 
   function normTel(t) { return (t || '').replace(/\D/g, ''); }
 
+  // sessionStorage tira excepción si el navegador bloquea los datos del sitio: antes eso
+  // hacía caer el ingreso en "Error de conexión" aunque el cliente existiera, y "Salir" no andaba.
+  function guardarTel(tel) {
+    try {
+      if (tel) sessionStorage.setItem('jg_cliente_tel', tel);
+      else sessionStorage.removeItem('jg_cliente_tel');
+    } catch (e) { /* sin almacenamiento: solo no se recuerda el número */ }
+  }
+  function leerTel() {
+    try { return sessionStorage.getItem('jg_cliente_tel'); } catch (e) { return null; }
+  }
+
   function fmtFecha(f) {
     if (!f) return null;
     const [y, m, d] = String(f).slice(0, 10).split('-');
@@ -128,13 +140,15 @@
       const cliente = (clientesRes.data || [])[0];
 
       if (!cliente) {
+        // Si era el número guardado, se olvida: si no, cada recarga volvía a "No te encontramos"
+        guardarTel(null);
         showScreen('notfound');
         return;
       }
 
       renderDashboard(cliente, svcRes.data || []);
       showScreen('dashboard');
-      sessionStorage.setItem('jg_cliente_tel', tel);
+      guardarTel(tel);
     } catch (err) {
       showScreen('login');
       const errEl = document.getElementById('cpLoginError');
@@ -159,13 +173,13 @@
 
   // Logout
   logoutBtn.addEventListener('click', () => {
-    sessionStorage.removeItem('jg_cliente_tel');
+    guardarTel(null);
     document.getElementById('cpPhone').value = '';
     showScreen('login');
   });
 
   // Auto-login si hay sesión guardada
-  const savedTel = sessionStorage.getItem('jg_cliente_tel');
+  const savedTel = leerTel();
   if (savedTel) {
     document.getElementById('cpPhone').value = savedTel;
     buscarCliente(savedTel);
