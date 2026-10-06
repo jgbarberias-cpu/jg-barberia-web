@@ -66,12 +66,32 @@
         return;
       }
 
-      const { error } = await client.from('resenas').insert({
-        nombre: document.getElementById('reviewNombre').value.trim(),
-        comentario: document.getElementById('reviewComentario').value.trim(),
-        calificacion,
-        aprobado: false
-      });
+      // "required" deja pasar un nombre o comentario hecho solo de espacios
+      const nombre = document.getElementById('reviewNombre').value.trim();
+      const comentario = document.getElementById('reviewComentario').value.trim();
+      if (!nombre || !comentario) {
+        msg.textContent = 'Por favor, completá tu nombre y tu comentario.';
+        msg.hidden = false;
+        return;
+      }
+
+      // Se bloquea el botón mientras se envía: con un doble toque se guardaba la reseña dos veces
+      const submitBtn = form.querySelector('[type="submit"]');
+      if (submitBtn.disabled) return;
+      submitBtn.disabled = true;
+      let error;
+      try {
+        ({ error } = await client.from('resenas').insert({
+          nombre,
+          comentario,
+          calificacion,
+          aprobado: false
+        }));
+      } catch (err) {
+        error = err;
+      } finally {
+        submitBtn.disabled = false;
+      }
 
       if (error) {
         msg.textContent = 'No se pudo enviar la reseña, intentá de nuevo.';
