@@ -1,7 +1,7 @@
 (function () {
   const { db, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, escapeHtml } = window.Panel.Storage;
   const { getServicios, onServiciosChange } = window.Panel.Servicios;
-  const { createTurnoIncome, deleteFinanzaEntry } = window.Panel.Finanzas;
+  const { createTurnoIncome, updateTurnoIncome, deleteFinanzaEntry } = window.Panel.Finanzas;
   const { logTurno } = window.Panel.Sheets;
 
   const turnosCol = collection(db, 'turnos');
@@ -42,13 +42,25 @@
       .sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
   }
 
+  // Valor del select para "dejar el servicio que ya tenía el turno"
+  const SERVICIO_ACTUAL = '__actual__';
+
   function populateServicioSelect() {
     const select = document.getElementById('turnoServicio');
     const current = select.value;
     const activos = getServicios().filter(s => s.activo !== false);
-    select.innerHTML = activos
+    let html = activos
       .map(s => `<option value="${s.id}" data-precio="${s.precio}">${escapeHtml(s.nombre)} ($${s.precio})</option>`)
-      .join('') || '<option value="">Sin servicios — creá uno en la pestaña Servicios</option>';
+      .join('');
+    // Al editar un turno cuyo servicio ya no está activo (o sin servicio, como algunos
+    // cortes del contador) se ofrece su servicio original: si no, el select caía en el
+    // primero de la lista y al guardar se cambiaban servicio y precio sin avisar
+    const t = editingTurno;
+    if (t && !activos.some(s => s.id === t.servicioId)) {
+      const precio = Number(t.precio) || 0;
+      html += `<option value="${SERVICIO_ACTUAL}" data-precio="${precio}">${escapeHtml(t.servicioNombre || 'Sin servicio')} ($${precio})</option>`;
+    }
+    select.innerHTML = html || '<option value="">Sin servicios — creá uno en la pestaña Servicios</option>';
     if (current) select.value = current;
   }
 
@@ -179,7 +191,9 @@
       document.getElementById('turnoFecha').value = turno.fecha;
       // La base devuelve "HH:MM:SS": con segundos el input los muestra y se guardan así
       document.getElementById('turnoHora').value = (turno.hora || '').slice(0, 5);
-      document.getElementById('turnoServicio').value = turno.servicioId;
+      const servicioSelect = document.getElementById('turnoServicio');
+      servicioSelect.value = turno.servicioId || SERVICIO_ACTUAL;
+      if (servicioSelect.value !== turno.servicioId) servicioSelect.value = SERVICIO_ACTUAL;
       document.getElementById('turnoEstado').value = turno.estado;
       document.getElementById('turnoNotas').value = turno.notas || '';
     } else {
@@ -253,14 +267,17 @@
         return;
       }
       const submitBtn = e.target.querySelector('[type="submit"]');
+      const mantieneServicio = selectedOption.value === SERVICIO_ACTUAL && editingTurno;
 
       const data = {
         cliente: document.getElementById('turnoCliente').value.trim(),
         telefono: document.getElementById('turnoTelefono').value.trim(),
         fecha: document.getElementById('turnoFecha').value,
         hora: document.getElementById('turnoHora').value.slice(0, 5),
-        servicioId: selectedOption.value,
-        servicioNombre: selectedOption.textContent.replace(/\s*\(\$\d+\)$/, ''),
+        servicioId: mantieneServicio ? (editingTurno.servicioId || null) : selectedOption.value,
+        servicioNombre: mantieneServicio
+          ? (editingTurno.servicioNombre || '')
+          : selectedOption.textContent.replace(/\s*\(\$\d+\)$/, ''),
         precio: Number(selectedOption.dataset.precio) || 0,
         estado: document.getElementById('turnoEstado').value,
         notas: document.getElementById('turnoNotas').value.trim()
@@ -281,9 +298,19 @@
             await deleteFinanzaEntry(oldFinanzaId);
             data.facturado = false;
             data.finanzaId = null;
+            // Si falla el update de abajo, el reintento no queda apuntando al ingreso borrado
+            editingTurno = { ...editingTurno, facturado: false, finanzaId: null };
           } else {
             data.facturado = !!oldFacturado;
             data.finanzaId = oldFinanzaId || null;
+            // Turno ya cobrado: si cambió el precio o la fecha se corrige también el
+            // ingreso (si no, Finanzas quedaba con el monto/fecha viejos)
+            if (oldFacturado && oldFinanzaId) {
+              const cambios = {};
+              if (data.precio !== (Number(editingTurno.precio) || 0)) cambios.monto = data.precio;
+              if (data.fecha !== editingTurno.fecha) cambios.fecha = data.fecha;
+              if (Object.keys(cambios).length) await updateTurnoIncome(oldFinanzaId, cambios);
+            }
           }
 
           await updateDoc(doc(db, 'turnos', editingTurno.id), data);

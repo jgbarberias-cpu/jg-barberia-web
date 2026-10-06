@@ -60,8 +60,11 @@
     rows.forEach(m => {
       if (m.tipo === 'ingreso') ingresos += Number(m.monto); else egresos += Number(m.monto);
       const tr = document.createElement('tr');
+      // Los cortes del contador aparecían como "Manual"
       const origenBadge = m.origen === 'turno'
         ? '<span class="badge badge--turno">Turno</span>'
+        : m.origen === 'contador'
+        ? '<span class="badge badge--turno">Contador</span>'
         : '<span class="badge badge--manual">Manual</span>';
       tr.innerHTML = `
         <td>${escapeHtml(m.fecha)}</td>
@@ -196,10 +199,16 @@
     return docRef.id;
   }
 
+  // Corrige el ingreso de un turno ya cobrado cuando se edita su precio o fecha
+  async function updateTurnoIncome(finanzaId, cambios) {
+    if (!finanzaId) return;
+    await updateDoc(doc(db, 'finanzas', finanzaId), cambios);
+  }
+
   async function deleteFinanzaEntry(finanzaId) {
     if (!finanzaId) return;
     await deleteDoc(doc(db, 'finanzas', finanzaId));
   }
 
-  window.Panel.Finanzas = { initFinanzas, createTurnoIncome, deleteFinanzaEntry };
+  window.Panel.Finanzas = { initFinanzas, createTurnoIncome, updateTurnoIncome, deleteFinanzaEntry };
 })();

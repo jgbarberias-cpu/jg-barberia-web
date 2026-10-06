@@ -125,14 +125,17 @@
 
   async function sincronizarConSheets() {
     if (!cache.length) { alert('No hay clientes para sincronizar.'); return; }
-    if (!confirm(`¿Enviar ${cache.length} clientes a Google Sheets? Tarda ~${Math.ceil(cache.length * 0.8 / 60)} min, no cierres la pestaña.`)) return;
+    // Copia fija: la sincronización tarda minutos y si mientras tanto se agregaba o
+    // borraba un cliente, la lista se reordenaba y unos se enviaban dos veces y otros no
+    const lista = cache.slice();
+    if (!confirm(`¿Enviar ${lista.length} clientes a Google Sheets? Tarda ~${Math.ceil(lista.length * 0.8 / 60)} min, no cierres la pestaña.`)) return;
 
     const btn = document.getElementById('syncSheetsBtn');
     if (btn) { btn.disabled = true; }
 
-    for (let i = 0; i < cache.length; i++) {
-      const c = cache[i];
-      if (btn) btn.textContent = `Enviando ${i + 1}/${cache.length}...`;
+    for (let i = 0; i < lista.length; i++) {
+      const c = lista[i];
+      if (btn) btn.textContent = `Enviando ${i + 1}/${lista.length}...`;
       try {
         await window.Panel.Sheets.post({
           tipo: 'cliente', accion: 'Nuevo',
@@ -144,7 +147,7 @@
     }
 
     if (btn) { btn.disabled = false; btn.textContent = '↑ Sincronizar con Sheets'; }
-    alert(`✓ ${cache.length} clientes enviados.`);
+    alert(`✓ ${lista.length} clientes enviados.`);
   }
 
   function exportarCSV() {
