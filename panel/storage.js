@@ -47,16 +47,33 @@
     };
   }
 
+  // Supabase devuelve como máximo 1000 filas por consulta: se lee por páginas
+  // (si no, pasadas las 1000 filas se perdían los turnos más nuevos y los
+  // últimos clientes). Se ordena además por id para que el paginado sea estable.
+  const PAGE_SIZE = 1000;
+
   async function fetchSnapshot(name, sub) {
-    let q = client.from(name).select('*');
-    if (sub.orderByField) q = q.order(sub.orderByField, { ascending: sub.orderDirection !== 'desc' });
-    const { data, error } = await q;
-    if (error) {
-      console.error(`Error leyendo "${name}":`, error.message);
-      return null;
+    const rows = [];
+    const seen = new Set();
+    for (let from = 0; ; from += PAGE_SIZE) {
+      let q = client.from(name).select('*');
+      if (sub.orderByField) q = q.order(sub.orderByField, { ascending: sub.orderDirection !== 'desc' });
+      q = q.order('id', { ascending: true }).range(from, from + PAGE_SIZE - 1);
+      const { data, error } = await q;
+      if (error) {
+        console.error(`Error leyendo "${name}":`, error.message);
+        return null;
+      }
+      // Si entre página y página se insertó una fila, otra puede repetirse: se descarta
+      data.forEach(row => {
+        if (seen.has(row.id)) return;
+        seen.add(row.id);
+        rows.push(row);
+      });
+      if (data.length < PAGE_SIZE) break;
     }
     return {
-      docs: data.map(row => {
+      docs: rows.map(row => {
         const camel = rowToCamel(row);
         const { id, ...rest } = camel;
         return { id, data: () => rest };

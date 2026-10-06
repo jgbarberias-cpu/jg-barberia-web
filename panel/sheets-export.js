@@ -23,7 +23,9 @@
       accion,
       id: turno.id,
       fecha: turno.fecha,
-      hora: turno.hora,
+      // La base guarda "HH:MM:SS" y el Apps Script arma fecha + 'T' + hora + ':00':
+      // con segundos la fecha queda inválida y el turno no llega al Calendar
+      hora: turno.hora ? String(turno.hora).slice(0, 5) : turno.hora,
       cliente: turno.cliente,
       telefono: turno.telefono,
       servicioNombre: turno.servicioNombre,
