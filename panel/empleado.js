@@ -47,7 +47,8 @@
   }
   function diasDesde(fecha) {
     if (!fecha) return null;
-    const [y, m, d] = fecha.split('-').map(Number);
+    // Solo la parte de la fecha (igual que en cliente.js), por si llega con hora
+    const [y, m, d] = String(fecha).slice(0, 10).split('-').map(Number);
     return Math.floor((new Date() - new Date(y, m - 1, d)) / 86400000);
   }
   function fmtFecha(f) {
@@ -158,7 +159,8 @@
     if (elRec) {
       const pendientes = cacheClientes
         .map(c => ({ ...c, dias: diasDesde(c.ultimaVisita) }))
-        .filter(c => c.dias === 10 && c.telefono)
+        // Con el número ya limpio: un teléfono sin dígitos armaba un link de WhatsApp roto
+        .filter(c => c.dias === 10 && normTel(c.telefono))
         .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
 
       const recCount = document.getElementById('empRecCount');
@@ -254,11 +256,21 @@
     const grid = document.getElementById('empRecordarGrid');
     if (!grid) return;
 
+    // Turnos cargados sin teléfono: se toma el del cliente registrado con ese nombre.
+    // Si no, un corte reciente sin teléfono no contaba como último corte y se le
+    // recordaba a alguien que ya había venido (por un corte anterior con teléfono)
+    const telPorNombre = new Map();
+    cacheClientes.forEach(c => {
+      const tel = normTel(c.telefono);
+      if (tel) telPorNombre.set((c.nombre || '').trim().toLowerCase(), tel);
+    });
+    const telDe = t => normTel(t.telefono) || telPorNombre.get((t.cliente || '').trim().toLowerCase()) || '';
+
     // Último corte de cada cliente (por teléfono, o por nombre si no tiene)
     const ultimoCorte = new Map();
     cacheTurnos.forEach(t => {
       if (t.estado !== 'completado' || !t.fecha) return;
-      const tel = normTel(t.telefono);
+      const tel = telDe(t);
       const key = tel ? `tel_${tel}` : `nombre_${(t.cliente || '').trim().toLowerCase()}`;
       const prev = ultimoCorte.get(key);
       if (!prev || t.fecha > prev.fecha || (t.fecha === prev.fecha && (t.hora || '') >= (prev.hora || ''))) {
@@ -270,7 +282,7 @@
     const porBarbero = new Map();
     const avisadosPorBarbero = new Map();
     ultimoCorte.forEach(t => {
-      const tel  = normTel(t.telefono);
+      const tel  = telDe(t);
       const dias = diasDesde(t.fecha);
       if (!tel || dias === null || dias < RECORDAR_MIN_DIAS || dias > RECORDAR_MAX_DIAS) return;
       const barbero = t.barbero || 'Sin barbero';
@@ -699,7 +711,7 @@
     if (!sel) return;
     const activos = cacheServicios.filter(s => s.activo !== false);
     sel.innerHTML = activos.map(s =>
-      `<option value="${s.id}" data-precio="${s.precio}" data-nombre="${s.nombre}">${s.nombre} (${fmt(s.precio)})</option>`
+      `<option value="${escapeHtml(s.id)}" data-precio="${s.precio}" data-nombre="${escapeHtml(s.nombre)}">${escapeHtml(s.nombre)} (${fmt(s.precio)})</option>`
     ).join('');
     const precioEl = document.getElementById('empCortePrecio');
     if (activos.length > 0 && precioEl) precioEl.value = activos[0].precio;
@@ -710,7 +722,7 @@
     if (!sel) return;
     const activos = getBarberos().filter(b => b.activo !== false);
     sel.innerHTML = activos.map(b =>
-      `<option value="${b.nombre}">${b.apodo || b.nombre}</option>`
+      `<option value="${escapeHtml(b.nombre)}">${escapeHtml(b.apodo || b.nombre)}</option>`
     ).join('');
   }
 
@@ -734,12 +746,12 @@
       row.className = 'emp-corte-row';
       row.innerHTML = `
         <div class="emp-corte-info">
-          <span class="emp-corte-desc">${f.descripcion}</span>
-          <span class="emp-corte-cat">${f.categoria || ''}</span>
+          <span class="emp-corte-desc">${escapeHtml(f.descripcion)}</span>
+          <span class="emp-corte-cat">${escapeHtml(f.categoria)}</span>
         </div>
         <div class="emp-corte-right">
           <span class="emp-corte-monto">${fmt(f.monto)}</span>
-          <button class="emp-corte-del" data-id="${f.id}" title="Eliminar">✕</button>
+          <button class="emp-corte-del" data-id="${escapeHtml(f.id)}" title="Eliminar">✕</button>
         </div>
       `;
       lista.appendChild(row);
