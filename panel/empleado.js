@@ -515,7 +515,21 @@
       if (dl) dl.innerHTML = cacheClientes.map(c => `<option value="${escapeHtml(c.nombre)}">`).join('');
     }
 
-    modal.addEventListener('close', resetModal);
+    // Si un intento falla a mitad de camino, al reintentar no se duplica lo que ya se grabó
+    let clienteCreado = null;  // cliente nuevo grabado en un intento que después falló
+    let finanzaSuelta = null;  // ingreso grabado cuyo turno no se pudo grabar
+
+    async function borrarFinanzaSuelta() {
+      if (!finanzaSuelta) return;
+      const id = finanzaSuelta;
+      await deleteDoc(doc(db, 'finanzas', id));
+      if (finanzaSuelta === id) finanzaSuelta = null;
+    }
+
+    modal.addEventListener('close', () => {
+      resetModal();
+      borrarFinanzaSuelta().catch(() => {});
+    });
 
     // Event delegation: el grid se regenera en cada render
     document.getElementById('empContadoresGrid').addEventListener('click', e => {
@@ -556,13 +570,25 @@
       submitBtn.disabled = true;
 
       try {
+        // Un intento anterior dejó un ingreso sin su turno: se borra antes de grabar otro
+        await borrarFinanzaSuelta();
+
+        // Misma fecha y hora para el ingreso, el turno, la última visita y la planilla
+        // (si no, cerca de la medianoche podían quedar en días distintos)
+        const fecha = todayISO();
+        const hora  = horaActual();
+
         // Primer servicio activo (antes tomaba el primero aunque estuviera desactivado)
         const servicio       = cacheServicios.find(s => s.activo !== false);
         const precio         = servicio ? servicio.precio : 10000;
         const servicioNombre = servicio ? servicio.nombre : 'Corte';
         const servicioId     = servicio ? servicio.id : null;
 
-        const clienteReg = cacheClientes.find(c => c.nombre.toLowerCase() === clienteNombre.toLowerCase());
+        let clienteReg = cacheClientes.find(c => c.nombre.toLowerCase() === clienteNombre.toLowerCase());
+        // La lista puede no tener todavía al cliente creado en un intento fallido: no crearlo de nuevo
+        if (!clienteReg && clienteCreado && clienteCreado.nombre.toLowerCase() === clienteNombre.toLowerCase()) {
+          clienteReg = clienteCreado;
+        }
         let telefono = wpp;
         let clienteId = null;
         let currentPuntos = 0;
@@ -571,6 +597,7 @@
         if (!clienteReg) {
           const newRef = await addDoc(clientesCol, { nombre: clienteNombre, telefono: wpp, notas: '' });
           clienteId = newRef ? newRef.id : null;
+          if (clienteId) clienteCreado = { id: clienteId, nombre: clienteNombre, telefono: wpp };
           window.Panel.Sheets.logCliente({ nombre: clienteNombre, telefono: wpp, instagram: '', email: '', notas: '' }, 'Nuevo');
         } else {
           clienteId = clienteReg.id;
@@ -584,21 +611,31 @@
         }
 
         const finanzaRef = await addDoc(finanzasCol, {
-          tipo: 'ingreso', fecha: todayISO(), monto: precio,
+          tipo: 'ingreso', fecha, monto: precio,
           descripcion: `${clienteNombre} — ${servicioNombre}`,
           categoria: 'Servicios', origen: 'contador', turnoId: null,
           createdAt: serverTimestamp()
         });
 
-        const turnoRef = await addDoc(turnosCol, {
-          cliente: clienteNombre, telefono, fecha: todayISO(), hora: horaActual(),
-          servicioId, servicioNombre, precio, estado: 'completado',
-          barbero, notas: '', facturado: true,
-          finanzaId: finanzaRef.id, createdAt: serverTimestamp()
-        });
+        let turnoRef;
+        try {
+          turnoRef = await addDoc(turnosCol, {
+            cliente: clienteNombre, telefono, fecha, hora,
+            servicioId, servicioNombre, precio, estado: 'completado',
+            barbero, notas: '', facturado: true,
+            finanzaId: finanzaRef.id, createdAt: serverTimestamp()
+          });
+        } catch (err) {
+          // Sin turno el ingreso queda suelto y el reintento lo grababa otra vez (ingreso doble):
+          // se borra ahora y, si tampoco se puede, antes del próximo intento
+          finanzaSuelta = finanzaRef.id;
+          try { await borrarFinanzaSuelta(); } catch (e) {}
+          throw err;
+        }
+        clienteCreado = null;
         window.Panel.Sheets.logTurno({
           id: turnoRef ? turnoRef.id : '', cliente: clienteNombre, telefono,
-          fecha: todayISO(), hora: horaActual(),
+          fecha, hora,
           servicioNombre, precio, estado: 'completado', notas: ''
         }, 'Nuevo');
 
@@ -609,7 +646,7 @@
           try {
             await updateDoc(doc(db, 'clientes', clienteId), {
               puntos: currentPuntos + 1,
-              ultimaVisita: todayISO(),
+              ultimaVisita: fecha,
               cantidadCortes: currentCortes + 1
             });
           } catch (err) {
