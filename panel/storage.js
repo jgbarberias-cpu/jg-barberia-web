@@ -47,30 +47,37 @@
     };
   }
 
-  // Supabase devuelve como máximo 1000 filas por consulta: se lee por páginas
-  // (si no, pasadas las 1000 filas se perdían los turnos más nuevos y los
-  // últimos clientes). Se ordena además por id para que el paginado sea estable.
+  // Supabase devuelve como máximo 1000 filas por consulta (o menos, según la
+  // configuración del proyecto): se lee por páginas hasta juntar el total que
+  // informa la primera consulta (si no, pasadas las 1000 filas se perdían los
+  // turnos más nuevos y los últimos clientes). Se ordena además por id para que
+  // el paginado sea estable.
   const PAGE_SIZE = 1000;
 
   async function fetchSnapshot(name, sub) {
     const rows = [];
     const seen = new Set();
-    for (let from = 0; ; from += PAGE_SIZE) {
-      let q = client.from(name).select('*');
+    let total = null;
+    for (let from = 0; ; ) {
+      let q = client.from(name).select('*', from === 0 ? { count: 'exact' } : undefined);
       if (sub.orderByField) q = q.order(sub.orderByField, { ascending: sub.orderDirection !== 'desc' });
       q = q.order('id', { ascending: true }).range(from, from + PAGE_SIZE - 1);
-      const { data, error } = await q;
+      const { data, error, count } = await q;
       if (error) {
         console.error(`Error leyendo "${name}":`, error.message);
         return null;
       }
+      if (from === 0 && typeof count === 'number') total = count;
       // Si entre página y página se insertó una fila, otra puede repetirse: se descarta
       data.forEach(row => {
         if (seen.has(row.id)) return;
         seen.add(row.id);
         rows.push(row);
       });
-      if (data.length < PAGE_SIZE) break;
+      // Se avanza según lo que llegó de verdad (el servidor puede devolver menos que PAGE_SIZE)
+      from += data.length;
+      if (data.length === 0) break;
+      if (total !== null ? from >= total : data.length < PAGE_SIZE) break;
     }
     return {
       docs: rows.map(row => {
