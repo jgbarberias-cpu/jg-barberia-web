@@ -21,7 +21,9 @@
     await client.auth.signOut();
   }
 
-  // Devuelve 'empleado', 'dueno', o null si no se pudo determinar.
+  // Devuelve 'empleado', 'dueno', o null si el usuario no tiene rol asignado.
+  // Si la consulta falla (red caída) tira el error: antes devolvía null y el
+  // panel cerraba la sesión con "Sin acceso" por un simple corte de conexión.
   async function getRole() {
     const session = await getSession();
     if (!session) return null;
@@ -29,9 +31,9 @@
       .from('barberia_roles')
       .select('rol')
       .eq('id', session.user.id)
-      .single();
-    if (error || !data) return null;
-    return data.rol;
+      .maybeSingle();
+    if (error) throw error;
+    return data ? data.rol : null;
   }
 
   window.Panel.Auth = { isLoggedIn, login, logout, getRole };

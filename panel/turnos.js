@@ -108,7 +108,7 @@
       ? turnos.map(t => `
         <div class="day-list__item">
           <div class="day-list__info">
-            <strong>${escapeHtml(t.hora)} · ${escapeHtml(t.cliente)}</strong>
+            <strong>${escapeHtml((t.hora || '').slice(0, 5))} · ${escapeHtml(t.cliente)}</strong>
             <small>${escapeHtml(t.servicioNombre)} · <span class="badge badge--${escapeHtml(t.estado)}">${ESTADOS[t.estado] || escapeHtml(t.estado)}</span></small>
           </div>
           <div>
@@ -177,7 +177,8 @@
       document.getElementById('turnoCliente').value = turno.cliente;
       document.getElementById('turnoTelefono').value = turno.telefono || '';
       document.getElementById('turnoFecha').value = turno.fecha;
-      document.getElementById('turnoHora').value = turno.hora;
+      // La base devuelve "HH:MM:SS": con segundos el input los muestra y se guardan así
+      document.getElementById('turnoHora').value = (turno.hora || '').slice(0, 5);
       document.getElementById('turnoServicio').value = turno.servicioId;
       document.getElementById('turnoEstado').value = turno.estado;
       document.getElementById('turnoNotas').value = turno.notas || '';
@@ -257,7 +258,7 @@
         cliente: document.getElementById('turnoCliente').value.trim(),
         telefono: document.getElementById('turnoTelefono').value.trim(),
         fecha: document.getElementById('turnoFecha').value,
-        hora: document.getElementById('turnoHora').value,
+        hora: document.getElementById('turnoHora').value.slice(0, 5),
         servicioId: selectedOption.value,
         servicioNombre: selectedOption.textContent.replace(/\s*\(\$\d+\)$/, ''),
         precio: Number(selectedOption.dataset.precio) || 0,

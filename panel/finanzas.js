@@ -64,12 +64,12 @@
         ? '<span class="badge badge--turno">Turno</span>'
         : '<span class="badge badge--manual">Manual</span>';
       tr.innerHTML = `
-        <td>${m.fecha}</td>
+        <td>${escapeHtml(m.fecha)}</td>
         <td>${m.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}</td>
         <td>${escapeHtml(m.descripcion)}</td>
         <td>${escapeHtml(m.categoria) || '-'}</td>
         <td>${origenBadge}</td>
-        <td class="amount--${m.tipo}">${m.tipo === 'ingreso' ? '+' : '-'}${fmt(m.monto)}</td>
+        <td class="amount--${escapeHtml(m.tipo)}">${m.tipo === 'ingreso' ? '+' : '-'}${fmt(m.monto)}</td>
         <td>
           <button class="link-btn" data-edit-mov="${m.id}">Editar</button> ·
           <button class="link-btn" data-delete-mov="${m.id}">Eliminar</button>

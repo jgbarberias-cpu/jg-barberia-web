@@ -43,7 +43,15 @@
 
   async function showDashboard() {
     document.getElementById('loginScreen').hidden = true;
-    const role = await getRole();
+    let role;
+    try {
+      role = await getRole();
+    } catch (err) {
+      // Error de red: no se cierra la sesión (no es "sin acceso"), se puede reintentar
+      console.error('No se pudo leer el rol:', err);
+      showLogin('No se pudo conectar. Revisá la conexión e intentá de nuevo.');
+      return;
+    }
 
     if (role === 'empleado') {
       document.getElementById('empleadoDashboard').hidden = false;
