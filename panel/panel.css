@@ -722,6 +722,42 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; }
   font-size: 0.85rem;
   color: var(--text-muted);
 }
+.counter-beneficio {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gold-light);
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+.counter-success__beneficio {
+  white-space: pre-line;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gold-light);
+  background: rgba(201,168,76,0.1);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  width: 100%;
+}
+.counter-success__deshacer { font-size: 0.76rem; }
+.counter-success__deshacer:hover { color: var(--red); }
+.cnt-clientes-hoy__del {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+.cnt-clientes-hoy__del:hover { color: var(--red); border-color: var(--red); }
+.cnt-clientes-hoy__del:disabled { opacity: 0.4; cursor: wait; }
+
 .counter-success__wa {
   width: 100%;
   background: #25d366;

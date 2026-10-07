@@ -533,6 +533,7 @@
       <input type="tel" id="counterWpp" placeholder="Ej: 3855551234" autocomplete="off" required>
     </label>
     <p id="counterNuevoMsg" class="form-warning" hidden></p>
+    <p id="counterBeneficioMsg" class="counter-beneficio" hidden></p>
     <div class="modal__actions">
       <div></div>
       <div class="modal__actions-right">
@@ -545,8 +546,10 @@
     <div class="counter-success__check">✓</div>
     <p class="counter-success__title" id="counterSuccessTitle"></p>
     <p class="counter-success__pts" id="counterSuccessPts"></p>
+    <p class="counter-success__beneficio" id="counterSuccessBeneficio" hidden></p>
     <a id="counterWaLink" href="" target="_blank" rel="noopener" class="btn btn--primary counter-success__wa">Enviar WhatsApp al cliente</a>
     <button type="button" class="btn btn--ghost" data-close-modal>Cerrar sin enviar</button>
+    <button type="button" id="counterDeshacer" class="link-btn counter-success__deshacer">Deshacer este corte</button>
   </div>
 </dialog>
 

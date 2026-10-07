@@ -30,6 +30,75 @@
     const pNombre = (nombre || '').trim().split(' ')[0];
     return `Hola ${pNombre}! Ya tenés el pelo largooo amigooo 💈 Avisame si querés que reservemos un turnito ✂️`;
   }
+  // Cliente del contador: por nombre o, si el nombre no coincide, por WhatsApp
+  // (así "Garcia Juan" y "Juan Garcia" con el mismo número no quedan como dos clientes)
+  function buscarCliente(nombre, telefono) {
+    const n = (nombre || '').trim().toLowerCase();
+    const t = normTel(telefono);
+    return cacheClientes.find(c => (c.nombre || '').trim().toLowerCase() === n)
+      || (t ? cacheClientes.find(c => normTel(c.telefono) === t) : null)
+      || null;
+  }
+
+  // Beneficio que corresponde a ESTE corte según los cortes que ya tiene el cliente.
+  // Ciclo de 10: después del 6° el siguiente es con 50%, después del 10° el siguiente es gratis.
+  function beneficioDelCorte(cantidadCortes) {
+    const n = cantidadCortes || 0;
+    if (n > 0 && n % 10 === 0) return { factor: 0,   etiqueta: 'gratis', aviso: `🎁 Este corte es GRATIS (ya tiene ${n} cortes)` };
+    if (n % 10 === 6)          return { factor: 0.5, etiqueta: '50%',    aviso: '✂️ Este corte tiene 50% de descuento' };
+    return null;
+  }
+
+  // Premio que gana el cliente CON este corte (para avisarle al barbero en el momento)
+  function premioGanado(nuevosCortes) {
+    const mod = nuevosCortes % 10;
+    if (mod === 3) return '🥤 ¡Ganó una bebida gratis!';
+    if (mod === 6) return '✂️ Su próximo corte tiene 50% de descuento';
+    if (mod === 0) return '🎁 Su próximo corte es gratis';
+    return '';
+  }
+
+  // Deshace un corte del contador: borra el turno y su ingreso y le resta el corte al
+  // cliente. "antes" son los valores exactos del cliente previos al corte (si se conocen);
+  // si no, se resta 1 y la última visita se recalcula con los cortes que le quedan.
+  async function deshacerCorte(turno, antes) {
+    if (turno.finanzaId) await deleteDoc(doc(db, 'finanzas', turno.finanzaId));
+    await deleteDoc(doc(db, 'turnos', turno.id));
+    window.Panel.Sheets.logTurno(turno, 'Eliminado');
+
+    // El corte no había llegado a sumarle puntos: no hay nada que restar
+    if (antes && antes.sinCambiosCliente) return;
+    // Cliente creado en este mismo corte (nombre mal tipeado, por ejemplo): se borra
+    if (antes && antes.borrarCliente) {
+      if (!antes.borrarCliente.id) return;
+      await deleteDoc(doc(db, 'clientes', antes.borrarCliente.id));
+      window.Panel.Sheets.logCliente(antes.borrarCliente, 'Eliminado');
+      return;
+    }
+    const cli = antes && antes.clienteId
+      ? cacheClientes.find(c => c.id === antes.clienteId)
+      : buscarCliente(turno.cliente, turno.telefono);
+    if (!cli) return;
+
+    let cambios;
+    if (antes && antes.valores) {
+      cambios = antes.valores;
+    } else {
+      const tel = normTel(turno.telefono);
+      const nom = (turno.cliente || '').trim().toLowerCase();
+      const ultima = cacheTurnos
+        .filter(t => t.id !== turno.id && t.estado === 'completado' && t.fecha &&
+          (tel ? normTel(t.telefono) === tel : (t.cliente || '').trim().toLowerCase() === nom))
+        .reduce((max, t) => (t.fecha > max ? t.fecha : max), '');
+      cambios = {
+        puntos: Math.max(0, (cli.puntos || 0) - 1),
+        cantidadCortes: Math.max(0, (cli.cantidadCortes || 0) - 1),
+        ultimaVisita: ultima || null
+      };
+    }
+    await updateDoc(doc(db, 'clientes', cli.id), cambios);
+  }
+
   // WhatsApp de agradecimiento para los clientes atendidos hoy
   function waGraciasUrl(tel, cliente) {
     const pNombre = (cliente || '').trim().split(' ')[0];
@@ -397,6 +466,7 @@
               <span class="cnt-clientes-hoy__barbero">${escapeHtml(t.barbero || '—')}</span>
               <span class="cnt-clientes-hoy__hora">${escapeHtml((t.hora || '').slice(0, 5))}</span>
               ${waBtn}
+              <button type="button" class="cnt-clientes-hoy__del" data-deshacer="${escapeHtml(t.id)}" title="Deshacer este corte" aria-label="Deshacer el corte de ${escapeHtml(t.cliente || '')}">✕</button>
             </div>`;
           }).join('')}`;
       }
@@ -461,9 +531,9 @@
     const grid = document.getElementById('finMesGrid');
     if (!grid) return;
 
-    let totalCortes = 0, totalDinero = 0, totalComisiones = 0;
+    let totalCortes = 0, totalDinero = 0;
     // También los empleados ya inactivos que cortaron este mes: si no, sus cortes y
-    // comisiones desaparecían del total y del neto al desactivarlos
+    // comisiones desaparecían del total al desactivarlos
     const empleados = getBarberos().filter(b => b.comision !== null);
 
     grid.innerHTML = empleados.map(b => {
@@ -475,7 +545,6 @@
       totalCortes += cortes.length;
       totalDinero += dinero;
       const comision = b.comision != null ? cortes.length * b.comision : 0;
-      totalComisiones += comision;
       const comisionLine = b.comision != null
         ? `<div class="emp-mes-card__comision">${fmt(comision)} para ${escapeHtml(b.apodo || b.nombre)}</div>`
         : '';
@@ -487,14 +556,8 @@
           ${comisionLine}
         </div>`;
     }).join('');
-
-    const neto = totalDinero - totalComisiones;
-    grid.innerHTML += `
-      <div class="emp-mes-card emp-mes-card--neto">
-        <div class="emp-mes-card__nombre">PARA VOS (NETO)</div>
-        <div class="emp-mes-card__cortes">${fmt(totalDinero)} − ${fmt(totalComisiones)} comisiones</div>
-        <div class="emp-mes-card__dinero emp-mes-card__dinero--neto">${fmt(neto)}</div>
-      </div>`;
+    // La ganancia neta del dueño ya no se muestra acá: es el panel de los empleados
+    // (el dueño la ve en el Resumen de su panel, "Ganancias del dueño")
 
     const totalEl = document.getElementById('finMesTotal');
     if (totalEl) totalEl.textContent = `${totalCortes} corte${totalCortes !== 1 ? 's' : ''} — ${fmt(totalDinero)} bruto`;
@@ -513,6 +576,14 @@
     const wppInput    = document.getElementById('counterWpp');
     const titleEl     = document.getElementById('counterModalTitle');
     const nuevoMsg    = document.getElementById('counterNuevoMsg');
+    const beneficioMsg     = document.getElementById('counterBeneficioMsg');
+    const successBeneficio = document.getElementById('counterSuccessBeneficio');
+    const deshacerBtn      = document.getElementById('counterDeshacer');
+
+    // Último corte registrado desde este modal, para poder deshacerlo
+    let ultimoRegistro = null;
+    // El WhatsApp lo completó el sistema al reconocer el nombre (si el nombre cambia, se borra)
+    let telAutocompletado = false;
 
     function resetModal() {
       form.hidden = false;
@@ -520,6 +591,33 @@
       cliInput.value = '';
       wppInput.value = '';
       nuevoMsg.hidden = true;
+      beneficioMsg.hidden = true;
+      successBeneficio.hidden = true;
+      telAutocompletado = false;
+      ultimoRegistro = null;
+    }
+
+    // Dice quién es el cliente (por nombre o por WhatsApp) y si este corte tiene beneficio
+    function mostrarIdentificacion() {
+      const nombre = cliInput.value.trim();
+      const cli = buscarCliente(nombre, wppInput.value);
+      nuevoMsg.hidden = true;
+      beneficioMsg.hidden = true;
+      if (!nombre) return;
+      if (!cli) {
+        nuevoMsg.textContent = `"${nombre}" no está en la base — se creará como cliente nuevo`;
+        nuevoMsg.hidden = false;
+        return;
+      }
+      if ((cli.nombre || '').trim().toLowerCase() !== nombre.toLowerCase()) {
+        nuevoMsg.textContent = `Ese WhatsApp ya es de "${cli.nombre}" — el corte se le suma a esa ficha`;
+        nuevoMsg.hidden = false;
+      }
+      const b = beneficioDelCorte(cli.cantidadCortes);
+      if (b) {
+        beneficioMsg.textContent = b.aviso;
+        beneficioMsg.hidden = false;
+      }
     }
 
     function refreshDatalist() {
@@ -556,16 +654,54 @@
     });
 
     cliInput.addEventListener('input', () => {
-      const nombre = cliInput.value.trim();
-      if (!nombre) { nuevoMsg.hidden = true; wppInput.value = ''; return; }
-      const existe = cacheClientes.find(c => c.nombre.toLowerCase() === nombre.toLowerCase());
+      const nombre = cliInput.value.trim().toLowerCase();
+      const existe = nombre ? cacheClientes.find(c => (c.nombre || '').trim().toLowerCase() === nombre) : null;
       if (existe) {
         wppInput.value = existe.telefono || '';
-        nuevoMsg.hidden = true;
-      } else {
+        telAutocompletado = true;
+      } else if (telAutocompletado) {
         wppInput.value = '';
-        nuevoMsg.textContent = `"${nombre}" no está en la base — se creará como cliente nuevo`;
-        nuevoMsg.hidden = false;
+        telAutocompletado = false;
+      }
+      mostrarIdentificacion();
+    });
+
+    wppInput.addEventListener('input', () => {
+      telAutocompletado = false;
+      mostrarIdentificacion();
+    });
+
+    deshacerBtn.addEventListener('click', async () => {
+      if (!ultimoRegistro) return;
+      if (!confirm(`¿Deshacer el corte de ${ultimoRegistro.turno.cliente}? Se borran el corte y el ingreso, y se le resta el punto.`)) return;
+      deshacerBtn.disabled = true;
+      try {
+        await deshacerCorte(ultimoRegistro.turno, ultimoRegistro.antes);
+        ultimoRegistro = null;
+        modal.close();
+      } catch (err) {
+        console.error(err);
+        alert('No se pudo deshacer el corte. Revisá la conexión e intentá de nuevo.');
+      } finally {
+        deshacerBtn.disabled = false;
+      }
+    });
+
+    // "Clientes de hoy": deshacer un corte cargado por error
+    const listaHoy = document.getElementById('cntClientesHoy');
+    if (listaHoy) listaHoy.addEventListener('click', async e => {
+      const btn = e.target.closest('[data-deshacer]');
+      if (!btn) return;
+      const turno = cacheTurnos.find(t => t.id === btn.dataset.deshacer);
+      if (!turno) return;
+      if (!confirm(`¿Deshacer el corte de ${turno.cliente}? Se borran el corte y el ingreso, y se le resta el punto.`)) return;
+      btn.disabled = true;
+      try {
+        await deshacerCorte(turno);
+      } catch (err) {
+        console.error(err);
+        alert('No se pudo deshacer el corte. Revisá la conexión e intentá de nuevo.');
+        btn.disabled = false;
       }
     });
 
@@ -592,21 +728,28 @@
 
         // Primer servicio activo (antes tomaba el primero aunque estuviera desactivado)
         const servicio       = cacheServicios.find(s => s.activo !== false);
-        const precio         = servicio ? servicio.precio : 10000;
+        const precioBase     = servicio ? servicio.precio : 10000;
         const servicioNombre = servicio ? servicio.nombre : 'Corte';
         const servicioId     = servicio ? servicio.id : null;
 
-        let clienteReg = cacheClientes.find(c => c.nombre.toLowerCase() === clienteNombre.toLowerCase());
+        // Por nombre o, si el nombre no coincide, por WhatsApp
+        let clienteReg = buscarCliente(clienteNombre, wpp);
+        let esNuevo = false;
         // La lista puede no tener todavía al cliente creado en un intento fallido: no crearlo de nuevo
         if (!clienteReg && clienteCreado && clienteCreado.nombre.toLowerCase() === clienteNombre.toLowerCase()) {
           clienteReg = clienteCreado;
+          esNuevo = true;
         }
+        // Si se lo reconoció por WhatsApp, el corte va con el nombre de su ficha
+        const nombreCliente = clienteReg ? clienteReg.nombre : clienteNombre;
         let telefono = wpp;
         let clienteId = null;
         let currentPuntos = 0;
         let currentCortes = 0;
+        const ultimaVisitaPrevia = clienteReg && !esNuevo ? (clienteReg.ultimaVisita || null) : null;
 
         if (!clienteReg) {
+          esNuevo = true;
           const newRef = await addDoc(clientesCol, { nombre: clienteNombre, telefono: wpp, notas: '' });
           clienteId = newRef ? newRef.id : null;
           if (clienteId) clienteCreado = { id: clienteId, nombre: clienteNombre, telefono: wpp };
@@ -618,13 +761,20 @@
           telefono = clienteReg.telefono || wpp;
           if (!clienteReg.telefono && wpp) {
             await updateDoc(doc(db, 'clientes', clienteReg.id), { telefono: wpp });
-            window.Panel.Sheets.logCliente({ nombre: clienteNombre, telefono: wpp, instagram: '', email: '', notas: '' }, 'Actualizado');
+            window.Panel.Sheets.logCliente({ nombre: nombreCliente, telefono: wpp, instagram: '', email: '', notas: '' }, 'Actualizado');
           }
         }
 
+        // Beneficio de fidelidad: después del 6° corte el siguiente es con 50%, después
+        // del 10° el siguiente es gratis. Se cobra lo que corresponde (antes siempre el
+        // precio completo e inflaba las finanzas). La comisión del barbero no cambia.
+        const beneficio = esNuevo ? null : beneficioDelCorte(currentCortes);
+        const precio = Math.round(precioBase * (beneficio ? beneficio.factor : 1));
+        const notas  = beneficio ? `Beneficio: corte ${beneficio.etiqueta}` : '';
+
         const finanzaRef = await addDoc(finanzasCol, {
           tipo: 'ingreso', fecha, monto: precio,
-          descripcion: `${clienteNombre} — ${servicioNombre}`,
+          descripcion: `${nombreCliente} — ${servicioNombre}${beneficio ? ` (${beneficio.etiqueta})` : ''}`,
           categoria: 'Servicios', origen: 'contador', turnoId: null,
           createdAt: serverTimestamp()
         });
@@ -632,9 +782,9 @@
         let turnoRef;
         try {
           turnoRef = await addDoc(turnosCol, {
-            cliente: clienteNombre, telefono, fecha, hora,
+            cliente: nombreCliente, telefono, fecha, hora,
             servicioId, servicioNombre, precio, estado: 'completado',
-            barbero, notas: '', facturado: true,
+            barbero, notas, facturado: true,
             finanzaId: finanzaRef.id, createdAt: serverTimestamp()
           });
         } catch (err) {
@@ -645,11 +795,11 @@
           throw err;
         }
         clienteCreado = null;
-        window.Panel.Sheets.logTurno({
-          id: turnoRef ? turnoRef.id : '', cliente: clienteNombre, telefono,
-          fecha, hora,
-          servicioNombre, precio, estado: 'completado', notas: ''
-        }, 'Nuevo');
+        const turnoGuardado = {
+          id: turnoRef ? turnoRef.id : '', finanzaId: finanzaRef.id, cliente: nombreCliente, telefono,
+          fecha, hora, servicioNombre, precio, estado: 'completado', notas
+        };
+        window.Panel.Sheets.logTurno(turnoGuardado, 'Nuevo');
 
         // El corte y el ingreso ya quedaron grabados: si falla solo la suma de puntos se
         // avisa, pero sin pedir que se reintente (duplicaría el corte y el ingreso)
@@ -666,17 +816,36 @@
           }
         }
 
+        // Para "Deshacer este corte": cómo estaba el cliente antes del corte
+        ultimoRegistro = {
+          turno: turnoGuardado,
+          antes: esNuevo
+            ? { borrarCliente: { id: clienteId, nombre: nombreCliente, telefono } }
+            : puntosOk
+              ? { clienteId, valores: { puntos: currentPuntos, cantidadCortes: currentCortes, ultimaVisita: ultimaVisitaPrevia } }
+              : { sinCambiosCliente: true }
+        };
+
         // Mostrar estado de éxito con botón WA
         const nuevoPuntos  = currentPuntos + 1;
         const nuevosCortes = currentCortes + 1;
-        const pNombre      = clienteNombre.split(' ')[0];
+        const pNombre      = nombreCliente.trim().split(' ')[0];
         const telNorm      = normTel(telefono);
         const waMsg = pNombre ? `${pNombre}, gracias por elegirnos!` : 'Gracias por elegirnos!';
 
-        successTitle.textContent = `Corte de ${clienteNombre} registrado`;
+        successTitle.textContent = `Corte de ${nombreCliente} registrado`;
         successPts.textContent   = puntosOk
           ? `Corte N° ${nuevosCortes} — ${nuevoPuntos} punto${nuevoPuntos !== 1 ? 's' : ''} acumulado${nuevoPuntos !== 1 ? 's' : ''}`
           : 'El corte quedó registrado, pero no se pudieron sumar los puntos del cliente. Avisale al dueño.';
+
+        const avisos = [];
+        if (beneficio) avisos.push(`Beneficio aplicado (corte ${beneficio.etiqueta}): se cobró ${fmt(precio)}`);
+        if (puntosOk) {
+          const premio = premioGanado(nuevosCortes);
+          if (premio) avisos.push(premio);
+        }
+        successBeneficio.textContent = avisos.join('\n');
+        successBeneficio.hidden = avisos.length === 0;
 
         // El mensaje ya no menciona los puntos: se puede mandar aunque no se hayan podido sumar
         if (telNorm) {
