@@ -41,17 +41,34 @@
     return stats;
   }
 
+  // Para buscar sin importar mayúsculas ni acentos ("garcía" encuentra "Garcia")
+  function normTexto(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+
+  function coincideBusqueda(c, busqueda) {
+    if (!busqueda) return true;
+    const digitos = busqueda.replace(/\D/g, '');
+    if (digitos.length >= 3 && normTel(c.telefono).includes(digitos)) return true;
+    const nombre = normTexto(c.nombre);
+    return normTexto(busqueda).split(/\s+/).filter(Boolean).every(p => nombre.includes(p));
+  }
+
   function renderTable() {
     const stats = statsPorTelefono();
     const tbody = document.getElementById('clientesTbody');
     const empty = document.getElementById('clientesEmpty');
     const total = document.getElementById('clientesTotal');
+    const buscarEl = document.getElementById('clientesBuscar');
+    const busqueda = buscarEl ? buscarEl.value.trim() : '';
 
+    const visibles = cache.filter(c => coincideBusqueda(c, busqueda));
     tbody.innerHTML = '';
-    empty.hidden = cache.length > 0;
-    total.textContent = cache.length;
+    empty.textContent = busqueda ? 'Ningún cliente coincide con la búsqueda.' : 'Todavía no hay clientes registrados.';
+    empty.hidden = visibles.length > 0;
+    total.textContent = busqueda ? `${visibles.length} de ${cache.length}` : cache.length;
 
-    cache
+    visibles
       .slice()
       .sort((a, b) => {
         const ka = claveCliente(a.nombre, a.telefono);
@@ -179,6 +196,8 @@
 
     document.getElementById('newClienteBtn').addEventListener('click', () => openClienteModal(null));
     document.getElementById('exportClientesBtn').addEventListener('click', exportarCSV);
+    const buscarEl = document.getElementById('clientesBuscar');
+    if (buscarEl) buscarEl.addEventListener('input', renderTable);
     document.getElementById('syncSheetsBtn').addEventListener('click', sincronizarConSheets);
 
     document.getElementById('clientesTbody').addEventListener('click', (e) => {
