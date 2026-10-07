@@ -42,6 +42,82 @@
     }).join('');
   }
 
+  // ── Reparto del mes: cuánto le toca a cada barbero y cuánto le queda al dueño ──
+  // Sale de los cortes completados del mes: a cada empleado le toca cortes × comisión;
+  // al dueño, sus propios cortes, los cortes sin barbero y lo que queda de los cortes
+  // de los empleados después de pagar la comisión.
+  function renderReparto(month, ingresos, egresos) {
+    const el = document.getElementById('finanzasReparto');
+    if (!el) return;
+
+    const turnos = (window.Panel.Turnos && window.Panel.Turnos.getTurnos()) || [];
+    const barberos = (window.Panel.Barberos && window.Panel.Barberos.getBarberos()) || [];
+    const porNombre = new Map(barberos.map(b => [b.nombre, b]));
+
+    const grupos = new Map();
+    // Los barberos activos aparecen aunque todavía no tengan cortes en el mes
+    barberos.filter(b => b.activo !== false).forEach(b => grupos.set(b.nombre, { cortes: 0, facturo: 0 }));
+    turnos
+      .filter(t => t.estado === 'completado' && t.fecha && t.fecha.startsWith(month))
+      .forEach(t => {
+        const k = t.barbero || '';
+        const g = grupos.get(k) || { cortes: 0, facturo: 0 };
+        g.cortes++;
+        g.facturo += Number(t.precio || 0);
+        grupos.set(k, g);
+      });
+
+    let totalCortes = 0, totalFacturo = 0, totalComisiones = 0;
+    const filas = [...grupos.entries()].map(([nombre, g]) => {
+      const b = porNombre.get(nombre);
+      const esEmpleado = !!b && b.comision != null;
+      const comision = esEmpleado ? g.cortes * Number(b.comision) : 0;
+      totalCortes += g.cortes;
+      totalFacturo += g.facturo;
+      totalComisiones += comision;
+      return {
+        ...g, comision, esEmpleado,
+        esDueno: !!b && b.comision == null,
+        nombre: b ? (b.apodo || b.nombre) : (nombre || 'Sin barbero asignado')
+      };
+    })
+      // Si no cortó y no es un barbero activo, no hace falta mostrarlo
+      .filter(f => f.cortes > 0 || f.esEmpleado || f.esDueno)
+      // Primero los empleados (más cortes arriba), después el dueño y al final los sin barbero
+      .sort((a, b) => (Number(b.esEmpleado) - Number(a.esEmpleado)) || (Number(b.esDueno) - Number(a.esDueno)) || (b.cortes - a.cortes));
+
+    const paraVos = totalFacturo - totalComisiones;
+    const despuesDeGastos = ingresos - egresos - totalComisiones;
+
+    const rows = filas.map(f => `
+      <tr>
+        <td>${escapeHtml(f.nombre)}${f.esDueno ? ' <span class="reparto__tag">dueño</span>' : ''}</td>
+        <td>${f.cortes}</td>
+        <td>${fmt(f.facturo)}</td>
+        <td>${f.esEmpleado
+          ? `<span class="reparto__le-toca">${fmt(f.comision)}</span>`
+          : '<span class="reparto__tuyo">es tuyo</span>'}</td>
+      </tr>`).join('');
+
+    el.innerHTML = `
+      <div class="reparto__grid">
+        <div class="table-wrap">
+          <table class="resumen-tabla reparto__tabla">
+            <thead><tr><th>Barbero</th><th>Cortes</th><th>Facturó</th><th>Le toca</th></tr></thead>
+            <tbody>${rows || '<tr><td colspan="4">No hay cortes completados este mes.</td></tr>'}</tbody>
+            <tfoot><tr><td>Total</td><td>${totalCortes}</td><td>${fmt(totalFacturo)}</td><td>${fmt(totalComisiones)}</td></tr></tfoot>
+          </table>
+        </div>
+        <div class="reparto__dueno">
+          <span class="reparto__dueno-label">💰 Te quedó a vos</span>
+          <strong class="reparto__dueno-monto">${fmt(paraVos)}</strong>
+          <span class="reparto__dueno-sub">${fmt(totalFacturo)} en cortes − ${fmt(totalComisiones)} de comisiones</span>
+          <span class="reparto__dueno-gastos">Después de los gastos del mes: <strong>${fmt(despuesDeGastos)}</strong></span>
+          <span class="reparto__dueno-sub">Balance (${fmt(ingresos - egresos)}) − comisiones</span>
+        </div>
+      </div>`;
+  }
+
   function renderTable() {
     const monthInput = document.getElementById('finanzasMonth');
     const month = monthInput.value || currentMonthValue();
@@ -84,6 +160,8 @@
     document.getElementById('totalIngresos').textContent = fmt(ingresos);
     document.getElementById('totalEgresos').textContent = fmt(egresos);
     document.getElementById('totalBalance').textContent = fmt(ingresos - egresos);
+
+    renderReparto(month, ingresos, egresos);
   }
 
   function initFinanzas() {
@@ -95,6 +173,10 @@
       cache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderTable();
     });
+
+    // El reparto del mes también depende de los cortes y de los barberos
+    if (window.Panel.Turnos) window.Panel.Turnos.onTurnosChange(renderTable);
+    if (window.Panel.Barberos) window.Panel.Barberos.onBarberosChange(renderTable);
 
     const modal = document.getElementById('movModal');
     const form = document.getElementById('movForm');

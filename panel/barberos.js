@@ -3,6 +3,9 @@
 
   const barberosCol = collection(db, 'barberos');
   let cache = [];
+  const listeners = [];
+
+  function onBarberosChange(fn) { listeners.push(fn); }
 
   function fmt(n) { return '$' + Number(n || 0).toLocaleString('es-AR'); }
 
@@ -133,8 +136,9 @@
     onSnapshot(query(barberosCol, orderBy('nombre')), snap => {
       cache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       render();
+      listeners.forEach(fn => fn(cache));
     });
   }
 
-  window.Panel.Barberos = { initBarberos, getBarberos: () => cache };
+  window.Panel.Barberos = { initBarberos, getBarberos: () => cache, onBarberosChange };
 })();

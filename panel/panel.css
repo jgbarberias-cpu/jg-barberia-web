@@ -612,6 +612,58 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; }
 .summary-card--egreso strong { color: var(--red); }
 .summary-card--balance strong { color: var(--gold); }
 
+/* ── Finanzas: reparto del mes ── */
+.reparto {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 24px;
+}
+.reparto__titulo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.reparto__sub { font-size: 0.75rem; color: var(--text-muted); margin: 2px 0 14px; }
+.reparto__grid { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; align-items: start; }
+.reparto__tabla td:nth-child(n+2), .reparto__tabla th:nth-child(n+2) { text-align: right; }
+.reparto__le-toca { font-weight: 600; color: var(--green); }
+.reparto__tuyo { font-size: 0.75rem; color: var(--gold-light); }
+.reparto__tag {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gold);
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 99px;
+  padding: 1px 6px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.reparto__dueno {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(201,168,76,0.16), rgba(201,168,76,0.04));
+  border: 1px solid rgba(201,168,76,0.4);
+}
+.reparto__dueno-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold-light); }
+.reparto__dueno-monto { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; font-weight: 700; color: var(--gold); line-height: 1.1; }
+.reparto__dueno-sub { font-size: 0.72rem; color: var(--text-muted); }
+.reparto__dueno-gastos { font-size: 0.84rem; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(201,168,76,0.25); }
+.reparto__dueno-gastos strong { color: var(--text); }
+@media (max-width: 760px) {
+  .reparto__grid { grid-template-columns: 1fr; }
+  .reparto { padding: 16px 14px; }
+}
+
 .clientes-buscar {
   flex: 1;
   min-width: 200px;
