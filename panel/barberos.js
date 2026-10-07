@@ -136,5 +136,5 @@
     });
   }
 
-  window.Panel.Barberos = { initBarberos };
+  window.Panel.Barberos = { initBarberos, getBarberos: () => cache };
 })();

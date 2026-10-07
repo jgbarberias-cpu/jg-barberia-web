@@ -247,5 +247,5 @@
     });
   }
 
-  window.Panel.Clientes = { initClientes };
+  window.Panel.Clientes = { initClientes, getClientes: () => cache };
 })();

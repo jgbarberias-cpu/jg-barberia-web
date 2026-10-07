@@ -384,14 +384,19 @@
     <label>Servicio
       <select id="turnoServicio" required></select>
     </label>
-    <label>Estado
-      <select id="turnoEstado">
-        <option value="pendiente">Pendiente</option>
-        <option value="confirmado">Confirmado</option>
-        <option value="completado">Completado</option>
-        <option value="cancelado">Cancelado</option>
-      </select>
-    </label>
+    <div class="form-row">
+      <label>Estado
+        <select id="turnoEstado">
+          <option value="pendiente">Pendiente</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="completado">Completado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </label>
+      <label>Barbero
+        <select id="turnoBarbero"></select>
+      </label>
+    </div>
     <label>Notas
       <textarea id="turnoNotas" rows="2"></textarea>
     </label>

@@ -5,6 +5,7 @@
   const { logTurno } = window.Panel.Sheets;
 
   const turnosCol = collection(db, 'turnos');
+  const clientesCol = collection(db, 'clientes');
   let cache = [];
   let editingTurno = null;
   const turnosListeners = [];
@@ -174,12 +175,77 @@
     }
   }
 
+  // ── Barbero del turno (cuenta para contadores, comisiones y empleado del mes) ──
+  function populateBarberoSelect(actual) {
+    const sel = document.getElementById('turnoBarbero');
+    if (!sel) return;
+    const lista = (window.Panel.Barberos && window.Panel.Barberos.getBarberos()) || [];
+    const activos = lista.filter(b => b.activo !== false);
+    let html = '<option value="">Sin asignar</option>' +
+      activos.map(b => `<option value="${escapeHtml(b.nombre)}">${escapeHtml(b.apodo || b.nombre)}</option>`).join('');
+    // Un barbero que ya no está activo se sigue mostrando en sus turnos viejos
+    if (actual && !activos.some(b => b.nombre === actual)) {
+      html += `<option value="${escapeHtml(actual)}">${escapeHtml(actual)}</option>`;
+    }
+    sel.innerHTML = html;
+    sel.value = actual || '';
+  }
+
+  // ── Puntos del cliente, igual que el contador del empleado ──
+  // Al completarse un turno suma 1 punto y 1 corte y actualiza la última visita;
+  // si deja de estar completado (o se borra) se los resta.
+  function normTelT(t) { return (t || '').replace(/\D/g, ''); }
+
+  function clienteDelTurno(turno) {
+    const lista = (window.Panel.Clientes && window.Panel.Clientes.getClientes()) || [];
+    const tel = normTelT(turno.telefono);
+    const nom = (turno.cliente || '').trim().toLowerCase();
+    return (tel && lista.find(c => normTelT(c.telefono) === tel))
+      || lista.find(c => (c.nombre || '').trim().toLowerCase() === nom)
+      || null;
+  }
+
+  async function sumarCorteCliente(turno) {
+    const cli = clienteDelTurno(turno);
+    if (!cli) {
+      // Sin WhatsApp no se le pueden seguir los puntos: no se crea la ficha
+      if (!normTelT(turno.telefono)) return;
+      const nuevo = { nombre: turno.cliente, telefono: turno.telefono, notas: '' };
+      await addDoc(clientesCol, { ...nuevo, puntos: 1, cantidadCortes: 1, ultimaVisita: turno.fecha });
+      window.Panel.Sheets.logCliente({ ...nuevo, instagram: '', email: '' }, 'Nuevo');
+      return;
+    }
+    const ultima = !cli.ultimaVisita || turno.fecha > String(cli.ultimaVisita).slice(0, 10) ? turno.fecha : cli.ultimaVisita;
+    await updateDoc(doc(db, 'clientes', cli.id), {
+      puntos: (cli.puntos || 0) + 1,
+      cantidadCortes: (cli.cantidadCortes || 0) + 1,
+      ultimaVisita: ultima
+    });
+  }
+
+  async function restarCorteCliente(turno) {
+    const cli = clienteDelTurno(turno);
+    if (!cli) return;
+    const tel = normTelT(turno.telefono);
+    const nom = (turno.cliente || '').trim().toLowerCase();
+    const ultima = cache
+      .filter(t => t.id !== turno.id && t.estado === 'completado' && t.fecha &&
+        (tel ? normTelT(t.telefono) === tel : (t.cliente || '').trim().toLowerCase() === nom))
+      .reduce((max, t) => (t.fecha > max ? t.fecha : max), '');
+    await updateDoc(doc(db, 'clientes', cli.id), {
+      puntos: Math.max(0, (cli.puntos || 0) - 1),
+      cantidadCortes: Math.max(0, (cli.cantidadCortes || 0) - 1),
+      ultimaVisita: ultima || null
+    });
+  }
+
   function openTurnoModal(turno, defaultDate) {
     editingTurno = turno || null;
     populateServicioSelect();
 
     const form = document.getElementById('turnoForm');
     form.reset();
+    populateBarberoSelect(turno ? turno.barbero : '');
     document.getElementById('turnoWarning').hidden = true;
     document.getElementById('turnoModalTitle').textContent = turno ? 'Editar turno' : 'Nuevo turno';
     document.getElementById('deleteTurnoBtn').hidden = !turno;
@@ -214,6 +280,14 @@
     // Se saca ya del cache: la relectura es asíncrona y el modal del día se redibuja enseguida
     cache = cache.filter(x => x.id !== turno.id);
     logTurno(turno, 'Eliminado');
+    if (turno.estado === 'completado') {
+      try {
+        await restarCorteCliente(turno);
+      } catch (err) {
+        console.error(err);
+        alert('El turno se borró, pero no se pudo restar el punto del cliente. Revisalo en Clientes.');
+      }
+    }
   }
 
   function initTurnos() {
@@ -280,12 +354,27 @@
           : selectedOption.textContent.replace(/\s*\(\$\d+\)$/, ''),
         precio: Number(selectedOption.dataset.precio) || 0,
         estado: document.getElementById('turnoEstado').value,
+        barbero: document.getElementById('turnoBarbero').value || null,
         notas: document.getElementById('turnoNotas').value.trim()
       };
+
+      // Un corte completado tiene que tener barbero: si no, no cuenta para su comisión
+      if (data.estado === 'completado' && !data.barbero) {
+        alert('Elegí el barbero que hizo el corte.');
+        document.getElementById('turnoBarbero').focus();
+        return;
+      }
+
+      // Estado con el que estaba guardado (un turno recién creado en un intento que
+      // falló a medias cuenta como nuevo, para que los puntos se sumen al reintentar)
+      const turnoAnterior = editingTurno;
+      const estadoAnterior = editingTurno && !editingTurno._recienCreado ? editingTurno.estado : null;
+      let turnoId;
 
       submitBtn.disabled = true;
       try {
         if (editingTurno) {
+          turnoId = editingTurno.id;
           const oldFacturado = editingTurno.facturado;
           const oldFinanzaId = editingTurno.finanzaId;
 
@@ -317,14 +406,27 @@
           logTurno({ ...data, id: editingTurno.id }, 'Actualizado');
         } else {
           const newDocRef = await addDoc(turnosCol, { ...data, facturado: false, finanzaId: null, createdAt: serverTimestamp() });
+          turnoId = newDocRef.id;
           // Si falla lo que sigue, el reintento edita este turno en vez de duplicarlo
-          editingTurno = { ...data, id: newDocRef.id, facturado: false, finanzaId: null };
+          editingTurno = { ...data, id: newDocRef.id, facturado: false, finanzaId: null, _recienCreado: true };
           if (data.estado === 'completado') {
             const finanzaId = await createTurnoIncome({ ...data, id: newDocRef.id });
             editingTurno = { ...editingTurno, facturado: true, finanzaId };
             await updateDoc(newDocRef, { facturado: true, finanzaId });
           }
           logTurno({ ...data, id: newDocRef.id }, 'Nuevo');
+        }
+
+        // Puntos del cliente: suma al completarse, resta si deja de estar completado
+        try {
+          if (data.estado === 'completado' && estadoAnterior !== 'completado') {
+            await sumarCorteCliente({ ...data, id: turnoId });
+          } else if (estadoAnterior === 'completado' && data.estado !== 'completado') {
+            await restarCorteCliente(turnoAnterior);
+          }
+        } catch (err) {
+          console.error(err);
+          alert('El turno se guardó, pero no se pudieron actualizar los puntos del cliente. Revisalo en Clientes.');
         }
 
         document.getElementById('turnoModal').close();
