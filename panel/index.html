@@ -206,6 +206,16 @@
             </div>
           </div>
         </div>
+        <div class="resumen-card resumen-card--comparacion">
+          <div class="resumen-card__title">📈 Este mes vs el anterior</div>
+          <p class="resumen-card__sub">Comparado hasta el mismo día del mes pasado</p>
+          <div id="resumenComparacion"><p class="resumen-empty">Cargando...</p></div>
+        </div>
+        <div class="resumen-card resumen-card--comisiones">
+          <div class="resumen-card__title">💵 Comisiones a pagar</div>
+          <p class="resumen-card__sub" id="resumenComisionesSub"></p>
+          <div id="resumenComisiones"><p class="resumen-empty">Cargando...</p></div>
+        </div>
         <div class="resumen-card resumen-card--recordatorios-hoy">
           <div class="resumen-card__title">
             📲 Recordatorios de hoy
@@ -217,6 +227,18 @@
         <div class="resumen-card">
           <div class="resumen-card__title">🎁 Beneficios disponibles</div>
           <div id="resumenBeneficios"><p class="resumen-empty">Cargando...</p></div>
+        </div>
+        <div class="resumen-card resumen-card--wide resumen-card--perdidos">
+          <div class="resumen-card__title">
+            😢 Clientes perdidos
+            <span id="resumenPerdidosBadge" class="badge-count badge-count--red" style="display:none"></span>
+          </div>
+          <p class="resumen-card__sub">Hace más de 30 días que no vienen. Primero los que se fueron hace menos, que son los más fáciles de recuperar.</p>
+          <div id="resumenPerdidos"><p class="resumen-empty">Cargando...</p></div>
+        </div>
+        <div class="resumen-card resumen-card--wide resumen-card--pico">
+          <div class="resumen-card__title">📊 Días y horarios pico</div>
+          <div id="resumenPico"><p class="resumen-empty">Cargando...</p></div>
         </div>
       </div>
     </section>
