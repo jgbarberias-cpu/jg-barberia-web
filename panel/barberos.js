@@ -2,10 +2,22 @@
   const { db, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, escapeHtml } = window.Panel.Storage;
 
   const barberosCol = collection(db, 'barberos');
+  let cache = [];
 
   function fmt(n) { return '$' + Number(n || 0).toLocaleString('es-AR'); }
 
-  function render(cache) {
+  // Los cortes guardan el NOMBRE del barbero: al renombrarlo hay que pasar sus cortes
+  // al nombre nuevo (si no, desaparecían de contadores, comisiones y empleado del mes).
+  // Se hace antes de cambiar la ficha: si algo falla, volver a guardar lo completa.
+  async function renombrarCortes(nombreViejo, nombreNuevo) {
+    const { error } = await window.Panel.client
+      .from('turnos')
+      .update({ barbero: nombreNuevo })
+      .eq('barbero', nombreViejo);
+    if (error) throw error;
+  }
+
+  function render() {
     const tbody = document.getElementById('barberosTbody');
     const empty = document.getElementById('barberosEmpty');
     if (!tbody) return;
@@ -80,9 +92,17 @@
       const data     = { nombre, apodo, comision, activo };
       const submitBtn = form.querySelector('[type="submit"]');
 
+      const otroConEseNombre = cache.find(b => b.id !== id && b.nombre.trim().toLowerCase() === nombre.toLowerCase());
+      if (otroConEseNombre) {
+        alert(`Ya hay un barbero llamado "${otroConEseNombre.nombre}". Usá otro nombre.`);
+        return;
+      }
+      const anterior = id ? cache.find(b => b.id === id) : null;
+
       submitBtn.disabled = true;
       try {
         if (id) {
+          if (anterior && anterior.nombre !== nombre) await renombrarCortes(anterior.nombre, nombre);
           await updateDoc(doc(db, 'barberos', id), data);
         } else {
           await addDoc(barberosCol, { ...data, createdAt: serverTimestamp() });
@@ -111,7 +131,8 @@
     modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
 
     onSnapshot(query(barberosCol, orderBy('nombre')), snap => {
-      render(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      cache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
     });
   }
 
